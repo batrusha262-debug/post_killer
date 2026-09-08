@@ -1,0 +1,15 @@
+# Rust
+/target/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+/build/
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+.serena/

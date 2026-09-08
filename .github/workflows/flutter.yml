@@ -1,0 +1,33 @@
+name: Flutter quality
+
+on:
+  pull_request:
+    paths:
+      - "apps/client_flutter/**"
+      - "Makefile"
+      - ".github/workflows/flutter.yml"
+  push:
+    branches: [main]
+    paths:
+      - "apps/client_flutter/**"
+      - "Makefile"
+      - ".github/workflows/flutter.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/client_flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: dart format --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test

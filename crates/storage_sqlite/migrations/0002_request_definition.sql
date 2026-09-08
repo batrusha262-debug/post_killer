@@ -1,0 +1,5 @@
+ALTER TABLE requests ADD COLUMN method TEXT NOT NULL DEFAULT 'GET';
+ALTER TABLE requests ADD COLUMN url TEXT NOT NULL DEFAULT '';
+ALTER TABLE requests ADD COLUMN query_params_json TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE requests ADD COLUMN headers_json TEXT NOT NULL DEFAULT '[]';
+ALTER TABLE requests ADD COLUMN body_json TEXT NOT NULL DEFAULT '{"kind":"empty"}';

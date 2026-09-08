@@ -1,0 +1,26 @@
+[workspace]
+members = [
+    "crates/domain",
+    "crates/http_engine",
+    "crates/application",
+    "crates/ffi_bridge",
+    "crates/storage_sqlite",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rusqlite = { version = "0.37", features = ["bundled"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
