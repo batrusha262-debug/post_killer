@@ -140,7 +140,8 @@
   `RequestExecutor` port без зависимости от HTTP/SQLite; reqwest реализует
   outbound adapter, а FFI является composition root. Есть fake-adapter unit
   test без TCP/SQLite; после рефакторинга проходят 31 Rust tests и Clippy.
-- Добавлен reproducible unsigned packaging pipeline: macOS DMG через `hdiutil`,
+- Добавлен reproducible unsigned packaging pipeline: universal macOS DMG
+  (`arm64` + `x86_64`) через `hdiutil`,
   Windows setup `.exe` через Inno Setup, Linux `.deb` и AppImage. GitHub Actions
   запускает platform-native builds и загружает каждый artifact; локальная DMG
   сборка ждёт полноценный Xcode (сейчас активны только Command Line Tools).

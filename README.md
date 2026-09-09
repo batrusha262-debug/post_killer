@@ -41,7 +41,8 @@ headers и телом. Коллекции и история хранятся л�
 ### macOS
 
 1. Скачайте и распакуйте `post-killer-macos-dmg`.
-2. Откройте `Post-Killer-<version>-macos.dmg`.
+2. Откройте `Post-Killer-<version>-macos.dmg`. Это универсальный пакет: один
+   DMG подходит и для Apple Silicon (M1/M2/M3/M4), и для Intel Mac.
 3. Перетащите `Post Killer.app` в `/Applications`.
 4. Если Gatekeeper блокирует запуск, подтвердите его в System Settings →
    Privacy & Security.
@@ -82,6 +83,7 @@ cd /Users/adt/Documents/ChatGPT/post_killer/apps/client_flutter
 ```sh
 cd /Users/adt/Documents/ChatGPT/post_killer
 cd apps/client_flutter
+# Flutter macOS release builds are universal by default: Intel + Apple Silicon.
 /Users/adt/development/flutter/bin/flutter build macos --release
 cd ../..
 bash packaging/macos/create_dmg.sh 0.1.0
