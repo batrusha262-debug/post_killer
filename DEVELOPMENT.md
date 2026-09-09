@@ -35,7 +35,11 @@
 ### Release
 
 - [ ] GitHub Actions для macOS, Windows и Linux; signing/notarization.
-- [ ] DMG/MSIX/AppImage/DEB, updater и release notes.
+- [ ] Выполнить и проверить первый GitHub Actions packaging run: macOS `.app`/
+  DMG, Windows `.exe`, Linux AppImage/DEB artifacts.
+- [ ] Добавить signing/notarization secrets, release signing и updater после
+  предоставления Apple Developer / Windows certificate / GPG authority.
+- [ ] Добавить release notes и provenance/SBOM для опубликованных пакетов.
 - [ ] Отдельно решить необходимость E2EE cloud sync; не проксировать запросы
   пользователя через Vercel.
 
@@ -136,6 +140,10 @@
   `RequestExecutor` port без зависимости от HTTP/SQLite; reqwest реализует
   outbound adapter, а FFI является composition root. Есть fake-adapter unit
   test без TCP/SQLite; после рефакторинга проходят 31 Rust tests и Clippy.
+- Добавлен reproducible unsigned packaging pipeline: macOS DMG через `hdiutil`,
+  Windows setup `.exe` через Inno Setup, Linux `.deb` и AppImage. GitHub Actions
+  запускает platform-native builds и загружает каждый artifact; локальная DMG
+  сборка ждёт полноценный Xcode (сейчас активны только Command Line Tools).
 
 ## Внешние блокеры проверки
 

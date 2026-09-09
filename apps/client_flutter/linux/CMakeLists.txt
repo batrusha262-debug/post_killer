@@ -1,13 +1,13 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.13)
-project(runner LANGUAGES CXX)
+project(post_killer LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "client_flutter")
+set(BINARY_NAME "post_killer")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "com.example.client_flutter")
+set(APPLICATION_ID "com.batrusha262.postkiller")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
