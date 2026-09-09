@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../data/workspace_repository.dart';
+import '../data/request_executor.dart';
 import '../domain/workspace_models.dart';
 
 sealed class WorkspaceEvent {
@@ -10,6 +11,16 @@ sealed class WorkspaceEvent {
 final class WorkspaceTabSelected extends WorkspaceEvent {
   const WorkspaceTabSelected(this.id);
   final String id;
+}
+
+final class WorkspaceSectionSelected extends WorkspaceEvent {
+  const WorkspaceSectionSelected(this.section);
+  final WorkspaceSection section;
+}
+
+final class WorkspaceCollectionSearchChanged extends WorkspaceEvent {
+  const WorkspaceCollectionSearchChanged(this.query);
+  final String query;
 }
 
 final class WorkspaceRequestOpened extends WorkspaceEvent {
@@ -41,6 +52,10 @@ final class WorkspaceBodyChanged extends WorkspaceEvent {
   final String body;
 }
 
+final class WorkspaceRequestSent extends WorkspaceEvent {
+  const WorkspaceRequestSent();
+}
+
 final class WorkspaceKeyValueAdded extends WorkspaceEvent {
   const WorkspaceKeyValueAdded({required this.isHeader});
   final bool isHeader;
@@ -62,13 +77,20 @@ final class WorkspaceKeyValueChanged extends WorkspaceEvent {
 }
 
 class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
-  WorkspaceBloc(WorkspaceRepository repository)
-    : super(repository.loadInitialWorkspace()) {
+  WorkspaceBloc(WorkspaceRepository repository, {RequestExecutor? executor})
+    : _executor = executor ?? const UnavailableRequestExecutor(),
+      super(repository.loadInitialWorkspace()) {
     on<WorkspaceTabSelected>((event, emit) {
       if (state.tabs.any((tab) => tab.id == event.id)) {
         emit(state.copyWith(selectedTabId: event.id));
       }
     });
+    on<WorkspaceSectionSelected>(
+      (event, emit) => emit(state.copyWith(selectedSection: event.section)),
+    );
+    on<WorkspaceCollectionSearchChanged>(
+      (event, emit) => emit(state.copyWith(collectionSearchQuery: event.query)),
+    );
     on<WorkspaceRequestOpened>((event, emit) {
       final isOpen = state.tabs.any((tab) => tab.id == event.request.id);
       emit(
@@ -102,7 +124,10 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     );
     on<WorkspaceKeyValueAdded>(_addKeyValue);
     on<WorkspaceKeyValueChanged>(_updateKeyValue);
+    on<WorkspaceRequestSent>(_sendRequest);
   }
+
+  final RequestExecutor _executor;
 
   var _untitledCounter = 0;
 
@@ -132,6 +157,8 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         collections: state.collections,
         tabs: tabs,
         selectedTabId: selected,
+        selectedSection: state.selectedSection,
+        collectionSearchQuery: state.collectionSearchQuery,
       ),
     );
   }
@@ -184,5 +211,16 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         ],
       ),
     );
+  }
+
+  Future<void> _sendRequest(
+    WorkspaceRequestSent event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    final tab = state.selectedTab;
+    if (tab == null || state.isExecuting) return;
+    emit(state.copyWith(isExecuting: true));
+    final execution = await _executor.execute(tab);
+    emit(state.copyWith(isExecuting: false, execution: execution));
   }
 }

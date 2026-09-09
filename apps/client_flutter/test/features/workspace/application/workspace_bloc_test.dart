@@ -39,6 +39,35 @@ void main() {
       ),
     ],
   );
+
+  blocTest<WorkspaceBloc, WorkspaceState>(
+    'switches the active workspace section from a typed navigation event',
+    build: () => WorkspaceBloc(const _FakeWorkspaceRepository(request)),
+    act: (bloc) =>
+        bloc.add(const WorkspaceSectionSelected(WorkspaceSection.history)),
+    expect: () => [
+      isA<WorkspaceState>().having(
+        (state) => state.selectedSection,
+        'selected section',
+        WorkspaceSection.history,
+      ),
+    ],
+  );
+
+  blocTest<WorkspaceBloc, WorkspaceState>(
+    'filters a derived collection view without replacing source collections',
+    build: () => WorkspaceBloc(const _FakeWorkspaceRepository(request)),
+    act: (bloc) => bloc.add(const WorkspaceCollectionSearchChanged('injected')),
+    expect: () => [
+      isA<WorkspaceState>()
+          .having((state) => state.collections.length, 'source collections', 1)
+          .having(
+            (state) => state.filteredCollections.single.requests.single.name,
+            'filtered request',
+            'Injected request',
+          ),
+    ],
+  );
 }
 
 class _FakeWorkspaceRepository implements WorkspaceRepository {

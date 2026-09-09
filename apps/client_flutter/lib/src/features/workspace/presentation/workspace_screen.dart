@@ -22,26 +22,30 @@ class WorkspaceScreen extends StatelessWidget {
             Text('Post Killer'),
           ],
         ),
-        actions: const [
-          _EnvironmentPicker(),
-          SizedBox(width: 12),
-          Icon(Icons.settings_outlined),
-          SizedBox(width: 16),
-        ],
       ),
       body: Row(
         children: [
-          const _PrimaryNavigation(),
+          _PrimaryNavigation(
+            selectedSection: workspace.selectedSection,
+            onSelected: (section) =>
+                controller.add(WorkspaceSectionSelected(section)),
+          ),
           const VerticalDivider(width: 1),
           SizedBox(
             width: 260,
-            child: _CollectionsPane(
-              collections: workspace.collections,
-              onOpenRequest: (request) =>
-                  controller.add(WorkspaceRequestOpened(request)),
-              onNewRequest: () =>
-                  controller.add(const WorkspaceRequestCreated()),
-            ),
+            child: switch (workspace.selectedSection) {
+              WorkspaceSection.collections => _CollectionsPane(
+                collections: workspace.filteredCollections,
+                onSearchChanged: (query) =>
+                    controller.add(WorkspaceCollectionSearchChanged(query)),
+                onOpenRequest: (request) =>
+                    controller.add(WorkspaceRequestOpened(request)),
+                onNewRequest: () =>
+                    controller.add(const WorkspaceRequestCreated()),
+              ),
+              WorkspaceSection.history => const _HistoryPane(),
+              WorkspaceSection.variables => const _VariablesPane(),
+            },
           ),
           const VerticalDivider(width: 1),
           Expanded(
@@ -77,6 +81,7 @@ class WorkspaceScreen extends StatelessWidget {
                   enabled: enabled,
                 ),
               ),
+              onSend: () => controller.add(const WorkspaceRequestSent()),
             ),
           ),
         ],
@@ -85,35 +90,20 @@ class WorkspaceScreen extends StatelessWidget {
   }
 }
 
-class _EnvironmentPicker extends StatelessWidget {
-  const _EnvironmentPicker();
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-    decoration: BoxDecoration(
-      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-      borderRadius: BorderRadius.circular(8),
-    ),
-    child: const Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.public, size: 17),
-        SizedBox(width: 7),
-        Text('No environment'),
-        SizedBox(width: 5),
-        Icon(Icons.keyboard_arrow_down, size: 18),
-      ],
-    ),
-  );
-}
-
 class _PrimaryNavigation extends StatelessWidget {
-  const _PrimaryNavigation();
+  const _PrimaryNavigation({
+    required this.selectedSection,
+    required this.onSelected,
+  });
+
+  final WorkspaceSection selectedSection;
+  final ValueChanged<WorkspaceSection> onSelected;
 
   @override
   Widget build(BuildContext context) => NavigationRail(
-    selectedIndex: 0,
+    selectedIndex: selectedSection.index,
+    onDestinationSelected: (index) =>
+        onSelected(WorkspaceSection.values[index]),
     labelType: NavigationRailLabelType.all,
     destinations: const [
       NavigationRailDestination(
@@ -136,11 +126,13 @@ class _PrimaryNavigation extends StatelessWidget {
 class _CollectionsPane extends StatelessWidget {
   const _CollectionsPane({
     required this.collections,
+    required this.onSearchChanged,
     required this.onOpenRequest,
     required this.onNewRequest,
   });
 
   final List<RequestCollection> collections;
+  final ValueChanged<String> onSearchChanged;
   final ValueChanged<SavedRequest> onOpenRequest;
   final VoidCallback onNewRequest;
 
@@ -167,9 +159,11 @@ class _CollectionsPane extends StatelessWidget {
           ],
         ),
       ),
-      const Padding(
+      Padding(
         padding: EdgeInsets.symmetric(horizontal: 12),
         child: TextField(
+          key: const Key('collection-search-field'),
+          onChanged: onSearchChanged,
           decoration: InputDecoration(
             isDense: true,
             hintText: 'Search',
@@ -214,6 +208,59 @@ class _CollectionsPane extends StatelessWidget {
   );
 }
 
+class _HistoryPane extends StatelessWidget {
+  const _HistoryPane();
+
+  @override
+  Widget build(BuildContext context) => const _SectionPlaceholder(
+    title: 'History',
+    icon: Icons.history,
+    message: 'No request history yet',
+  );
+}
+
+class _VariablesPane extends StatelessWidget {
+  const _VariablesPane();
+
+  @override
+  Widget build(BuildContext context) => const _SectionPlaceholder(
+    title: 'Variables',
+    icon: Icons.tune,
+    message: 'No variables yet',
+  );
+}
+
+class _SectionPlaceholder extends StatelessWidget {
+  const _SectionPlaceholder({
+    required this.title,
+    required this.icon,
+    required this.message,
+  });
+
+  final String title;
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+      ),
+      Expanded(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [Icon(icon), const SizedBox(height: 8), Text(message)],
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
 class _RequestWorkspace extends StatelessWidget {
   const _RequestWorkspace({
     required this.workspace,
@@ -227,6 +274,7 @@ class _RequestWorkspace extends StatelessWidget {
     required this.onAddHeader,
     required this.onQueryChanged,
     required this.onHeaderChanged,
+    required this.onSend,
   });
 
   final WorkspaceState workspace;
@@ -242,6 +290,7 @@ class _RequestWorkspace extends StatelessWidget {
   onQueryChanged;
   final void Function(String, {String? key, String? value, bool? enabled})
   onHeaderChanged;
+  final VoidCallback onSend;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -287,6 +336,9 @@ class _RequestWorkspace extends StatelessWidget {
                 onAddHeader: onAddHeader,
                 onQueryChanged: onQueryChanged,
                 onHeaderChanged: onHeaderChanged,
+                onSend: onSend,
+                isExecuting: workspace.isExecuting,
+                execution: workspace.execution,
               ),
       ),
     ],
@@ -372,6 +424,9 @@ class _RequestEditor extends StatelessWidget {
     required this.onAddHeader,
     required this.onQueryChanged,
     required this.onHeaderChanged,
+    required this.onSend,
+    required this.isExecuting,
+    required this.execution,
   });
 
   final RequestTab tab;
@@ -384,6 +439,9 @@ class _RequestEditor extends StatelessWidget {
   onQueryChanged;
   final void Function(String, {String? key, String? value, bool? enabled})
   onHeaderChanged;
+  final VoidCallback onSend;
+  final bool isExecuting;
+  final RequestExecutionView? execution;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -422,9 +480,9 @@ class _RequestEditor extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             FilledButton.icon(
-              onPressed: () {},
+              onPressed: isExecuting ? null : onSend,
               icon: const Icon(Icons.send, size: 17),
-              label: const Text('Send'),
+              label: Text(isExecuting ? 'Sending…' : 'Send'),
             ),
           ],
         ),
@@ -458,7 +516,7 @@ class _RequestEditor extends StatelessWidget {
                         onChanged: onHeaderChanged,
                       ),
                       _BodyEditor(value: tab.body, onChanged: onBodyChanged),
-                      const _ResponsePlaceholder(),
+                      _ResponseView(execution: execution),
                     ],
                   ),
                 ),
@@ -550,21 +608,38 @@ class _BodyEditor extends StatelessWidget {
   );
 }
 
-class _ResponsePlaceholder extends StatelessWidget {
-  const _ResponsePlaceholder();
+class _ResponseView extends StatelessWidget {
+  const _ResponseView({required this.execution});
+  final RequestExecutionView? execution;
+
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: const [
-        Icon(Icons.data_object, size: 36),
-        SizedBox(height: 8),
-        Text('Response will appear here'),
-        SizedBox(height: 4),
-        Text('Send a request to inspect status, headers and body'),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) {
+    final result = execution;
+    if (result?.error case final error?) {
+      return Center(child: Text(error, key: const Key('response-error')));
+    }
+    if (result?.status case final status?) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: SelectableText(
+          'HTTP $status · ${result!.durationMillis} ms\n\n${result.body}',
+          key: const Key('response-content'),
+        ),
+      );
+    }
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(Icons.data_object, size: 36),
+          SizedBox(height: 8),
+          Text('Response will appear here'),
+          SizedBox(height: 4),
+          Text('Send a request to inspect status, headers and body'),
+        ],
+      ),
+    );
+  }
 }
 
 class _EmptyWorkspace extends StatelessWidget {

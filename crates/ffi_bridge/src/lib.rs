@@ -1,5 +1,12 @@
-//! Stable application-facing Rust API. flutter_rust_bridge code generation is intentionally
-//! deferred until the Flutter shell and domain contract are established.
+//! Inbound adapters and composition root for Flutter and other native callers.
+
+// Generated FFI wire code necessarily dereferences raw Dart pointers. This is
+// the only permitted unsafe boundary; handwritten bridge code stays denied.
+#[allow(unsafe_code)]
+mod frb_generated;
+
+/// Coarse-grained, owned DTOs consumed by `flutter_rust_bridge` code generation.
+pub mod api;
 
 use post_killer_application::RequestExecutionService;
 use post_killer_domain::{RequestDefinition, ValidationError};

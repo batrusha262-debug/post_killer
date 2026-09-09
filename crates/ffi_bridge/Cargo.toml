@@ -4,10 +4,18 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[lib]
+crate-type = ["lib", "cdylib", "staticlib"]
+
 [lints]
 workspace = true
 
 [dependencies]
+flutter_rust_bridge = "=2.13.0"
 post-killer-domain = { path = "../domain" }
 post-killer-application = { path = "../application" }
 post-killer-http-engine = { path = "../http_engine" }
+serde_json.workspace = true
+
+[dev-dependencies]
+tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread"] }

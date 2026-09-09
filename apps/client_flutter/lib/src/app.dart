@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'features/workspace/application/workspace_bloc.dart';
 import 'features/workspace/data/workspace_gateway.dart';
+import 'features/workspace/data/request_executor.dart';
 import 'features/workspace/data/workspace_repository.dart';
 import 'features/workspace/presentation/workspace_screen.dart';
 
@@ -29,6 +30,7 @@ class PostKillerApp extends StatelessWidget {
       home: BlocProvider(
         create: (_) => WorkspaceBloc(
           GatewayWorkspaceRepository(const InMemoryWorkspaceGateway()),
+          executor: const FrbRequestExecutor(),
         ),
         child: const WorkspaceScreen(),
       ),

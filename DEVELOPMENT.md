@@ -28,24 +28,6 @@
   Критерий готовности: подключить UI к Rust через `flutter_rust_bridge` для
   execution, collections, tabs, request drafts и сохранения без прямого доступа
   Flutter к SQLite/HTTP; покрыть state transitions и success/error/cancel paths.
-- [ ] **QA-002 · High · History и Variables в боковой навигации не работают.**
-  В установленном macOS-приложении нажмите **History**, затем **Variables**.
-  Ожидание: смена выбранного раздела и отображение соответствующего экрана.
-  Факт: остаётся экран Collections. Подтверждено UI-тестом 2026-09-09; в коде
-  `NavigationRail` жёстко содержит `selectedIndex: 0` и не имеет
-  `onDestinationSelected`. Критерий готовности: добавить BLoC event/state для
-  раздела, экраны history/variables и widget-тесты переходов.
-- [ ] **QA-003 · Medium · Поиск Collections не выполняет поиск.** Введите
-  название сохранённого запроса в поле **Search**. Ожидание: список сразу
-  фильтруется. Факт: поле визуально присутствует, но не привязано к состоянию
-  или фильтрации; `TextField` не имеет `onChanged`. Критерий готовности:
-  добавить debounce-free BLoC search event, фильтрацию без потери исходных
-  коллекций и widget-тесты для совпадения/пустого результата.
-- [ ] **QA-004 · Medium · Environment picker и Settings — неинтерактивные
-  заглушки.** В верхней панели показаны **No environment** и шестерёнка, но
-  это `Container`/`Icon` без обработчиков. Критерий готовности: либо скрыть
-  элементы до реализации, либо открыть работающие выбор environment/settings
-  через BLoC и покрыть пользовательский сценарий тестом.
 
 ### HTTP execution
 
@@ -176,6 +158,14 @@
   через GitHub Actions для macOS (Apple Silicon и Intel), Windows и Linux,
   включая безопасное прохождение Gatekeeper/SmartScreen и текущие ограничения
   ранней версии.
+- QA-002 закрыт: выбранный раздел workspace хранится в immutable BLoC state;
+  NavigationRail dispatches typed event, а History и Variables показывают свои
+  экраны. BLoC и widget-тесты покрывают переходы.
+- QA-003 закрыт: Search dispatches debounce-free BLoC event и отображает
+  derived-фильтр collections/requests без изменения исходных данных. BLoC и
+  widget-тесты покрывают совпадение, пустой результат и восстановление списка.
+- QA-004 закрыт: неготовые интерактивные Environment picker и Settings скрыты
+  до появления доменных BLoC flows; widget-тест подтверждает их отсутствие.
 
 ## Внешние блокеры проверки
 

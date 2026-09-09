@@ -64,4 +64,57 @@ void main() {
 
     expect(find.text('Health check •'), findsOneWidget);
   });
+
+  testWidgets('navigates to History and Variables through the workspace BLoC', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+
+    await tester.tap(find.text('History').first);
+    await tester.pump();
+    expect(find.text('No request history yet'), findsOneWidget);
+    expect(find.text('Getting started'), findsNothing);
+
+    await tester.tap(find.text('Variables').first);
+    await tester.pump();
+    expect(find.text('No variables yet'), findsOneWidget);
+  });
+
+  testWidgets('filters collections without losing the original list', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+
+    await tester.enterText(
+      find.byKey(const Key('collection-search-field')),
+      'create user',
+    );
+    await tester.pump();
+    expect(find.text('Create user'), findsNWidgets(2));
+    expect(find.text('Health check'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('collection-search-field')),
+      'not found',
+    );
+    await tester.pump();
+    expect(find.text('Getting started'), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const Key('collection-search-field')),
+      '',
+    );
+    await tester.pump();
+    expect(find.text('Health check'), findsNWidgets(2));
+  });
+
+  testWidgets(
+    'hides environment and settings controls until their flows exist',
+    (tester) async {
+      await pumpApp(tester);
+
+      expect(find.text('No environment'), findsNothing);
+      expect(find.byIcon(Icons.settings_outlined), findsNothing);
+    },
+  );
 }
