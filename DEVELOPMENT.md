@@ -17,8 +17,35 @@
 ### Данные и редактор запросов
 
 - [ ] Реализовать auth form поверх локального request draft state.
-- [ ] Подключить UI к Rust через `flutter_rust_bridge`: collections, tabs,
-  request drafts и сохранение без прямого доступа Flutter к SQLite/HTTP.
+- [ ] **QA-001 · Critical · Send не выполняет HTTP-запрос.** В приложении
+  введите `GET https://httpbin.org/get` в открытую вкладку и нажмите **Send**.
+  Ожидание: BLoC запускает use case через `flutter_rust_bridge`, кнопка показывает
+  состояние выполнения, а в response viewer появляются status, headers и body.
+  Факт: обработчик кнопки пустой, response viewer остаётся placeholder.
+  Подтверждено ручным UI-тестом в macOS-пакете 2026-09-09: URL редактируется,
+  нажатие **Send** не меняет интерфейс, во вкладке Response остаётся текст
+  `Response will appear here`.
+  Критерий готовности: подключить UI к Rust через `flutter_rust_bridge` для
+  execution, collections, tabs, request drafts и сохранения без прямого доступа
+  Flutter к SQLite/HTTP; покрыть state transitions и success/error/cancel paths.
+- [ ] **QA-002 · High · History и Variables в боковой навигации не работают.**
+  В установленном macOS-приложении нажмите **History**, затем **Variables**.
+  Ожидание: смена выбранного раздела и отображение соответствующего экрана.
+  Факт: остаётся экран Collections. Подтверждено UI-тестом 2026-09-09; в коде
+  `NavigationRail` жёстко содержит `selectedIndex: 0` и не имеет
+  `onDestinationSelected`. Критерий готовности: добавить BLoC event/state для
+  раздела, экраны history/variables и widget-тесты переходов.
+- [ ] **QA-003 · Medium · Поиск Collections не выполняет поиск.** Введите
+  название сохранённого запроса в поле **Search**. Ожидание: список сразу
+  фильтруется. Факт: поле визуально присутствует, но не привязано к состоянию
+  или фильтрации; `TextField` не имеет `onChanged`. Критерий готовности:
+  добавить debounce-free BLoC search event, фильтрацию без потери исходных
+  коллекций и widget-тесты для совпадения/пустого результата.
+- [ ] **QA-004 · Medium · Environment picker и Settings — неинтерактивные
+  заглушки.** В верхней панели показаны **No environment** и шестерёнка, но
+  это `Container`/`Icon` без обработчиков. Критерий готовности: либо скрыть
+  элементы до реализации, либо открыть работающие выбор environment/settings
+  через BLoC и покрыть пользовательский сценарий тестом.
 
 ### HTTP execution
 
