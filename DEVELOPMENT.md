@@ -16,6 +16,17 @@
 
 ### Данные и редактор запросов
 
+- [ ] **QA-005 · Critical · Нельзя создать workspace или collection через UI.**
+  Откройте установленное macOS-приложение и пройдите раздел Collections.
+  Ожидание: пользователь может создать и выбрать workspace, а затем создать
+  collection для собственных запросов. Факт: экран содержит только заранее
+  заданную коллекцию `Getting started` с двумя демо-запросами; доступна
+  лишь кнопка новой вкладки-запроса, controls для создания workspace/collection
+  отсутствуют. Подтверждено ручным UI-тестом macOS-пакета 2026-09-09.
+  Критерий готовности: добавить доступный путь создания и выбора workspace и
+  collection с typed BLoC events и persistence через repository/gateway; после
+  перезапуска выбранная сущность и созданная collection сохраняются; покрыть
+  сценарии widget-тестами и повторить macOS UI smoke-test.
 - [ ] Реализовать auth form поверх локального request draft state.
 - [ ] **QA-001 · Critical · Send не выполняет HTTP-запрос.** В приложении
   введите `GET https://httpbin.org/get` в открытую вкладку и нажмите **Send**.
@@ -34,6 +45,11 @@
   `https://httpbin.org/get` Response показывает `HTTP transport failed: Connect`,
   хотя macOS `curl` получает HTTP 200. В работе native Rustls root-store fix;
   после него требуется повторный DMG smoke-test.
+  TLS fix проверен opt-in live Rust test: тот же engine получил HTTP 200 от
+  `https://httpbin.org/get`. UI automation доходит до Rust и показывает его
+  structured errors, но не генерирует Flutter `onChanged` при программной
+  вставке текста; финальная ручная проверка обычного ввода в `v0.1.3` остаётся
+  контрольным шагом.
   Критерий готовности: подключить UI к Rust через `flutter_rust_bridge` для
   execution, collections, tabs, request drafts и сохранения без прямого доступа
   Flutter к SQLite/HTTP; покрыть state transitions и success/error/cancel paths.

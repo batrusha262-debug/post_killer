@@ -975,4 +975,15 @@ mod tests {
         );
         assert_eq!(receiver.recv().await, None);
     }
+
+    /// Opt-in smoke test for the actual public internet. It is intentionally
+    /// ignored in CI; run it when diagnosing DNS/TLS behavior on a desktop.
+    #[tokio::test]
+    #[ignore = "requires outbound access to httpbin.org"]
+    async fn live_https_request_uses_the_host_certificate_store() {
+        let response = execute(request("https://httpbin.org/get".into()))
+            .await
+            .expect("HTTPS request to httpbin.org should succeed");
+        assert_eq!(response.status, 200);
+    }
 }
