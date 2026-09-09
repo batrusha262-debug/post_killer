@@ -1,42 +1,108 @@
 # Post Killer
 
-Local-first, cross-platform API client. Flutter renders the desktop/mobile
-interface; Rust owns request execution, local SQLite data and future secret
-storage. User HTTP requests never pass through a project-operated proxy.
+Post Killer — local-first desktop-клиент для работы с HTTP API, аналог Postman
+для macOS, Windows и Linux. Запросы выполняются на устройстве пользователя, а
+не проходят через сервер проекта или proxy.
 
-## Current capability
+## Зачем нужен
 
-- Rust workspace with shared request models.
-- SQLite migrations and CRUD for workspaces, collections, folders, requests and
-  environments.
-- HTTP MVP with Rustls, redirects, timeout, caller-owned cancellation, bounded
-  response streaming, JSON/text/form/text-multipart bodies and typed errors.
-- Basic, Bearer and API-key authentication; environment variable preview and
-  versioned persistence of request auth.
-- Privacy-safe execution history: timestamps, status, duration, response size
-  and error category only; never bodies, headers, URLs, cookies or credentials.
-- Flutter desktop shell is pending a working Flutter SDK installation.
+Используйте Post Killer для проверки API, сохранения коллекций запросов,
+исследования HTTP-ответов и повторного запуска запросов с разными query,
+headers и телом. Коллекции и история хранятся локально.
 
-The live feature status is in [DEVELOPMENT.md](DEVELOPMENT.md). Contributor and
-agent rules are in [CLAUDE.md](CLAUDE.md).
+## Функциональность сейчас
 
-## Rust quality checks
+- Desktop UI: collections, tabs, URL, HTTP method, Query, Headers и Body draft.
+- HTTP engine: Rustls TLS, redirects, timeout, bounded response, streaming и
+  caller-owned cancellation.
+- Request bodies: empty, text, JSON, form-url-encoded и text multipart.
+- Basic, Bearer и API-key authentication.
+- SQLite: workspace, collection, folder, request, environment и variables.
+- Privacy-safe history: только timestamp, status, duration, response size и
+  error category — без bodies, headers, URLs, cookies и credentials.
+- GitHub Actions выпускает unsigned macOS DMG, Windows setup EXE, Linux DEB и
+  AppImage artifacts.
+
+## Что пока не готово
+
+- Flutter ↔ Rust bridge ещё не подключён к UI: экран использует development
+  data adapter, а кнопка **Send** ещё не выполняет запрос.
+- Нет Postman/OpenAPI import/export, secure storage, file multipart, proxy,
+  custom CA, cookie jar, signing/notarization и auto-update.
+
+Полный актуальный backlog: [DEVELOPMENT.md](DEVELOPMENT.md).
+
+## Установка готового пакета
+
+В GitHub откройте **Actions → Release packages**, выберите успешный run и
+скачайте artifact для своей ОС. Пакеты пока unsigned, поэтому macOS и Windows
+могут показать системное предупреждение до появления code signing.
+
+### macOS
+
+1. Скачайте и распакуйте `post-killer-macos-dmg`.
+2. Откройте `Post-Killer-<version>-macos.dmg`.
+3. Перетащите `Post Killer.app` в `/Applications`.
+4. Если Gatekeeper блокирует запуск, подтвердите его в System Settings →
+   Privacy & Security.
+
+### Windows
+
+1. Скачайте и распакуйте `post-killer-windows-exe`.
+2. Запустите `Post-Killer-<version>-windows-setup.exe`.
+3. Пройдите установщик; ярлык появится в Start Menu, а при выборе опции — на
+   рабочем столе.
+
+### Linux
+
+```sh
+# Debian / Ubuntu
+sudo apt install ./post-killer_<version>_amd64.deb
+
+# AppImage
+chmod +x Post-Killer-<version>-linux-x86_64.AppImage
+./Post-Killer-<version>-linux-x86_64.AppImage
+```
+
+## Запуск из исходников на macOS
+
+Нужны Flutter SDK и полный Xcode:
+
+```sh
+sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -runFirstLaunch
+
+cd /Users/adt/Documents/ChatGPT/post_killer/apps/client_flutter
+/Users/adt/development/flutter/bin/flutter pub get
+/Users/adt/development/flutter/bin/flutter run -d macos
+```
+
+Создание локального DMG:
+
+```sh
+cd /Users/adt/Documents/ChatGPT/post_killer
+cd apps/client_flutter
+/Users/adt/development/flutter/bin/flutter build macos --release
+cd ../..
+bash packaging/macos/create_dmg.sh 0.1.0
+```
+
+Если Flutter не находит `xcodebuild`, установлены только Command Line Tools —
+установите полный Xcode из App Store.
+
+## Проверки для разработчиков
 
 ```sh
 cargo fmt --all --check
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
+make flutter-check
 ```
 
-The HTTP integration tests bind only to `127.0.0.1`; some restricted execution
-environments require local-network permission for that command.
+## Архитектура
 
-## Repository layout
+- Flutter: BLoC — `Event → Bloc → immutable State`.
+- Rust: Ports & Adapters — application use-cases зависят от traits, HTTP/SQLite
+  являются заменяемыми outbound adapters.
 
-```text
-crates/domain/          Shared request and collection models
-crates/storage_sqlite/  Versioned local persistence
-crates/http_engine/     Native HTTP execution engine
-crates/ffi_bridge/      Flutter-facing Rust API boundary
-docs/adr/               Architecture decisions
-```
+Подробности: [docs/adr](docs/adr/). Правила разработки: [CLAUDE.md](CLAUDE.md).
