@@ -15,6 +15,7 @@ class RequestEditor extends StatelessWidget {
     required this.onBodyChanged,
     required this.onAddQuery,
     required this.onAddHeader,
+    required this.onHeaderPreset,
     required this.onQueryChanged,
     required this.onHeaderChanged,
     required this.onSend,
@@ -28,6 +29,7 @@ class RequestEditor extends StatelessWidget {
   final ValueChanged<String> onBodyChanged;
   final VoidCallback onAddQuery;
   final VoidCallback onAddHeader;
+  final void Function(String, String) onHeaderPreset;
   final void Function(String, {String? key, String? value, bool? enabled})
   onQueryChanged;
   final void Function(String, {String? key, String? value, bool? enabled})
@@ -115,6 +117,8 @@ class RequestEditor extends StatelessWidget {
                         ),
                         KeyValueEditor(
                           values: tab.headers,
+                          isHeader: true,
+                          onHeaderPreset: onHeaderPreset,
                           emptyLabel: 'No headers',
                           onAdd: onAddHeader,
                           onChanged: onHeaderChanged,

@@ -106,6 +106,8 @@ class WorkspaceScreen extends StatelessWidget {
                   enabled: enabled,
                 ),
               ),
+              onHeaderPreset: (name, value) =>
+                  controller.add(WorkspaceHeaderPresetAdded(name, value)),
               onSend: () => controller.add(const WorkspaceRequestSent()),
             ),
           ),

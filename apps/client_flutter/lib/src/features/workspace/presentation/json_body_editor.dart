@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'json_syntax.dart';
+import 'json_editing.dart';
+
 class JsonBodyEditor extends StatefulWidget {
   const JsonBodyEditor({
     super.key,
@@ -18,13 +21,20 @@ class JsonBodyEditor extends StatefulWidget {
 }
 
 class JsonBodyEditorState extends State<JsonBodyEditor> {
-  late final _JsonSyntaxController _controller;
+  late final JsonSyntaxController _controller;
   String? _validationError;
+  late final FocusNode _focus;
+  final _scroll = ScrollController();
+  List<JsonCompletion> _completions = [];
+  int _highlighted = 0;
 
   @override
   void initState() {
     super.initState();
-    _controller = _JsonSyntaxController(text: widget.value);
+    _focus = FocusNode(onKeyEvent: _handleKey);
+    _controller = JsonSyntaxController(text: widget.value);
+    _controller.addListener(_refreshCompletions);
+    _focus.addListener(_refreshCompletions);
     _validate(widget.value);
   }
 
@@ -42,6 +52,10 @@ class JsonBodyEditorState extends State<JsonBodyEditor> {
 
   @override
   void dispose() {
+    _controller.removeListener(_refreshCompletions);
+    _focus.removeListener(_refreshCompletions);
+    _focus.dispose();
+    _scroll.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -77,19 +91,51 @@ class JsonBodyEditorState extends State<JsonBodyEditor> {
     }
   }
 
-  void _insertSuggestion(String suggestion) {
-    final selection = _controller.selection;
-    final start = selection.start < 0
-        ? _controller.text.length
-        : selection.start;
-    final end = selection.end < 0 ? start : selection.end;
-    final text = _controller.text.replaceRange(start, end, suggestion);
-    final cursor = start + suggestion.length;
-    _controller.value = TextEditingValue(
-      text: text,
-      selection: TextSelection.collapsed(offset: cursor),
-    );
-    _onChanged(text);
+  void _refreshCompletions() {
+    if (!mounted) return;
+    setState(() {
+      _completions = _focus.hasFocus ? jsonCompletions(_controller.value) : [];
+      _highlighted = 0;
+    });
+  }
+
+  void _complete(JsonCompletion completion) {
+    _controller.value = completion.apply(_controller.value);
+    _onChanged(_controller.text);
+    setState(() => _completions = []);
+    _focus.requestFocus();
+  }
+
+  KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (!_controller.value.composing.isCollapsed) return KeyEventResult.ignored;
+    if (event.logicalKey == LogicalKeyboardKey.tab) {
+      _controller.value = indentJson(
+        _controller.value,
+        outdent: HardwareKeyboard.instance.isShiftPressed,
+      );
+      _onChanged(_controller.text);
+      return KeyEventResult.handled;
+    }
+    if (_completions.isEmpty) return KeyEventResult.ignored;
+    if (event.logicalKey == LogicalKeyboardKey.escape) {
+      setState(() => _completions = []);
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown ||
+        event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      setState(
+        () => _highlighted =
+            (_highlighted +
+                (event.logicalKey == LogicalKeyboardKey.arrowDown ? 1 : -1)) %
+            _completions.length,
+      );
+    } else if (event.logicalKey == LogicalKeyboardKey.enter) {
+      _complete(_completions[_highlighted]);
+    } else {
+      return KeyEventResult.ignored;
+    }
+    return KeyEventResult.handled;
   }
 
   @override
@@ -125,117 +171,54 @@ class JsonBodyEditorState extends State<JsonBodyEditor> {
                 style: TextStyle(color: colors.error),
               ),
             ),
-          Wrap(
-            key: const Key('json-autocomplete'),
-            spacing: 6,
-            runSpacing: 4,
-            children: [
-              for (final suggestion in const [
-                '{}',
-                '[]',
-                'true',
-                'false',
-                'null',
-                '"key": ',
-                '"{{variable}}"',
-              ])
-                ActionChip(
-                  label: Text(suggestion),
-                  onPressed: () => _insertSuggestion(suggestion),
-                ),
-            ],
-          ),
           const SizedBox(height: 8),
           Expanded(
-            child: TextField(
-              key: const Key('json-body-editor'),
-              controller: _controller,
-              expands: true,
-              maxLines: null,
-              minLines: null,
-              keyboardType: TextInputType.multiline,
-              textAlignVertical: TextAlignVertical.top,
-              style: const TextStyle(fontFamily: 'monospace', height: 1.45),
-              inputFormatters: const [_JsonPairFormatter()],
-              decoration: const InputDecoration(
-                hintText: '{\n  "name": "Ada"\n}',
-                alignLabelWithHint: true,
-                border: OutlineInputBorder(),
+            child: Focus(
+              onKeyEvent: _handleKey,
+              child: LayoutBuilder(
+                builder: (context, constraints) => Stack(
+                  children: [
+                    TextField(
+                      key: const Key('json-body-editor'),
+                      controller: _controller,
+                      focusNode: _focus,
+                      scrollController: _scroll,
+                      expands: true,
+                      maxLines: null,
+                      minLines: null,
+                      keyboardType: TextInputType.multiline,
+                      textAlignVertical: TextAlignVertical.top,
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 14,
+                        height: 1.45,
+                      ),
+                      inputFormatters: const [JsonPairFormatter()],
+                      decoration: const InputDecoration(
+                        hintText: '{\n  "name": "Ada"\n}',
+                        hintStyle: TextStyle(color: Colors.grey),
+                        alignLabelWithHint: true,
+                        border: OutlineInputBorder(),
+                      ),
+                      onChanged: _onChanged,
+                    ),
+                    if (_completions.isNotEmpty)
+                      JsonCompletionMenu(
+                        value: _controller.value,
+                        scrollOffset: _scroll.hasClients ? _scroll.offset : 0,
+                        bounds: constraints.biggest,
+                        completions: _completions,
+                        highlighted: _highlighted,
+                        onSelected: _complete,
+                      ),
+                  ],
+                ),
               ),
-              onChanged: _onChanged,
             ),
           ),
         ],
       ),
     );
-  }
-}
-
-class _JsonPairFormatter extends TextInputFormatter {
-  const _JsonPairFormatter();
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    if (newValue.text.length != oldValue.text.length + 1 ||
-        newValue.selection.start < 1) {
-      return newValue;
-    }
-    final insertedAt = newValue.selection.start - 1;
-    final opener = newValue.text[insertedAt];
-    final closer = switch (opener) {
-      '{' => '}',
-      '[' => ']',
-      _ => null,
-    };
-    if (closer == null) return newValue;
-    return TextEditingValue(
-      text: newValue.text.replaceRange(insertedAt + 1, insertedAt + 1, closer),
-      selection: TextSelection.collapsed(offset: insertedAt + 1),
-    );
-  }
-}
-
-class _JsonSyntaxController extends TextEditingController {
-  _JsonSyntaxController({super.text});
-
-  static final _tokenPattern = RegExp(
-    r'"(?:\\.|[^"\\])*"|\b(?:true|false|null)\b|-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b',
-  );
-
-  @override
-  TextSpan buildTextSpan({
-    required BuildContext context,
-    TextStyle? style,
-    required bool withComposing,
-  }) {
-    final colors = Theme.of(context).colorScheme;
-    final children = <InlineSpan>[];
-    var cursor = 0;
-    for (final match in _tokenPattern.allMatches(text)) {
-      if (match.start > cursor) {
-        children.add(TextSpan(text: text.substring(cursor, match.start)));
-      }
-      final token = match.group(0)!;
-      final color = token.startsWith('"')
-          ? colors.primary
-          : token == 'true' || token == 'false' || token == 'null'
-          ? colors.tertiary
-          : colors.secondary;
-      children.add(
-        TextSpan(
-          text: token,
-          style: TextStyle(color: color),
-        ),
-      );
-      cursor = match.end;
-    }
-    if (cursor < text.length) {
-      children.add(TextSpan(text: text.substring(cursor)));
-    }
-    return TextSpan(style: style, children: children);
   }
 }
 

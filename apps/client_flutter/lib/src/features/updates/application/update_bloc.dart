@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../data/update_repository.dart';
+import '../data/github_release_gateway.dart';
 import '../domain/update_models.dart';
 
 sealed class UpdateEvent {
@@ -33,7 +34,10 @@ class UpdateAvailable extends UpdateState {
 }
 
 class UpdateCheckFailed extends UpdateState {
-  const UpdateCheckFailed();
+  const UpdateCheckFailed([
+    this.message = 'Не удалось проверить обновления. Попробуйте позже.',
+  ]);
+  final String message;
 }
 
 class UpdateBloc extends Bloc<UpdateEvent, UpdateState> {
@@ -56,6 +60,8 @@ class UpdateBloc extends Bloc<UpdateEvent, UpdateState> {
         case UpdateIsAvailable(:final update):
           emit(UpdateAvailable(update));
       }
+    } on UpdateLookupException catch (error) {
+      emit(UpdateCheckFailed(error.message));
     } on Object {
       emit(const UpdateCheckFailed());
     }

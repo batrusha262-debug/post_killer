@@ -14,11 +14,8 @@ class UpdateAction extends StatelessWidget {
       switch (state) {
         case UpdateCurrent():
           _showMessage(context, 'Установлена последняя версия.');
-        case UpdateCheckFailed():
-          _showMessage(
-            context,
-            'Не удалось проверить обновления. Попробуйте позже.',
-          );
+        case UpdateCheckFailed(:final message):
+          _showFailure(context, message);
         case UpdateAvailable(:final update):
           _showDownloadDialog(context, update);
         case UpdateIdle() || UpdateChecking():
@@ -65,6 +62,47 @@ class UpdateAction extends StatelessWidget {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
 
+  static Future<void> _showFailure(BuildContext context, String message) =>
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Проверка обновлений'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Закрыть'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _openUrl(
+                  context,
+                  Uri.parse(
+                    'https://github.com/batrusha262-debug/post_killer/releases',
+                  ),
+                );
+              },
+              child: const Text('Открыть релизы'),
+            ),
+          ],
+        ),
+      );
+
+  static Future<void> _openUrl(BuildContext context, Uri uri) async {
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && context.mounted) {
+        _showMessage(context, 'Не удалось открыть браузер.');
+      }
+    } on Object {
+      if (context.mounted) _showMessage(context, 'Не удалось открыть браузер.');
+    }
+  }
+
   static Future<void> _showDownloadDialog(
     BuildContext context,
     AppUpdate update,
@@ -84,13 +122,7 @@ class UpdateAction extends StatelessWidget {
         FilledButton(
           onPressed: () async {
             Navigator.of(dialogContext).pop();
-            final launched = await launchUrl(
-              update.downloadUri,
-              mode: LaunchMode.externalApplication,
-            );
-            if (!launched && context.mounted) {
-              _showMessage(context, 'Не удалось открыть загрузку в браузере.');
-            }
+            await _openUrl(context, update.downloadUri);
           },
           child: const Text('Скачать'),
         ),

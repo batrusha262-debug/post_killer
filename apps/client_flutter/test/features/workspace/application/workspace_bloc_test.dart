@@ -114,6 +114,32 @@ void main() {
     },
   );
 
+  blocTest<WorkspaceBloc, WorkspaceState>(
+    'header presets add one row and preserve an existing user value',
+    build: buildBloc,
+    act: (bloc) => bloc
+      ..add(
+        const WorkspaceHeaderPresetAdded('Content-Type', 'application/json'),
+      )
+      ..add(const WorkspaceHeaderPresetAdded('content-type', 'text/plain')),
+    verify: (bloc) {
+      expect(
+        bloc.state.selectedTab!.headers
+            .where((header) => header.key.toLowerCase() == 'content-type')
+            .single
+            .value,
+        'application/json',
+      );
+      expect(
+        bloc.state.selectedTab!.headers.any(
+          (header) =>
+              header.key == 'Accept' && header.value == 'application/json',
+        ),
+        isTrue,
+      );
+    },
+  );
+
   test('an execution result is visible only in its owning tab', () {
     final execution = RequestExecutionView.response(
       requestId: request.id,

@@ -108,7 +108,9 @@ void main() {
     expect(find.byKey(const Key('json-validation-error')), findsOneWidget);
     expect(find.text('Fix JSON to send'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ActionChip, 'true'));
+    await tester.enterText(editor, '{"enabled": tr');
+    await tester.pump();
+    await tester.tap(find.text('true'));
     await tester.pump();
     expect(
       tester.widget<TextField>(editor).controller!.text,

@@ -44,6 +44,16 @@ class HttpGitHubReleaseGateway implements GitHubReleaseGateway {
           },
         )
         .timeout(const Duration(seconds: 10));
+    if (response.statusCode == 404) {
+      throw const UpdateLookupException(
+        'Релизы недоступны без входа в GitHub или ещё не опубликованы. Откройте страницу релизов в браузере.',
+      );
+    }
+    if (response.statusCode == 403 || response.statusCode == 429) {
+      throw const UpdateLookupException(
+        'GitHub временно ограничил проверку обновлений. Повторите позже или откройте релизы в браузере.',
+      );
+    }
     if (response.statusCode != 200) {
       throw const UpdateLookupException();
     }
@@ -72,5 +82,8 @@ class HttpGitHubReleaseGateway implements GitHubReleaseGateway {
 }
 
 class UpdateLookupException implements Exception {
-  const UpdateLookupException();
+  const UpdateLookupException([
+    this.message = 'Не удалось проверить обновления. Проверьте соединение или откройте релизы в браузере.',
+  ]);
+  final String message;
 }

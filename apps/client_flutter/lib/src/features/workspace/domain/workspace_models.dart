@@ -48,7 +48,13 @@ class RequestTab {
     required this.method,
     required this.url,
     this.query = const [],
-    this.headers = const [],
+    this.headers = const [
+      RequestKeyValue(
+        id: 'header-accept',
+        key: 'Accept',
+        value: 'application/json',
+      ),
+    ],
     this.body = '',
     this.isDirty = false,
   });

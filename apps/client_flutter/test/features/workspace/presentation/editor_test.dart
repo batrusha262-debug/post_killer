@@ -1,0 +1,139 @@
+import 'package:client_flutter/src/features/workspace/presentation/json_body_editor.dart';
+import 'package:client_flutter/src/features/workspace/presentation/json_editing.dart';
+import 'package:client_flutter/src/features/workspace/presentation/json_syntax.dart';
+import 'package:client_flutter/src/features/workspace/presentation/response_view.dart';
+import 'package:client_flutter/src/features/workspace/domain/workspace_models.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('indent and outdent preserve selected lines and cursor', () {
+    const value = TextEditingValue(
+      text: 'a\nb',
+      selection: TextSelection(baseOffset: 0, extentOffset: 3),
+    );
+    final indented = indentJson(value);
+    expect(indented.text, '  a\n  b');
+    expect(indentJson(indented, outdent: true).text, value.text);
+    expect(
+      indentJson(
+        const TextEditingValue(
+          text: '\n',
+          selection: TextSelection.collapsed(offset: 0),
+        ),
+        outdent: true,
+      ).text,
+      '\n',
+    );
+  });
+  test(
+    'completion replaces a prefix and preserves the rest of the document',
+    () {
+      const value = TextEditingValue(
+        text: '{"ok": tr}',
+        selection: TextSelection.collapsed(offset: 9),
+      );
+      expect(jsonCompletions(value).single.apply(value).text, '{"ok": true}');
+      const key = TextEditingValue(
+        text: '{"na": 1}',
+        selection: TextSelection.collapsed(offset: 4),
+      );
+      expect(jsonCompletions(key).single.apply(key).text, '{"name": 1}');
+      expect(
+        jsonCompletions(
+          const TextEditingValue(
+            text: '{"value":"tr',
+            selection: TextSelection.collapsed(offset: 12),
+          ),
+        ),
+        isEmpty,
+      );
+    },
+  );
+  test('pair insertion does not alter braces inside strings', () {
+    const old = TextEditingValue(
+      text: '"',
+      selection: TextSelection.collapsed(offset: 1),
+    );
+    const next = TextEditingValue(
+      text: '"{',
+      selection: TextSelection.collapsed(offset: 2),
+    );
+    expect(const JsonPairFormatter().formatEditUpdate(old, next), next);
+  });
+  testWidgets(
+    'Tab inserts spaces, Shift Tab removes them and Enter accepts inline completion',
+    (tester) async {
+      var edited = '';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: JsonBodyEditor(value: '', onChanged: (text) => edited = text),
+          ),
+        ),
+      );
+      final field = find.byKey(const Key('json-body-editor'));
+      await tester.tap(field);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+      expect(edited, '  ');
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pump();
+      expect(edited, '');
+      await tester.enterText(field, '{"ok": tr');
+      await tester.pump();
+      expect(find.byKey(const Key('json-autocomplete')), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(edited, '{"ok": true');
+      expect(
+        tester.widget<TextField>(field).decoration!.hintStyle!.color,
+        Colors.grey,
+      );
+    },
+  );
+  testWidgets(
+    'response presents pretty JSON, raw body and headers separately',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ResponseView(
+              execution: RequestExecutionView.response(
+                requestId: 'one',
+                status: 200,
+                durationMillis: 12,
+                headers: const [
+                  RequestResponseHeader(
+                    name: 'content-type',
+                    value: 'application/json',
+                  ),
+                ],
+                body: '{"ok":true}',
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('HTTP 200'), findsOneWidget);
+      final pretty = tester.widget<SelectableText>(
+        find.byKey(const Key('response-content')),
+      );
+      expect(pretty.textSpan!.toPlainText(), '{\n  "ok": true\n}');
+      await tester.tap(find.text('Raw'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<SelectableText>(find.byKey(const Key('response-raw')))
+            .data,
+        '{"ok":true}',
+      );
+      await tester.tap(find.text('Headers (1)'));
+      await tester.pumpAndSettle();
+      expect(find.text('content-type'), findsOneWidget);
+    },
+  );
+}

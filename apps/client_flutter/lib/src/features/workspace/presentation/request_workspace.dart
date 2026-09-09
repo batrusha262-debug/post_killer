@@ -18,6 +18,7 @@ class RequestWorkspace extends StatelessWidget {
     required this.onBodyChanged,
     required this.onAddQuery,
     required this.onAddHeader,
+    required this.onHeaderPreset,
     required this.onQueryChanged,
     required this.onHeaderChanged,
     required this.onSend,
@@ -32,6 +33,7 @@ class RequestWorkspace extends StatelessWidget {
   final ValueChanged<String> onBodyChanged;
   final VoidCallback onAddQuery;
   final VoidCallback onAddHeader;
+  final void Function(String, String) onHeaderPreset;
   final void Function(String, {String? key, String? value, bool? enabled})
   onQueryChanged;
   final void Function(String, {String? key, String? value, bool? enabled})
@@ -80,6 +82,7 @@ class RequestWorkspace extends StatelessWidget {
                 onBodyChanged: onBodyChanged,
                 onAddQuery: onAddQuery,
                 onAddHeader: onAddHeader,
+                onHeaderPreset: onHeaderPreset,
                 onQueryChanged: onQueryChanged,
                 onHeaderChanged: onHeaderChanged,
                 onSend: onSend,

@@ -94,3 +94,9 @@ final class WorkspaceKeyValueChanged extends WorkspaceEvent {
   final String? value;
   final bool? enabled;
 }
+
+final class WorkspaceHeaderPresetAdded extends WorkspaceEvent {
+  const WorkspaceHeaderPresetAdded(this.name, this.value);
+  final String name;
+  final String value;
+}

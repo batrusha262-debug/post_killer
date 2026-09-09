@@ -1,3 +1,4 @@
+import 'package:client_flutter/src/features/updates/data/github_release_gateway.dart';
 import 'package:client_flutter/src/features/updates/application/update_bloc.dart';
 import 'package:client_flutter/src/features/updates/data/update_repository.dart';
 import 'package:client_flutter/src/features/updates/domain/update_models.dart';
@@ -7,6 +8,33 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('failed check explains the problem and offers release page', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: BlocProvider(
+            create: (_) => UpdateBloc(_PrivateReleaseRepository()),
+            child: const UpdateAction(),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('check-updates-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Нужен вход в GitHub'), findsOneWidget);
+    expect(find.text('Открыть релизы'), findsOneWidget);
+    await tester.tap(find.text('Закрыть'));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<IconButton>(find.byKey(const Key('check-updates-button')))
+          .onPressed,
+      isNotNull,
+    );
+  });
+
   testWidgets('exposes a named update button to accessibility services', (
     tester,
   ) async {
@@ -62,4 +90,10 @@ class _AvailableUpdateRepository implements UpdateRepository {
       ),
     ),
   );
+}
+
+class _PrivateReleaseRepository implements UpdateRepository {
+  @override
+  Future<UpdateCheckResult> checkForUpdate() async =>
+      throw const UpdateLookupException('Нужен вход в GitHub');
 }

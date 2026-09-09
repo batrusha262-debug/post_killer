@@ -1,3 +1,5 @@
+import 'header_presets.dart';
+
 import 'package:flutter/material.dart';
 
 import '../domain/workspace_models.dart';
@@ -6,11 +8,15 @@ class KeyValueEditor extends StatelessWidget {
   const KeyValueEditor({
     super.key,
     required this.values,
+    this.isHeader = false,
+    this.onHeaderPreset,
     required this.emptyLabel,
     required this.onAdd,
     required this.onChanged,
   });
   final List<RequestKeyValue> values;
+  final bool isHeader;
+  final void Function(String, String)? onHeaderPreset;
   final String emptyLabel;
   final VoidCallback onAdd;
   final void Function(String, {String? key, String? value, bool? enabled})
@@ -19,8 +25,11 @@ class KeyValueEditor extends StatelessWidget {
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(12),
     children: [
+      if (isHeader && onHeaderPreset != null)
+        HeaderPresets(onSelected: onHeaderPreset!),
       for (final entry in values)
         Row(
+          key: ValueKey(entry.id),
           children: [
             Checkbox(
               value: entry.enabled,

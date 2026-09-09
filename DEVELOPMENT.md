@@ -12,7 +12,7 @@
 
 ## Активный план
 
-- [ ] AUDIT-RELEASE: проверить публикацию v0.2.4 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
+- [ ] AUDIT-RELEASE: проверить публикацию v0.2.5 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
 
 ### Foundation
 
@@ -100,6 +100,22 @@
   пользователя через Vercel.
 
 ## Готово
+
+- EDITOR-UX (v0.2.5): Tab вставляет 2 пробела, Shift+Tab снимает отступ, в том
+  числе с выделенных строк. Серый placeholder Body; подсказки JSON keys/literals
+  рядом с курсором (↑/↓, Enter, Escape), без изменения текста внутри строк.
+  JSON syntax controller переиспользуется в редакторе и ответе. Response получил
+  Pretty JSON/Raw/Headers, status/time/size, syntax highlighting и Copy; ответы
+  больше 1 MiB показываются текстом без синхронного форматирования.
+  Default Accept: application/json и presets популярных headers без дублей;
+  Authorization preset выключен до заполнения. Updater показывает отдельные
+  ошибки 404/403/429 и кнопку открытия GitHub Releases; launch failures обработаны.
+  Flutter format/analyze clean, 39 tests passed. Rust/FFI не менялись.
+- Ограничение updater: автоматическое сравнение закрытых GitHub Releases
+  невозможно без доступа к API. Browser fallback использует вход пользователя;
+  токены в приложение не встраиваются. Нужен публичный feed либо отдельный
+  безопасный login flow для полноценной автоматической проверки.
+
 
 - RELEASE-APT: установка Linux build dependencies вынесена в
   `packaging/linux/install_dependencies.sh`. Оба вызова APT используют только

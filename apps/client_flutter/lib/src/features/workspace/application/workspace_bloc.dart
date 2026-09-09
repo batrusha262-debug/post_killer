@@ -71,6 +71,27 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         (tab) => tab.copyWith(body: event.body, isDirty: true),
       ),
     );
+    on<WorkspaceHeaderPresetAdded>(
+      (event, emit) => _updateSelected(emit, (tab) {
+        if (tab.headers.any(
+          (header) => header.key.toLowerCase() == event.name.toLowerCase(),
+        )) {
+          return tab;
+        }
+        return tab.copyWith(
+          headers: [
+            ...tab.headers,
+            RequestKeyValue(
+              id: 'preset-${event.name.toLowerCase()}',
+              key: event.name,
+              value: event.value,
+              enabled: event.name != 'Authorization',
+            ),
+          ],
+          isDirty: true,
+        );
+      }),
+    );
     on<WorkspaceKeyValueAdded>(_addKeyValue);
     on<WorkspaceKeyValueChanged>(_updateKeyValue);
     on<WorkspaceRequestSent>(_sendRequest);
