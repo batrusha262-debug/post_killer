@@ -12,7 +12,95 @@ use post_killer_http_engine::{
     ExecuteError, ExecutionOptions, RedirectPolicy, ReqwestRequestExecutor, ResponsePayload,
     TransportErrorKind,
 };
-use std::time::Duration;
+use post_killer_storage_sqlite::{Collection, Repository, SqliteStorage, Workspace};
+use std::{
+    path::PathBuf,
+    sync::{Mutex, OnceLock},
+    time::{Duration, SystemTime, UNIX_EPOCH},
+};
+
+static WORKSPACE_STORAGE: OnceLock<Result<Mutex<SqliteStorage>, String>> = OnceLock::new();
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FfiWorkspace {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FfiCollection {
+    pub id: String,
+    pub workspace_id: String,
+    pub name: String,
+}
+
+/// Lists persisted local workspaces. The database is owned exclusively by the
+/// Rust storage adapter; Flutter only receives owned DTOs through FRB.
+pub fn list_workspaces() -> Result<Vec<FfiWorkspace>, String> {
+    with_storage(|storage| storage.list_workspaces().map_err(|error| error.to_string()))
+        .map(|workspaces| workspaces.into_iter().map(Into::into).collect())
+}
+
+pub fn create_workspace(name: String) -> Result<FfiWorkspace, String> {
+    let name = name.trim().to_owned();
+    with_storage(|storage| {
+        storage
+            .create_workspace(next_id("workspace"), name)
+            .map_err(|error| error.to_string())
+    })
+    .map(Into::into)
+}
+
+pub fn list_collections(workspace_id: String) -> Result<Vec<FfiCollection>, String> {
+    with_storage(|storage| {
+        storage
+            .list_collections(&workspace_id)
+            .map_err(|error| error.to_string())
+    })
+    .map(|collections| collections.into_iter().map(Into::into).collect())
+}
+
+pub fn create_collection(workspace_id: String, name: String) -> Result<FfiCollection, String> {
+    let name = name.trim().to_owned();
+    with_storage(|storage| {
+        storage
+            .create_collection(next_id("collection"), workspace_id, name)
+            .map_err(|error| error.to_string())
+    })
+    .map(Into::into)
+}
+
+fn with_storage<T>(
+    operation: impl FnOnce(&mut SqliteStorage) -> Result<T, String>,
+) -> Result<T, String> {
+    let storage = WORKSPACE_STORAGE.get_or_init(|| {
+        let directory = app_data_directory()?;
+        std::fs::create_dir_all(&directory)
+            .map_err(|error| format!("cannot create local data directory: {error}"))?;
+        SqliteStorage::open(directory.join("post-killer.sqlite3"))
+            .map(Mutex::new)
+            .map_err(|error| format!("cannot open local workspace storage: {error}"))
+    });
+    let storage = storage.as_ref().map_err(Clone::clone)?;
+    let mut storage = storage
+        .lock()
+        .map_err(|_| "local workspace storage is unavailable".to_owned())?;
+    operation(&mut storage)
+}
+
+fn app_data_directory() -> Result<PathBuf, String> {
+    dirs_next::data_local_dir()
+        .map(|directory| directory.join("Post Killer"))
+        .ok_or_else(|| "cannot resolve the local application data directory".to_owned())
+}
+
+fn next_id(prefix: &str) -> String {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .unwrap_or_default();
+    format!("{prefix}-{nanos}")
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FfiRequestMethod {
@@ -325,6 +413,25 @@ impl From<FfiApiKeyPlacement> for ApiKeyPlacement {
         match value {
             FfiApiKeyPlacement::Header => Self::Header,
             FfiApiKeyPlacement::Query => Self::Query,
+        }
+    }
+}
+
+impl From<Workspace> for FfiWorkspace {
+    fn from(value: Workspace) -> Self {
+        Self {
+            id: value.id,
+            name: value.name,
+        }
+    }
+}
+
+impl From<Collection> for FfiCollection {
+    fn from(value: Collection) -> Self {
+        Self {
+            id: value.id,
+            workspace_id: value.workspace_id,
+            name: value.name,
         }
     }
 }

@@ -15,7 +15,9 @@ flutter_rust_bridge = "=2.13.0"
 post-killer-domain = { path = "../domain" }
 post-killer-application = { path = "../application" }
 post-killer-http-engine = { path = "../http_engine" }
+post-killer-storage-sqlite = { path = "../storage_sqlite" }
 serde_json.workspace = true
+dirs-next = "2.0"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["io-util", "macros", "net", "rt-multi-thread"] }

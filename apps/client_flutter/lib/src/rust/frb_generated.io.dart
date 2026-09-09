@@ -13,13 +13,17 @@ import 'frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
-abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
-  RustLibApiImplPlatform({
+abstract class PostKillerRustLibApiImplPlatform
+    extends BaseApiImpl<PostKillerRustLibWire> {
+  PostKillerRustLibApiImplPlatform({
     required super.handler,
     required super.wire,
     required super.generalizedFrbRustBinding,
     required super.portManager,
   });
+
+  @protected
+  int dco_decode_CastedPrimitive_u_64(dynamic raw);
 
   @protected
   String dco_decode_String(dynamic raw);
@@ -45,10 +49,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_box_autoadd_u_32(dynamic raw);
 
   @protected
-  BigInt dco_decode_box_autoadd_u_64(dynamic raw);
+  FfiApiKeyPlacement dco_decode_ffi_api_key_placement(dynamic raw);
 
   @protected
-  FfiApiKeyPlacement dco_decode_ffi_api_key_placement(dynamic raw);
+  FfiCollection dco_decode_ffi_collection(dynamic raw);
 
   @protected
   FfiExecutionError dco_decode_ffi_execution_error(dynamic raw);
@@ -90,7 +94,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   FfiResponseHeader dco_decode_ffi_response_header(dynamic raw);
 
   @protected
+  FfiWorkspace dco_decode_ffi_workspace(dynamic raw);
+
+  @protected
   int dco_decode_i_32(dynamic raw);
+
+  @protected
+  List<FfiCollection> dco_decode_list_ffi_collection(dynamic raw);
 
   @protected
   List<FfiKeyValue> dco_decode_list_ffi_key_value(dynamic raw);
@@ -99,7 +109,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<FfiResponseHeader> dco_decode_list_ffi_response_header(dynamic raw);
 
   @protected
+  List<FfiWorkspace> dco_decode_list_ffi_workspace(dynamic raw);
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  int? dco_decode_opt_CastedPrimitive_u_64(dynamic raw);
 
   @protected
   String? dco_decode_opt_String(dynamic raw);
@@ -118,9 +134,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
 
   @protected
-  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw);
-
-  @protected
   int dco_decode_u_16(dynamic raw);
 
   @protected
@@ -134,6 +147,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void dco_decode_unit(dynamic raw);
+
+  @protected
+  int sse_decode_CastedPrimitive_u_64(SseDeserializer deserializer);
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
@@ -163,12 +179,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
-  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer);
-
-  @protected
   FfiApiKeyPlacement sse_decode_ffi_api_key_placement(
     SseDeserializer deserializer,
   );
+
+  @protected
+  FfiCollection sse_decode_ffi_collection(SseDeserializer deserializer);
 
   @protected
   FfiExecutionError sse_decode_ffi_execution_error(
@@ -226,7 +242,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  FfiWorkspace sse_decode_ffi_workspace(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  List<FfiCollection> sse_decode_list_ffi_collection(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<FfiKeyValue> sse_decode_list_ffi_key_value(SseDeserializer deserializer);
@@ -237,7 +261,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  List<FfiWorkspace> sse_decode_list_ffi_workspace(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  int? sse_decode_opt_CastedPrimitive_u_64(SseDeserializer deserializer);
 
   @protected
   String? sse_decode_opt_String(SseDeserializer deserializer);
@@ -256,9 +288,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
 
   @protected
-  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer);
-
-  @protected
   int sse_decode_u_16(SseDeserializer deserializer);
 
   @protected
@@ -272,6 +301,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
+  void sse_encode_CastedPrimitive_u_64(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
@@ -307,13 +339,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
 
   @protected
-  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer);
-
-  @protected
   void sse_encode_ffi_api_key_placement(
     FfiApiKeyPlacement self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_ffi_collection(FfiCollection self, SseSerializer serializer);
 
   @protected
   void sse_encode_ffi_execution_error(
@@ -388,7 +420,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_ffi_workspace(FfiWorkspace self, SseSerializer serializer);
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_ffi_collection(
+    List<FfiCollection> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_ffi_key_value(
@@ -403,10 +444,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  void sse_encode_list_ffi_workspace(
+    List<FfiWorkspace> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_opt_CastedPrimitive_u_64(int? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_String(String? self, SseSerializer serializer);
@@ -427,9 +477,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);
 
   @protected
-  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer);
-
-  @protected
   void sse_encode_u_16(int self, SseSerializer serializer);
 
   @protected
@@ -447,15 +494,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
 // Section: wire_class
 
-class RustLibWire implements BaseWire {
-  factory RustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
-      RustLibWire(lib.ffiDynamicLibrary);
+class PostKillerRustLibWire implements BaseWire {
+  factory PostKillerRustLibWire.fromExternalLibrary(ExternalLibrary lib) =>
+      PostKillerRustLibWire(lib.ffiDynamicLibrary);
 
   /// Holds the symbol lookup function.
   final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
   _lookup;
 
   /// The symbols are looked up in [dynamicLibrary].
-  RustLibWire(ffi.DynamicLibrary dynamicLibrary)
+  PostKillerRustLibWire(ffi.DynamicLibrary dynamicLibrary)
     : _lookup = dynamicLibrary.lookup;
 }

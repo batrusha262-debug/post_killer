@@ -13,6 +13,25 @@ final class WorkspaceTabSelected extends WorkspaceEvent {
   final String id;
 }
 
+final class WorkspaceBootstrapRequested extends WorkspaceEvent {
+  const WorkspaceBootstrapRequested();
+}
+
+final class WorkspaceSelected extends WorkspaceEvent {
+  const WorkspaceSelected(this.id);
+  final String id;
+}
+
+final class WorkspaceCreateRequested extends WorkspaceEvent {
+  const WorkspaceCreateRequested(this.name);
+  final String name;
+}
+
+final class CollectionCreateRequested extends WorkspaceEvent {
+  const CollectionCreateRequested(this.name);
+  final String name;
+}
+
 final class WorkspaceSectionSelected extends WorkspaceEvent {
   const WorkspaceSectionSelected(this.section);
   final WorkspaceSection section;
@@ -77,9 +96,26 @@ final class WorkspaceKeyValueChanged extends WorkspaceEvent {
 }
 
 class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
-  WorkspaceBloc(WorkspaceRepository repository, {RequestExecutor? executor})
-    : _executor = executor ?? const UnavailableRequestExecutor(),
-      super(repository.loadInitialWorkspace()) {
+  WorkspaceBloc(
+    WorkspaceRepository repository, {
+    RequestExecutor? executor,
+    WorkspaceState? initialState,
+    bool autoBootstrap = true,
+  }) : _repository = repository,
+       _executor = executor ?? const UnavailableRequestExecutor(),
+       super(
+         initialState ??
+             const WorkspaceState(
+               collections: [],
+               tabs: [],
+               selectedTabId: null,
+               isLoading: true,
+             ),
+       ) {
+    on<WorkspaceBootstrapRequested>(_bootstrap);
+    on<WorkspaceSelected>(_selectWorkspace);
+    on<WorkspaceCreateRequested>(_createWorkspace);
+    on<CollectionCreateRequested>(_createCollection);
     on<WorkspaceTabSelected>((event, emit) {
       if (state.tabs.any((tab) => tab.id == event.id)) {
         emit(state.copyWith(selectedTabId: event.id));
@@ -125,11 +161,135 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     on<WorkspaceKeyValueAdded>(_addKeyValue);
     on<WorkspaceKeyValueChanged>(_updateKeyValue);
     on<WorkspaceRequestSent>(_sendRequest);
+    if (autoBootstrap) add(const WorkspaceBootstrapRequested());
   }
 
+  final WorkspaceRepository _repository;
   final RequestExecutor _executor;
 
   var _untitledCounter = 0;
+
+  Future<void> _bootstrap(
+    WorkspaceBootstrapRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    try {
+      final workspaces = await _repository.listWorkspaces();
+      if (workspaces.isEmpty) {
+        emit(
+          state.copyWith(
+            workspaces: const [],
+            collections: const [],
+            isLoading: false,
+          ),
+        );
+        return;
+      }
+      final selected = workspaces.first;
+      final collections = await _repository.listCollections(selected.id);
+      final tabs = [
+        for (final collection in collections)
+          for (final request in collection.requests)
+            RequestTab.fromSaved(request),
+      ];
+      emit(
+        state.copyWith(
+          workspaces: workspaces,
+          selectedWorkspaceId: selected.id,
+          collections: collections,
+          tabs: tabs,
+          selectedTabId: tabs.isEmpty ? state.selectedTabId : tabs.first.id,
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось открыть локальное хранилище.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _selectWorkspace(
+    WorkspaceSelected event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    if (!state.workspaces.any((workspace) => workspace.id == event.id)) return;
+    emit(state.copyWith(isLoading: true));
+    try {
+      final collections = await _repository.listCollections(event.id);
+      emit(
+        state.copyWith(
+          selectedWorkspaceId: event.id,
+          collections: collections,
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось загрузить collections.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _createWorkspace(
+    WorkspaceCreateRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    if (event.name.trim().isEmpty) return;
+    emit(state.copyWith(isLoading: true));
+    try {
+      final workspace = await _repository.createWorkspace(event.name);
+      emit(
+        state.copyWith(
+          workspaces: [...state.workspaces, workspace],
+          selectedWorkspaceId: workspace.id,
+          collections: const [],
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось создать workspace.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _createCollection(
+    CollectionCreateRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    final workspaceId = state.selectedWorkspaceId;
+    if (workspaceId == null || event.name.trim().isEmpty) return;
+    emit(state.copyWith(isLoading: true));
+    try {
+      final collection = await _repository.createCollection(
+        workspaceId: workspaceId,
+        name: event.name,
+      );
+      emit(
+        state.copyWith(
+          collections: [...state.collections, collection],
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось создать collection.',
+        ),
+      );
+    }
+  }
 
   void _createRequest(
     WorkspaceRequestCreated event,
@@ -154,11 +314,15 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         : state.selectedTabId;
     emit(
       WorkspaceState(
+        workspaces: state.workspaces,
+        selectedWorkspaceId: state.selectedWorkspaceId,
         collections: state.collections,
         tabs: tabs,
         selectedTabId: selected,
         selectedSection: state.selectedSection,
         collectionSearchQuery: state.collectionSearchQuery,
+        isLoading: state.isLoading,
+        storageError: state.storageError,
       ),
     );
   }

@@ -6,8 +6,8 @@ import 'features/updates/application/update_bloc.dart';
 import 'features/updates/data/github_release_gateway.dart';
 import 'features/updates/data/update_repository.dart';
 import 'features/workspace/application/workspace_bloc.dart';
-import 'features/workspace/data/workspace_gateway.dart';
 import 'features/workspace/data/request_executor.dart';
+import 'features/workspace/data/workspace_gateway.dart';
 import 'features/workspace/data/workspace_repository.dart';
 import 'features/workspace/presentation/workspace_screen.dart';
 
@@ -45,7 +45,7 @@ class PostKillerApp extends StatelessWidget {
           BlocProvider(
             create: (_) => WorkspaceBloc(
               workspaceRepository ??
-                  GatewayWorkspaceRepository(const InMemoryWorkspaceGateway()),
+                  GatewayWorkspaceRepository(const FrbWorkspaceGateway()),
               executor: requestExecutor ?? const FrbRequestExecutor(),
             ),
           ),

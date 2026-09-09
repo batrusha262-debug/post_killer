@@ -20,6 +20,13 @@ class SavedRequest {
   final String url;
 }
 
+class WorkspaceSummary {
+  const WorkspaceSummary({required this.id, required this.name});
+
+  final String id;
+  final String name;
+}
+
 class RequestCollection {
   const RequestCollection({
     required this.id,
@@ -156,6 +163,8 @@ class RequestResponseHeader {
 
 class WorkspaceState {
   const WorkspaceState({
+    this.workspaces = const [],
+    this.selectedWorkspaceId,
     required this.collections,
     required this.tabs,
     required this.selectedTabId,
@@ -163,8 +172,12 @@ class WorkspaceState {
     this.collectionSearchQuery = '',
     this.isExecuting = false,
     this.execution,
+    this.isLoading = false,
+    this.storageError,
   });
 
+  final List<WorkspaceSummary> workspaces;
+  final String? selectedWorkspaceId;
   final List<RequestCollection> collections;
   final List<RequestTab> tabs;
   final String? selectedTabId;
@@ -172,6 +185,8 @@ class WorkspaceState {
   final String collectionSearchQuery;
   final bool isExecuting;
   final RequestExecutionView? execution;
+  final bool isLoading;
+  final String? storageError;
 
   /// A derived view so searching never replaces the repository-backed source.
   List<RequestCollection> get filteredCollections {
@@ -206,6 +221,8 @@ class WorkspaceState {
       execution?.requestId == selectedTabId ? execution : null;
 
   WorkspaceState copyWith({
+    List<WorkspaceSummary>? workspaces,
+    String? selectedWorkspaceId,
     List<RequestCollection>? collections,
     List<RequestTab>? tabs,
     String? selectedTabId,
@@ -213,7 +230,11 @@ class WorkspaceState {
     String? collectionSearchQuery,
     bool? isExecuting,
     RequestExecutionView? execution,
+    bool? isLoading,
+    String? storageError,
   }) => WorkspaceState(
+    workspaces: workspaces ?? this.workspaces,
+    selectedWorkspaceId: selectedWorkspaceId ?? this.selectedWorkspaceId,
     collections: collections ?? this.collections,
     tabs: tabs ?? this.tabs,
     selectedTabId: selectedTabId ?? this.selectedTabId,
@@ -221,5 +242,7 @@ class WorkspaceState {
     collectionSearchQuery: collectionSearchQuery ?? this.collectionSearchQuery,
     isExecuting: isExecuting ?? this.isExecuting,
     execution: execution ?? this.execution,
+    isLoading: isLoading ?? this.isLoading,
+    storageError: storageError ?? this.storageError,
   );
 }

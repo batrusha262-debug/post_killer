@@ -37,7 +37,25 @@ class WorkspaceScreen extends StatelessWidget {
             width: 260,
             child: switch (workspace.selectedSection) {
               WorkspaceSection.collections => _CollectionsPane(
+                workspaces: workspace.workspaces,
+                selectedWorkspaceId: workspace.selectedWorkspaceId,
                 collections: workspace.filteredCollections,
+                isLoading: workspace.isLoading,
+                error: workspace.storageError,
+                onWorkspaceSelected: (id) =>
+                    controller.add(WorkspaceSelected(id)),
+                onNewWorkspace: () => _showNameDialog(
+                  context,
+                  title: 'Новая workspace',
+                  onSubmit: (name) =>
+                      controller.add(WorkspaceCreateRequested(name)),
+                ),
+                onNewCollection: () => _showNameDialog(
+                  context,
+                  title: 'Новая collection',
+                  onSubmit: (name) =>
+                      controller.add(CollectionCreateRequested(name)),
+                ),
                 onSearchChanged: (query) =>
                     controller.add(WorkspaceCollectionSearchChanged(query)),
                 onOpenRequest: (request) =>
@@ -90,6 +108,45 @@ class WorkspaceScreen extends StatelessWidget {
       ),
     );
   }
+
+  static Future<void> _showNameDialog(
+    BuildContext context, {
+    required String title,
+    required ValueChanged<String> onSubmit,
+  }) async {
+    final controller = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          autofocus: true,
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Название'),
+          onSubmitted: (value) {
+            if (value.trim().isEmpty) return;
+            Navigator.of(dialogContext).pop();
+            onSubmit(value);
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Отмена'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (controller.text.trim().isEmpty) return;
+              Navigator.of(dialogContext).pop();
+              onSubmit(controller.text);
+            },
+            child: const Text('Создать'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+  }
 }
 
 class _PrimaryNavigation extends StatelessWidget {
@@ -127,13 +184,27 @@ class _PrimaryNavigation extends StatelessWidget {
 
 class _CollectionsPane extends StatelessWidget {
   const _CollectionsPane({
+    required this.workspaces,
+    required this.selectedWorkspaceId,
     required this.collections,
+    required this.isLoading,
+    required this.error,
+    required this.onWorkspaceSelected,
+    required this.onNewWorkspace,
+    required this.onNewCollection,
     required this.onSearchChanged,
     required this.onOpenRequest,
     required this.onNewRequest,
   });
 
+  final List<WorkspaceSummary> workspaces;
+  final String? selectedWorkspaceId;
   final List<RequestCollection> collections;
+  final bool isLoading;
+  final String? error;
+  final ValueChanged<String> onWorkspaceSelected;
+  final VoidCallback onNewWorkspace;
+  final VoidCallback onNewCollection;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<SavedRequest> onOpenRequest;
   final VoidCallback onNewRequest;
@@ -153,6 +224,18 @@ class _CollectionsPane extends StatelessWidget {
               ),
             ),
             IconButton(
+              key: const Key('new-workspace-button'),
+              tooltip: 'New workspace',
+              onPressed: onNewWorkspace,
+              icon: const Icon(Icons.workspaces_outline),
+            ),
+            IconButton(
+              key: const Key('new-collection-button'),
+              tooltip: 'New collection',
+              onPressed: selectedWorkspaceId == null ? null : onNewCollection,
+              icon: const Icon(Icons.create_new_folder_outlined),
+            ),
+            IconButton(
               key: const Key('new-request-button'),
               tooltip: 'New request',
               onPressed: onNewRequest,
@@ -161,6 +244,31 @@ class _CollectionsPane extends StatelessWidget {
           ],
         ),
       ),
+      if (workspaces.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: DropdownButtonFormField<String>(
+            initialValue: selectedWorkspaceId,
+            decoration: const InputDecoration(
+              labelText: 'Workspace',
+              isDense: true,
+            ),
+            items: [
+              for (final workspace in workspaces)
+                DropdownMenuItem(
+                  value: workspace.id,
+                  child: Text(workspace.name),
+                ),
+            ],
+            onChanged: isLoading
+                ? null
+                : (id) {
+                    if (id != null) onWorkspaceSelected(id);
+                  },
+          ),
+        ),
+      if (error case final message?)
+        Padding(padding: const EdgeInsets.all(12), child: Text(message)),
       Padding(
         padding: EdgeInsets.symmetric(horizontal: 12),
         child: TextField(
@@ -175,36 +283,40 @@ class _CollectionsPane extends StatelessWidget {
       ),
       const SizedBox(height: 8),
       Expanded(
-        child: ListView(
-          children: [
-            for (final collection in collections)
-              ExpansionTile(
-                initiallyExpanded: true,
-                leading: const Icon(Icons.folder_outlined, size: 20),
-                title: Text(collection.name),
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : workspaces.isEmpty
+            ? const Center(child: Text('Создайте первую workspace'))
+            : ListView(
                 children: [
-                  for (final request in collection.requests)
-                    ListTile(
-                      dense: true,
-                      key: Key('saved-request-${request.id}'),
-                      leading: SizedBox(
-                        width: 38,
-                        child: Text(
-                          request.method.label,
-                          style: TextStyle(
-                            color: _methodColor(context, request.method),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
+                  for (final collection in collections)
+                    ExpansionTile(
+                      initiallyExpanded: true,
+                      leading: const Icon(Icons.folder_outlined, size: 20),
+                      title: Text(collection.name),
+                      children: [
+                        for (final request in collection.requests)
+                          ListTile(
+                            dense: true,
+                            key: Key('saved-request-${request.id}'),
+                            leading: SizedBox(
+                              width: 38,
+                              child: Text(
+                                request.method.label,
+                                style: TextStyle(
+                                  color: _methodColor(context, request.method),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            title: Text(request.name),
+                            onTap: () => onOpenRequest(request),
                           ),
-                        ),
-                      ),
-                      title: Text(request.name),
-                      onTap: () => onOpenRequest(request),
+                      ],
                     ),
                 ],
               ),
-          ],
-        ),
       ),
     ],
   );

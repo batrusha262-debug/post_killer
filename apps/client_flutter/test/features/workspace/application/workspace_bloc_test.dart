@@ -13,6 +13,25 @@ void main() {
     url: 'https://example.test',
   );
 
+  WorkspaceBloc buildBloc({RequestExecutor? executor}) => WorkspaceBloc(
+    const _FakeWorkspaceRepository(request),
+    executor: executor,
+    autoBootstrap: false,
+    initialState: WorkspaceState(
+      workspaces: const [WorkspaceSummary(id: 'workspace', name: 'Workspace')],
+      selectedWorkspaceId: 'workspace',
+      collections: [
+        RequestCollection(
+          id: 'injected',
+          name: 'Injected',
+          requests: const [request],
+        ),
+      ],
+      tabs: [RequestTab.fromSaved(request)],
+      selectedTabId: request.id,
+    ),
+  );
+
   test('an execution result is visible only in its owning tab', () {
     final execution = RequestExecutionView.response(
       requestId: request.id,
@@ -46,7 +65,7 @@ void main() {
 
   blocTest<WorkspaceBloc, WorkspaceState>(
     'turns a user event into an immutable dirty draft state',
-    build: () => WorkspaceBloc(const _FakeWorkspaceRepository(request)),
+    build: buildBloc,
     act: (bloc) => bloc.add(const WorkspaceUrlChanged('https://changed.test')),
     expect: () => [
       isA<WorkspaceState>()
@@ -61,7 +80,7 @@ void main() {
 
   blocTest<WorkspaceBloc, WorkspaceState>(
     'creates a tab only in response to an explicit event',
-    build: () => WorkspaceBloc(const _FakeWorkspaceRepository(request)),
+    build: buildBloc,
     act: (bloc) => bloc.add(const WorkspaceRequestCreated()),
     expect: () => [
       isA<WorkspaceState>().having(
@@ -73,8 +92,28 @@ void main() {
   );
 
   blocTest<WorkspaceBloc, WorkspaceState>(
+    'creates a persisted collection for the selected workspace',
+    build: buildBloc,
+    act: (bloc) => bloc.add(const CollectionCreateRequested('Backend')),
+    expect: () => [
+      isA<WorkspaceState>().having(
+        (state) => state.isLoading,
+        'creating',
+        true,
+      ),
+      isA<WorkspaceState>()
+          .having((state) => state.isLoading, 'finished', false)
+          .having(
+            (state) => state.collections.last.name,
+            'new collection name',
+            'Backend',
+          ),
+    ],
+  );
+
+  blocTest<WorkspaceBloc, WorkspaceState>(
     'switches the active workspace section from a typed navigation event',
-    build: () => WorkspaceBloc(const _FakeWorkspaceRepository(request)),
+    build: buildBloc,
     act: (bloc) =>
         bloc.add(const WorkspaceSectionSelected(WorkspaceSection.history)),
     expect: () => [
@@ -88,7 +127,7 @@ void main() {
 
   blocTest<WorkspaceBloc, WorkspaceState>(
     'filters a derived collection view without replacing source collections',
-    build: () => WorkspaceBloc(const _FakeWorkspaceRepository(request)),
+    build: buildBloc,
     act: (bloc) => bloc.add(const WorkspaceCollectionSearchChanged('injected')),
     expect: () => [
       isA<WorkspaceState>()
@@ -103,10 +142,7 @@ void main() {
 
   blocTest<WorkspaceBloc, WorkspaceState>(
     'runs Send through the execution port and exposes its response state',
-    build: () => WorkspaceBloc(
-      const _FakeWorkspaceRepository(request),
-      executor: const _FakeRequestExecutor(),
-    ),
+    build: () => buildBloc(executor: const _FakeRequestExecutor()),
     act: (bloc) => bloc.add(const WorkspaceRequestSent()),
     expect: () => [
       isA<WorkspaceState>().having(
@@ -123,10 +159,7 @@ void main() {
 
   blocTest<WorkspaceBloc, WorkspaceState>(
     'recovers from a bridge exception without leaving Send disabled',
-    build: () => WorkspaceBloc(
-      const _FakeWorkspaceRepository(request),
-      executor: const _ThrowingRequestExecutor(),
-    ),
+    build: () => buildBloc(executor: const _ThrowingRequestExecutor()),
     act: (bloc) => bloc.add(const WorkspaceRequestSent()),
     expect: () => [
       isA<WorkspaceState>().having(
@@ -149,12 +182,27 @@ class _FakeWorkspaceRepository implements WorkspaceRepository {
   const _FakeWorkspaceRepository(this.request);
   final SavedRequest request;
   @override
-  WorkspaceState loadInitialWorkspace() => WorkspaceState(
-    collections: [
-      RequestCollection(id: 'injected', name: 'Injected', requests: [request]),
-    ],
-    tabs: [RequestTab.fromSaved(request)],
-    selectedTabId: request.id,
+  Future<List<WorkspaceSummary>> listWorkspaces() async => const [
+    WorkspaceSummary(id: 'workspace', name: 'Workspace'),
+  ];
+
+  @override
+  Future<List<RequestCollection>> listCollections(String workspaceId) async => [
+    RequestCollection(id: 'injected', name: 'Injected', requests: [request]),
+  ];
+
+  @override
+  Future<WorkspaceSummary> createWorkspace(String name) async =>
+      WorkspaceSummary(id: 'created-workspace', name: name);
+
+  @override
+  Future<RequestCollection> createCollection({
+    required String workspaceId,
+    required String name,
+  }) async => RequestCollection(
+    id: 'created-collection',
+    name: name,
+    requests: const [],
   );
 }
 

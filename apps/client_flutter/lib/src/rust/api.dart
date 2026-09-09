@@ -7,25 +7,70 @@ import 'frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `error`, `success`, `validation_field`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `try_from`, `try_from`
+// These functions are ignored because they are not marked as `pub`: `app_data_directory`, `error`, `next_id`, `success`, `validation_field`, `with_storage`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `try_from`, `try_from`
+
+/// Lists persisted local workspaces. The database is owned exclusively by the
+/// Rust storage adapter; Flutter only receives owned DTOs through FRB.
+Future<List<FfiWorkspace>> listWorkspaces() =>
+    PostKillerRustLib.instance.api.crateApiListWorkspaces();
+
+Future<FfiWorkspace> createWorkspace({required String name}) =>
+    PostKillerRustLib.instance.api.crateApiCreateWorkspace(name: name);
+
+Future<List<FfiCollection>> listCollections({required String workspaceId}) =>
+    PostKillerRustLib.instance.api.crateApiListCollections(
+      workspaceId: workspaceId,
+    );
+
+Future<FfiCollection> createCollection({
+  required String workspaceId,
+  required String name,
+}) => PostKillerRustLib.instance.api.crateApiCreateCollection(
+  workspaceId: workspaceId,
+  name: name,
+);
 
 /// Executes a request using conservative transport defaults. FRB maps this
 /// `async fn` to a Dart `Future<FfiExecutionOutcome>`.
 Future<FfiExecutionOutcome> executeRequest({required FfiRequest request}) =>
-    RustLib.instance.api.crateApiExecuteRequest(request: request);
+    PostKillerRustLib.instance.api.crateApiExecuteRequest(request: request);
 
 /// Executes with caller-controlled limits while retaining typed outcomes for
 /// expected validation and transport failures.
 Future<FfiExecutionOutcome> executeRequestWithOptions({
   required FfiRequest request,
   required FfiExecutionOptions options,
-}) => RustLib.instance.api.crateApiExecuteRequestWithOptions(
+}) => PostKillerRustLib.instance.api.crateApiExecuteRequestWithOptions(
   request: request,
   options: options,
 );
 
 enum FfiApiKeyPlacement { header, query }
+
+class FfiCollection {
+  final String id;
+  final String workspaceId;
+  final String name;
+
+  const FfiCollection({
+    required this.id,
+    required this.workspaceId,
+    required this.name,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ workspaceId.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiCollection &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          workspaceId == other.workspaceId &&
+          name == other.name;
+}
 
 class FfiExecutionError {
   final FfiExecutionErrorKind kind;
@@ -35,7 +80,7 @@ class FfiExecutionError {
 
   /// Optional editor field to focus, such as `url`, `header`, or `body`.
   final String? field;
-  final BigInt? limitBytes;
+  final int? limitBytes;
 
   const FfiExecutionError({
     required this.kind,
@@ -77,11 +122,11 @@ enum FfiExecutionErrorKind {
 }
 
 class FfiExecutionOptions {
-  final BigInt timeoutMillis;
+  final int timeoutMillis;
 
   /// `None` disables redirects; otherwise this is the maximum followed count.
   final int? maxRedirects;
-  final BigInt maxResponseBytes;
+  final int maxResponseBytes;
 
   const FfiExecutionOptions({
     required this.timeoutMillis,
@@ -90,7 +135,7 @@ class FfiExecutionOptions {
   });
 
   static Future<FfiExecutionOptions> default_() =>
-      RustLib.instance.api.crateApiFfiExecutionOptionsDefault();
+      PostKillerRustLib.instance.api.crateApiFfiExecutionOptionsDefault();
 
   @override
   int get hashCode =>
@@ -133,7 +178,7 @@ class FfiExecutionResponse {
   final List<FfiResponseHeader> headers;
   final Uint8List body;
   final String effectiveUrl;
-  final BigInt durationMillis;
+  final int durationMillis;
 
   const FfiExecutionResponse({
     required this.requestId,
@@ -334,4 +379,22 @@ class FfiResponseHeader {
           runtimeType == other.runtimeType &&
           name == other.name &&
           value == other.value;
+}
+
+class FfiWorkspace {
+  final String id;
+  final String name;
+
+  const FfiWorkspace({required this.id, required this.name});
+
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiWorkspace &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name;
 }

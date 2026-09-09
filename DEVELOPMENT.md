@@ -16,17 +16,18 @@
 
 ### Данные и редактор запросов
 
-- [ ] **QA-005 · Critical · Нельзя создать workspace или collection через UI.**
+- [x] **QA-005 · Critical · Нельзя создать workspace или collection через UI.**
   Откройте установленное macOS-приложение и пройдите раздел Collections.
   Ожидание: пользователь может создать и выбрать workspace, а затем создать
   collection для собственных запросов. Факт: экран содержит только заранее
   заданную коллекцию `Getting started` с двумя демо-запросами; доступна
   лишь кнопка новой вкладки-запроса, controls для создания workspace/collection
   отсутствуют. Подтверждено ручным UI-тестом macOS-пакета 2026-09-09.
-  Критерий готовности: добавить доступный путь создания и выбора workspace и
-  collection с typed BLoC events и persistence через repository/gateway; после
-  перезапуска выбранная сущность и созданная collection сохраняются; покрыть
-  сценарии widget-тестами и повторить macOS UI smoke-test.
+  Исправлено: добавлены controls для создания workspace/collection и выбора
+  workspace; typed BLoC events вызывают repository → FRB → Rust SQLite, который
+  хранится в системной app-data директории. BLoC и widget tests покрывают
+  загрузку и создание. Финальный macOS smoke-test нового DMG остаётся частью
+  QA-007 desktop E2E, поскольку локально отсутствует полный Xcode.
 - [ ] Реализовать auth form поверх локального request draft state.
 - [x] **QA-001 · Critical · Send не выполняет HTTP-запрос.** В приложении
   введите `GET https://httpbin.org/get` в открытую вкладку и нажмите **Send**.

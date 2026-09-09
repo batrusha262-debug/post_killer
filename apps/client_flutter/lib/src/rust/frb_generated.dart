@@ -15,15 +15,21 @@ import 'frb_generated.io.dart'
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Main entrypoint of the Rust API
-class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
+class PostKillerRustLib
+    extends
+        BaseEntrypoint<
+          PostKillerRustLibApi,
+          PostKillerRustLibApiImpl,
+          PostKillerRustLibWire
+        > {
   @internal
-  static final instance = RustLib._();
+  static final instance = PostKillerRustLib._();
 
-  RustLib._();
+  PostKillerRustLib._();
 
   /// Initialize flutter_rust_bridge
   static Future<void> init({
-    RustLibApi? api,
+    PostKillerRustLibApi? api,
     BaseHandler? handler,
     ExternalLibrary? externalLibrary,
     bool forceSameCodegenVersion = true,
@@ -38,7 +44,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   /// Initialize flutter_rust_bridge in mock mode.
   /// No libraries for FFI are loaded.
-  static void initMock({required RustLibApi api}) {
+  static void initMock({required PostKillerRustLibApi api}) {
     instance.initMockImpl(api: api);
   }
 
@@ -49,12 +55,12 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   static void dispose() => instance.disposeImpl();
 
   @override
-  ApiImplConstructor<RustLibApiImpl, RustLibWire> get apiImplConstructor =>
-      RustLibApiImpl.new;
+  ApiImplConstructor<PostKillerRustLibApiImpl, PostKillerRustLibWire>
+  get apiImplConstructor => PostKillerRustLibApiImpl.new;
 
   @override
-  WireConstructor<RustLibWire> get wireConstructor =>
-      RustLibWire.fromExternalLibrary;
+  WireConstructor<PostKillerRustLibWire> get wireConstructor =>
+      PostKillerRustLibWire.fromExternalLibrary;
 
   @override
   Future<void> executeRustInitializers() async {}
@@ -67,7 +73,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1701565116;
+  int get rustContentHash => -22269857;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -78,7 +84,14 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       );
 }
 
-abstract class RustLibApi extends BaseApi {
+abstract class PostKillerRustLibApi extends BaseApi {
+  Future<FfiCollection> crateApiCreateCollection({
+    required String workspaceId,
+    required String name,
+  });
+
+  Future<FfiWorkspace> crateApiCreateWorkspace({required String name});
+
   Future<FfiExecutionOutcome> crateApiExecuteRequest({
     required FfiRequest request,
   });
@@ -89,15 +102,84 @@ abstract class RustLibApi extends BaseApi {
   });
 
   Future<FfiExecutionOptions> crateApiFfiExecutionOptionsDefault();
+
+  Future<List<FfiCollection>> crateApiListCollections({
+    required String workspaceId,
+  });
+
+  Future<List<FfiWorkspace>> crateApiListWorkspaces();
 }
 
-class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
-  RustLibApiImpl({
+class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
+    implements PostKillerRustLibApi {
+  PostKillerRustLibApiImpl({
     required super.handler,
     required super.wire,
     required super.generalizedFrbRustBinding,
     required super.portManager,
   });
+
+  @override
+  Future<FfiCollection> crateApiCreateCollection({
+    required String workspaceId,
+    required String name,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(workspaceId, serializer);
+          sse_encode_String(name, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_ffi_collection,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiCreateCollectionConstMeta,
+        argValues: [workspaceId, name],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCreateCollectionConstMeta => const TaskConstMeta(
+    debugName: "create_collection",
+    argNames: ["workspaceId", "name"],
+  );
+
+  @override
+  Future<FfiWorkspace> crateApiCreateWorkspace({required String name}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(name, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_ffi_workspace,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiCreateWorkspaceConstMeta,
+        argValues: [name],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCreateWorkspaceConstMeta =>
+      const TaskConstMeta(debugName: "create_workspace", argNames: ["name"]);
 
   @override
   Future<FfiExecutionOutcome> crateApiExecuteRequest({
@@ -111,7 +193,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 1,
+            funcId: 3,
             port: port_,
           );
         },
@@ -143,7 +225,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 4,
             port: port_,
           );
         },
@@ -173,7 +255,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 5,
             port: port_,
           );
         },
@@ -193,6 +275,73 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         debugName: "ffi_execution_options_default",
         argNames: [],
       );
+
+  @override
+  Future<List<FfiCollection>> crateApiListCollections({
+    required String workspaceId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(workspaceId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_ffi_collection,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiListCollectionsConstMeta,
+        argValues: [workspaceId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiListCollectionsConstMeta => const TaskConstMeta(
+    debugName: "list_collections",
+    argNames: ["workspaceId"],
+  );
+
+  @override
+  Future<List<FfiWorkspace>> crateApiListWorkspaces() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_ffi_workspace,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiListWorkspacesConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiListWorkspacesConstMeta =>
+      const TaskConstMeta(debugName: "list_workspaces", argNames: []);
+
+  @protected
+  int dco_decode_CastedPrimitive_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError(
+      'Not implemented in this codec, please use the other one',
+    );
+  }
 
   @protected
   String dco_decode_String(dynamic raw) {
@@ -241,15 +390,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BigInt dco_decode_box_autoadd_u_64(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return dco_decode_u_64(raw);
-  }
-
-  @protected
   FfiApiKeyPlacement dco_decode_ffi_api_key_placement(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return FfiApiKeyPlacement.values[raw as int];
+  }
+
+  @protected
+  FfiCollection dco_decode_ffi_collection(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FfiCollection(
+      id: dco_decode_String(arr[0]),
+      workspaceId: dco_decode_String(arr[1]),
+      name: dco_decode_String(arr[2]),
+    );
   }
 
   @protected
@@ -262,7 +418,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       kind: dco_decode_ffi_execution_error_kind(arr[0]),
       message: dco_decode_String(arr[1]),
       field: dco_decode_opt_String(arr[2]),
-      limitBytes: dco_decode_opt_box_autoadd_u_64(arr[3]),
+      limitBytes: dco_decode_opt_CastedPrimitive_u_64(arr[3]),
     );
   }
 
@@ -279,9 +435,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 3)
       throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
     return FfiExecutionOptions(
-      timeoutMillis: dco_decode_u_64(arr[0]),
+      timeoutMillis: dco_decode_CastedPrimitive_u_64(arr[0]),
       maxRedirects: dco_decode_opt_box_autoadd_u_32(arr[1]),
-      maxResponseBytes: dco_decode_u_64(arr[2]),
+      maxResponseBytes: dco_decode_CastedPrimitive_u_64(arr[2]),
     );
   }
 
@@ -309,7 +465,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       headers: dco_decode_list_ffi_response_header(arr[2]),
       body: dco_decode_list_prim_u_8_strict(arr[3]),
       effectiveUrl: dco_decode_String(arr[4]),
-      durationMillis: dco_decode_u_64(arr[5]),
+      durationMillis: dco_decode_CastedPrimitive_u_64(arr[5]),
     );
   }
 
@@ -406,9 +562,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FfiWorkspace dco_decode_ffi_workspace(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return FfiWorkspace(
+      id: dco_decode_String(arr[0]),
+      name: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
   int dco_decode_i_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
+  }
+
+  @protected
+  List<FfiCollection> dco_decode_list_ffi_collection(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_collection).toList();
   }
 
   @protected
@@ -424,9 +598,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FfiWorkspace> dco_decode_list_ffi_workspace(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_workspace).toList();
+  }
+
+  @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  int? dco_decode_opt_CastedPrimitive_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_CastedPrimitive_u_64(raw);
   }
 
   @protected
@@ -460,12 +646,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BigInt? dco_decode_opt_box_autoadd_u_64(dynamic raw) {
-    // Codec=Dco (DartCObject based), see doc to use other codecs
-    return raw == null ? null : dco_decode_box_autoadd_u_64(raw);
-  }
-
-  @protected
   int dco_decode_u_16(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -493,6 +673,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void dco_decode_unit(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return;
+  }
+
+  @protected
+  int sse_decode_CastedPrimitive_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_u_64(deserializer);
+    return inner.toInt();
   }
 
   @protected
@@ -545,18 +732,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BigInt sse_decode_box_autoadd_u_64(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    return (sse_decode_u_64(deserializer));
-  }
-
-  @protected
   FfiApiKeyPlacement sse_decode_ffi_api_key_placement(
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_i_32(deserializer);
     return FfiApiKeyPlacement.values[inner];
+  }
+
+  @protected
+  FfiCollection sse_decode_ffi_collection(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_workspaceId = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    return FfiCollection(
+      id: var_id,
+      workspaceId: var_workspaceId,
+      name: var_name,
+    );
   }
 
   @protected
@@ -567,7 +761,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_kind = sse_decode_ffi_execution_error_kind(deserializer);
     var var_message = sse_decode_String(deserializer);
     var var_field = sse_decode_opt_String(deserializer);
-    var var_limitBytes = sse_decode_opt_box_autoadd_u_64(deserializer);
+    var var_limitBytes = sse_decode_opt_CastedPrimitive_u_64(deserializer);
     return FfiExecutionError(
       kind: var_kind,
       message: var_message,
@@ -590,9 +784,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_timeoutMillis = sse_decode_u_64(deserializer);
+    var var_timeoutMillis = sse_decode_CastedPrimitive_u_64(deserializer);
     var var_maxRedirects = sse_decode_opt_box_autoadd_u_32(deserializer);
-    var var_maxResponseBytes = sse_decode_u_64(deserializer);
+    var var_maxResponseBytes = sse_decode_CastedPrimitive_u_64(deserializer);
     return FfiExecutionOptions(
       timeoutMillis: var_timeoutMillis,
       maxRedirects: var_maxRedirects,
@@ -624,7 +818,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_headers = sse_decode_list_ffi_response_header(deserializer);
     var var_body = sse_decode_list_prim_u_8_strict(deserializer);
     var var_effectiveUrl = sse_decode_String(deserializer);
-    var var_durationMillis = sse_decode_u_64(deserializer);
+    var var_durationMillis = sse_decode_CastedPrimitive_u_64(deserializer);
     return FfiExecutionResponse(
       requestId: var_requestId,
       status: var_status,
@@ -739,9 +933,31 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FfiWorkspace sse_decode_ffi_workspace(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    return FfiWorkspace(id: var_id, name: var_name);
+  }
+
+  @protected
   int sse_decode_i_32(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getInt32();
+  }
+
+  @protected
+  List<FfiCollection> sse_decode_list_ffi_collection(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FfiCollection>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_collection(deserializer));
+    }
+    return ans_;
   }
 
   @protected
@@ -773,10 +989,35 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<FfiWorkspace> sse_decode_list_ffi_workspace(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FfiWorkspace>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_workspace(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  int? sse_decode_opt_CastedPrimitive_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_CastedPrimitive_u_64(deserializer));
+    } else {
+      return null;
+    }
   }
 
   @protected
@@ -828,17 +1069,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  BigInt? sse_decode_opt_box_autoadd_u_64(SseDeserializer deserializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    if (sse_decode_bool(deserializer)) {
-      return (sse_decode_box_autoadd_u_64(deserializer));
-    } else {
-      return null;
-    }
-  }
-
-  @protected
   int sse_decode_u_16(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint16();
@@ -865,6 +1095,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   void sse_decode_unit(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
+  }
+
+  @protected
+  void sse_encode_CastedPrimitive_u_64(int self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_64(sseEncodeCastedPrimitiveU64(self), serializer);
   }
 
   @protected
@@ -922,18 +1158,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  void sse_encode_box_autoadd_u_64(BigInt self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self, serializer);
-  }
-
-  @protected
   void sse_encode_ffi_api_key_placement(
     FfiApiKeyPlacement self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_ffi_collection(FfiCollection self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.workspaceId, serializer);
+    sse_encode_String(self.name, serializer);
   }
 
   @protected
@@ -945,7 +1183,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_ffi_execution_error_kind(self.kind, serializer);
     sse_encode_String(self.message, serializer);
     sse_encode_opt_String(self.field, serializer);
-    sse_encode_opt_box_autoadd_u_64(self.limitBytes, serializer);
+    sse_encode_opt_CastedPrimitive_u_64(self.limitBytes, serializer);
   }
 
   @protected
@@ -963,9 +1201,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_u_64(self.timeoutMillis, serializer);
+    sse_encode_CastedPrimitive_u_64(self.timeoutMillis, serializer);
     sse_encode_opt_box_autoadd_u_32(self.maxRedirects, serializer);
-    sse_encode_u_64(self.maxResponseBytes, serializer);
+    sse_encode_CastedPrimitive_u_64(self.maxResponseBytes, serializer);
   }
 
   @protected
@@ -992,7 +1230,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_list_ffi_response_header(self.headers, serializer);
     sse_encode_list_prim_u_8_strict(self.body, serializer);
     sse_encode_String(self.effectiveUrl, serializer);
-    sse_encode_u_64(self.durationMillis, serializer);
+    sse_encode_CastedPrimitive_u_64(self.durationMillis, serializer);
   }
 
   @protected
@@ -1081,9 +1319,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_ffi_workspace(FfiWorkspace self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.name, serializer);
+  }
+
+  @protected
   void sse_encode_i_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putInt32(self);
+  }
+
+  @protected
+  void sse_encode_list_ffi_collection(
+    List<FfiCollection> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_collection(item, serializer);
+    }
   }
 
   @protected
@@ -1111,6 +1368,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_ffi_workspace(
+    List<FfiWorkspace> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_workspace(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
     SseSerializer serializer,
@@ -1118,6 +1387,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_opt_CastedPrimitive_u_64(
+    int? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_CastedPrimitive_u_64(self, serializer);
+    }
   }
 
   @protected
@@ -1163,16 +1445,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_u_32(self, serializer);
-    }
-  }
-
-  @protected
-  void sse_encode_opt_box_autoadd_u_64(BigInt? self, SseSerializer serializer) {
-    // Codec=Sse (Serialization based), see doc to use other codecs
-
-    sse_encode_bool(self != null, serializer);
-    if (self != null) {
-      sse_encode_box_autoadd_u_64(self, serializer);
     }
   }
 

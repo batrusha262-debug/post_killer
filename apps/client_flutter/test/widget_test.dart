@@ -1,5 +1,6 @@
 import 'package:client_flutter/src/app.dart';
 import 'package:client_flutter/src/features/workspace/data/request_executor.dart';
+import 'package:client_flutter/src/features/workspace/data/workspace_repository.dart';
 import 'package:client_flutter/src/features/workspace/domain/workspace_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,7 +14,13 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(PostKillerApp(requestExecutor: requestExecutor));
+    await tester.pumpWidget(
+      PostKillerApp(
+        workspaceRepository: const _WidgetWorkspaceRepository(),
+        requestExecutor: requestExecutor,
+      ),
+    );
+    await tester.pumpAndSettle();
   }
 
   testWidgets('shows desktop workspace with collection and active request', (
@@ -150,4 +157,47 @@ class _ValidationErrorExecutor implements RequestExecutor {
         requestId: request.id,
         error: 'invalid request: request URL must not be empty',
       );
+}
+
+class _WidgetWorkspaceRepository implements WorkspaceRepository {
+  const _WidgetWorkspaceRepository();
+
+  @override
+  Future<List<WorkspaceSummary>> listWorkspaces() async => const [
+    WorkspaceSummary(id: 'workspace', name: 'Workspace'),
+  ];
+
+  @override
+  Future<List<RequestCollection>> listCollections(String workspaceId) async =>
+      const [
+        RequestCollection(
+          id: 'starter',
+          name: 'Getting started',
+          requests: [
+            SavedRequest(
+              id: 'health-check',
+              name: 'Health check',
+              method: HttpMethod.get,
+              url: 'https://api.example.com/health',
+            ),
+            SavedRequest(
+              id: 'create-user',
+              name: 'Create user',
+              method: HttpMethod.post,
+              url: 'https://api.example.com/users',
+            ),
+          ],
+        ),
+      ];
+
+  @override
+  Future<WorkspaceSummary> createWorkspace(String name) async =>
+      WorkspaceSummary(id: 'new-workspace', name: name);
+
+  @override
+  Future<RequestCollection> createCollection({
+    required String workspaceId,
+    required String name,
+  }) async =>
+      RequestCollection(id: 'new-collection', name: name, requests: const []);
 }
