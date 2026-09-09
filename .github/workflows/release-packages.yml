@@ -61,7 +61,8 @@ jobs:
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
-      - run: sudo apt-get update && sudo apt-get install --yes clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - name: Install Linux build dependencies from Ubuntu repositories
+        run: bash packaging/linux/install_dependencies.sh
       - working-directory: apps/client_flutter
         run: |
           flutter pub get

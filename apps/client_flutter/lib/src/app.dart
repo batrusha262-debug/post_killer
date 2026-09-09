@@ -56,7 +56,7 @@ class PostKillerApp extends StatelessWidget {
                     gateway: HttpGitHubReleaseGateway(http.Client()),
                     currentVersion: const String.fromEnvironment(
                       'APP_VERSION',
-                      defaultValue: '0.2.3',
+                      defaultValue: '0.2.4',
                     ),
                   ),
             ),

@@ -12,7 +12,7 @@
 
 ## Активный план
 
-- [ ] AUDIT-RELEASE: проверить публикацию v0.2.3 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер.
+- [ ] AUDIT-RELEASE: проверить публикацию v0.2.4 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
 
 ### Foundation
 
@@ -100,6 +100,15 @@
   пользователя через Vercel.
 
 ## Готово
+
+- RELEASE-APT: установка Linux build dependencies вынесена в
+  `packaging/linux/install_dependencies.sh`. Оба вызова APT используют только
+  официальные Ubuntu jammy repositories с archive-keyring и retry; системные
+  sources не меняются, hash/signature checks не отключаются. Проверены `bash -n`,
+  `git diff --check` и запуск с подменённым sudo: параметры update/install,
+  список пакетов, остановка при ошибке update и очистка временного файла.
+  Реальная Ubuntu-установка и готовые пакеты требуют подтверждения release CI.
+
 
 - AUDIT-2026-09: выполнено Rust/Flutter ревью, декомпозированы монолитные файлы,
   устранены дубли HTTP construction, гонки workspace, ошибки поиска/nullable state,
