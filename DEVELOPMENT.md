@@ -25,6 +25,11 @@
   Подтверждено ручным UI-тестом в macOS-пакете 2026-09-09: URL редактируется,
   нажатие **Send** не меняет интерфейс, во вкладке Response остаётся текст
   `Response will appear here`.
+  Исправление реализовано в исходниках: BLoC вызывает data-layer executor,
+  generated `flutter_rust_bridge` bridge вызывает Rust Ports-and-Adapters core,
+  а Response умеет отображать loading/success/error. Flutter native-assets hook
+  успешно компилирует Rust library; Rust 34 tests и Flutter 12 tests проходят.
+  До переноса в «Готово» требуется ручная проверка нового macOS DMG `v0.1.2`.
   Критерий готовности: подключить UI к Rust через `flutter_rust_bridge` для
   execution, collections, tabs, request drafts и сохранения без прямого доступа
   Flutter к SQLite/HTTP; покрыть state transitions и success/error/cancel paths.
