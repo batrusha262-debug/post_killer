@@ -84,14 +84,48 @@ void main() {
     await pumpApp(tester);
 
     await tester.tap(find.text('Body'));
-    await tester.pump();
+    await tester.pumpAndSettle();
     await tester.enterText(
-      find.byType(TextFormField).last,
+      find.byKey(const Key('json-body-editor')),
       '{"enabled": true}',
     );
     await tester.pump();
 
     expect(find.text('Health check •'), findsOneWidget);
+  });
+
+  testWidgets('validates, formats and completes a JSON request body', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+
+    await tester.tap(find.text('Body'));
+    await tester.pumpAndSettle();
+    final editor = find.byKey(const Key('json-body-editor'));
+
+    await tester.enterText(editor, '{"enabled": ');
+    await tester.pump();
+    expect(find.byKey(const Key('json-validation-error')), findsOneWidget);
+    expect(find.text('Fix JSON to send'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ActionChip, 'true'));
+    await tester.pump();
+    expect(
+      tester.widget<TextField>(editor).controller!.text,
+      '{"enabled": true',
+    );
+
+    await tester.enterText(editor, '{"enabled": true}');
+    await tester.pump();
+    expect(find.byKey(const Key('json-validation-error')), findsNothing);
+    expect(find.text('Send'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('format-json-button')));
+    await tester.pump();
+    expect(
+      tester.widget<TextField>(editor).controller!.text,
+      '{\n  "enabled": true\n}',
+    );
   });
 
   testWidgets('navigates to History and Variables through the workspace BLoC', (

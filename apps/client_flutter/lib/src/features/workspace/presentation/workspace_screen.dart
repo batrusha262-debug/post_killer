@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 
 import '../../updates/presentation/update_action.dart';
 import '../application/workspace_bloc.dart';
@@ -558,89 +561,104 @@ class _RequestEditor extends StatelessWidget {
   final RequestExecutionView? execution;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(20),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            SizedBox(
-              width: 160,
-              child: DropdownButtonFormField<HttpMethod>(
-                key: const Key('method-picker'),
-                initialValue: tab.method,
-                decoration: const InputDecoration(isDense: true),
-                items: [
-                  for (final method in HttpMethod.values)
-                    DropdownMenuItem(value: method, child: Text(method.label)),
-                ],
-                onChanged: (method) {
-                  if (method != null) onMethodChanged(method);
-                },
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextFormField(
-                key: const Key('request-url-field'),
-                initialValue: tab.url,
-                onChanged: onUrlChanged,
-                decoration: const InputDecoration(
-                  isDense: true,
-                  hintText: 'https://api.example.com/resource',
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            FilledButton.icon(
-              onPressed: isExecuting ? null : onSend,
-              icon: const Icon(Icons.send, size: 17),
-              label: Text(isExecuting ? 'Sending…' : 'Send'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: DefaultTabController(
-            length: 4,
-            child: Column(
-              children: [
-                const TabBar(
-                  tabs: [
-                    Tab(text: 'Query'),
-                    Tab(text: 'Headers'),
-                    Tab(text: 'Body'),
-                    Tab(key: Key('response-tab'), text: 'Response'),
+  Widget build(BuildContext context) {
+    final isJsonValid = _isValidJson(tab.body);
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 160,
+                child: DropdownButtonFormField<HttpMethod>(
+                  key: const Key('method-picker'),
+                  initialValue: tab.method,
+                  decoration: const InputDecoration(isDense: true),
+                  items: [
+                    for (final method in HttpMethod.values)
+                      DropdownMenuItem(
+                        value: method,
+                        child: Text(method.label),
+                      ),
                   ],
+                  onChanged: (method) {
+                    if (method != null) onMethodChanged(method);
+                  },
                 ),
-                Expanded(
-                  child: TabBarView(
-                    children: [
-                      _KeyValueEditor(
-                        values: tab.query,
-                        emptyLabel: 'No query parameters',
-                        onAdd: onAddQuery,
-                        onChanged: onQueryChanged,
-                      ),
-                      _KeyValueEditor(
-                        values: tab.headers,
-                        emptyLabel: 'No headers',
-                        onAdd: onAddHeader,
-                        onChanged: onHeaderChanged,
-                      ),
-                      _BodyEditor(value: tab.body, onChanged: onBodyChanged),
-                      _ResponseView(execution: execution),
-                    ],
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextFormField(
+                  key: const Key('request-url-field'),
+                  initialValue: tab.url,
+                  onChanged: onUrlChanged,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    hintText: 'https://api.example.com/resource',
                   ),
                 ),
-              ],
+              ),
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                onPressed: isExecuting || !isJsonValid ? null : onSend,
+                icon: const Icon(Icons.send, size: 17),
+                label: Text(
+                  isExecuting
+                      ? 'Sending…'
+                      : isJsonValid
+                      ? 'Send'
+                      : 'Fix JSON to send',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: DefaultTabController(
+              length: 4,
+              child: Column(
+                children: [
+                  const TabBar(
+                    tabs: [
+                      Tab(text: 'Query'),
+                      Tab(text: 'Headers'),
+                      Tab(text: 'Body'),
+                      Tab(key: Key('response-tab'), text: 'Response'),
+                    ],
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        _KeyValueEditor(
+                          values: tab.query,
+                          emptyLabel: 'No query parameters',
+                          onAdd: onAddQuery,
+                          onChanged: onQueryChanged,
+                        ),
+                        _KeyValueEditor(
+                          values: tab.headers,
+                          emptyLabel: 'No headers',
+                          onAdd: onAddHeader,
+                          onChanged: onHeaderChanged,
+                        ),
+                        _JsonBodyEditor(
+                          value: tab.body,
+                          onChanged: onBodyChanged,
+                        ),
+                        _ResponseView(execution: execution),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
 
 class _KeyValueEditor extends StatelessWidget {
@@ -704,22 +722,246 @@ class _KeyValueEditor extends StatelessWidget {
   );
 }
 
-class _BodyEditor extends StatelessWidget {
-  const _BodyEditor({required this.value, required this.onChanged});
+class _JsonBodyEditor extends StatefulWidget {
+  const _JsonBodyEditor({required this.value, required this.onChanged});
+
   final String value;
   final ValueChanged<String> onChanged;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(12),
-    child: TextFormField(
-      initialValue: value,
-      maxLines: null,
-      expands: true,
-      textAlignVertical: TextAlignVertical.top,
-      decoration: const InputDecoration(hintText: 'Request body'),
-      onChanged: onChanged,
-    ),
+  State<_JsonBodyEditor> createState() => _JsonBodyEditorState();
+}
+
+class _JsonBodyEditorState extends State<_JsonBodyEditor> {
+  late final _JsonSyntaxController _controller;
+  String? _validationError;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = _JsonSyntaxController(text: widget.value);
+    _validate(widget.value);
+  }
+
+  @override
+  void didUpdateWidget(covariant _JsonBodyEditor oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != _controller.text) {
+      _controller.value = TextEditingValue(
+        text: widget.value,
+        selection: TextSelection.collapsed(offset: widget.value.length),
+      );
+      _validate(widget.value);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    _validate(value);
+    widget.onChanged(value);
+  }
+
+  void _validate(String value) {
+    String? error;
+    if (value.trim().isNotEmpty) {
+      try {
+        jsonDecode(value);
+      } on FormatException catch (exception) {
+        error = exception.message.toString();
+      }
+    }
+    if (mounted) setState(() => _validationError = error);
+  }
+
+  void _format() {
+    try {
+      final formatted = const JsonEncoder.withIndent('  ')
+          .convert(jsonDecode(_controller.text));
+      _controller.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+      _onChanged(formatted);
+    } on FormatException {
+      _validate(_controller.text);
+    }
+  }
+
+  void _insertSuggestion(String suggestion) {
+    final selection = _controller.selection;
+    final start = selection.start < 0
+        ? _controller.text.length
+        : selection.start;
+    final end = selection.end < 0 ? start : selection.end;
+    final text = _controller.text.replaceRange(start, end, suggestion);
+    final cursor = start + suggestion.length;
+    _controller.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: cursor),
+    );
+    _onChanged(text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text('JSON', style: Theme.of(context).textTheme.labelLarge),
+              const Spacer(),
+              TextButton.icon(
+                key: const Key('format-json-button'),
+                onPressed:
+                    _validationError == null &&
+                        _controller.text.trim().isNotEmpty
+                    ? _format
+                    : null,
+                icon: const Icon(Icons.auto_fix_high, size: 18),
+                label: const Text('Format'),
+              ),
+            ],
+          ),
+          if (_validationError case final error?)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Invalid JSON: $error',
+                key: const Key('json-validation-error'),
+                style: TextStyle(color: colors.error),
+              ),
+            ),
+          Wrap(
+            key: const Key('json-autocomplete'),
+            spacing: 6,
+            runSpacing: 4,
+            children: [
+              for (final suggestion in const [
+                '{}',
+                '[]',
+                'true',
+                'false',
+                'null',
+                '"key": ',
+                '"{{variable}}"',
+              ])
+                ActionChip(
+                  label: Text(suggestion),
+                  onPressed: () => _insertSuggestion(suggestion),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: TextField(
+              key: const Key('json-body-editor'),
+              controller: _controller,
+              expands: true,
+              maxLines: null,
+              minLines: null,
+              keyboardType: TextInputType.multiline,
+              textAlignVertical: TextAlignVertical.top,
+              style: const TextStyle(fontFamily: 'monospace', height: 1.45),
+              inputFormatters: const [_JsonPairFormatter()],
+              decoration: const InputDecoration(
+                hintText: '{\n  "name": "Ada"\n}',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(),
+              ),
+              onChanged: _onChanged,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _JsonPairFormatter extends TextInputFormatter {
+  const _JsonPairFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.length != oldValue.text.length + 1 ||
+        newValue.selection.start < 1) {
+      return newValue;
+    }
+    final insertedAt = newValue.selection.start - 1;
+    final opener = newValue.text[insertedAt];
+    final closer = switch (opener) {
+      '{' => '}',
+      '[' => ']',
+      _ => null,
+    };
+    if (closer == null) return newValue;
+    return TextEditingValue(
+      text: newValue.text.replaceRange(insertedAt + 1, insertedAt + 1, closer),
+      selection: TextSelection.collapsed(offset: insertedAt + 1),
+    );
+  }
+}
+
+class _JsonSyntaxController extends TextEditingController {
+  _JsonSyntaxController({super.text});
+
+  static final _tokenPattern = RegExp(
+    r'"(?:\\.|[^"\\])*"|\b(?:true|false|null)\b|-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b',
   );
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final colors = Theme.of(context).colorScheme;
+    final children = <InlineSpan>[];
+    var cursor = 0;
+    for (final match in _tokenPattern.allMatches(text)) {
+      if (match.start > cursor) {
+        children.add(TextSpan(text: text.substring(cursor, match.start)));
+      }
+      final token = match.group(0)!;
+      final color = token.startsWith('"')
+          ? colors.primary
+          : token == 'true' || token == 'false' || token == 'null'
+          ? colors.tertiary
+          : colors.secondary;
+      children.add(
+        TextSpan(
+          text: token,
+          style: TextStyle(color: color),
+        ),
+      );
+      cursor = match.end;
+    }
+    if (cursor < text.length) {
+      children.add(TextSpan(text: text.substring(cursor)));
+    }
+    return TextSpan(style: style, children: children);
+  }
+}
+
+bool _isValidJson(String value) {
+  if (value.trim().isEmpty) return true;
+  try {
+    jsonDecode(value);
+    return true;
+  } on FormatException {
+    return false;
+  }
 }
 
 class _ResponseView extends StatelessWidget {
