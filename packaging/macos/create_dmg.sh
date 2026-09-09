@@ -11,14 +11,11 @@ EXECUTABLE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP_
 EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/$EXECUTABLE_NAME"
 ARCHITECTURES="$(lipo -archs "$EXECUTABLE_PATH")"
 
-case " $ARCHITECTURES " in
-  *" arm64 "*" x86_64 "*) ;;
-  *)
-    echo "Expected a universal arm64 + x86_64 app, found: $ARCHITECTURES" >&2
-    echo "Build with: flutter build macos --release --macos-archs=arm64,x86_64" >&2
-    exit 1
-    ;;
-esac
+if [[ " $ARCHITECTURES " != *" arm64 "* || " $ARCHITECTURES " != *" x86_64 "* ]]; then
+  echo "Expected a universal arm64 + x86_64 app, found: $ARCHITECTURES" >&2
+  echo "Flutter macOS release builds include both architectures by default." >&2
+  exit 1
+fi
 
 mkdir -p dist
 hdiutil create -volname "Post Killer" -srcfolder "$APP_PATH" -ov -format UDZO "$OUTPUT"
