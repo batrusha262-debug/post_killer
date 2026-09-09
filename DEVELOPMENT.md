@@ -30,6 +30,10 @@
   а Response умеет отображать loading/success/error. Flutter native-assets hook
   успешно компилирует Rust library; Rust 34 tests и Flutter 12 tests проходят.
   До переноса в «Готово» требуется ручная проверка нового macOS DMG `v0.1.2`.
+  Ручная проверка `v0.1.2` выявила следующий transport blocker: при валидном
+  `https://httpbin.org/get` Response показывает `HTTP transport failed: Connect`,
+  хотя macOS `curl` получает HTTP 200. В работе native Rustls root-store fix;
+  после него требуется повторный DMG smoke-test.
   Критерий готовности: подключить UI к Rust через `flutter_rust_bridge` для
   execution, collections, tabs, request drafts и сохранения без прямого доступа
   Flutter к SQLite/HTTP; покрыть state transitions и success/error/cancel paths.
