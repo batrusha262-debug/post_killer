@@ -24,12 +24,16 @@ headers и телом. Коллекции и история хранятся л�
 - Privacy-safe history: только timestamp, status, duration, response size и
   error category — без bodies, headers, URLs, cookies и credentials.
 - GitHub Actions выпускает unsigned macOS DMG, Windows setup EXE, Linux DEB и
-  AppImage artifacts.
+  AppImage artifacts и прикрепляет их к GitHub Releases.
+- Кнопка обновления сверяет последнюю стабильную версию в GitHub Releases и по
+  подтверждению открывает подходящий файл для macOS, Windows или Linux.
 
 ## Что пока не готово
 
 - Нет Postman/OpenAPI import/export, secure storage, file multipart, proxy,
   custom CA, cookie jar, signing/notarization и auto-update.
+- Обновление пока не заменяет приложение само: после скачивания нужно выполнить
+  обычную установку с заменой текущей версии.
 - Создание workspace/collection и их сохранение через UI ещё в работе; текущие
   demo-коллекции служат для быстрого старта.
 

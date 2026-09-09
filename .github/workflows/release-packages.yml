@@ -25,7 +25,7 @@ jobs:
           flutter pub get
           # Flutter 3.47 selects macOS standard architectures through Xcode.
           # create_dmg.sh independently rejects a non-universal output.
-          flutter build macos --release
+          flutter build macos --release --build-name="${GITHUB_REF_NAME#v}" --build-number="$GITHUB_RUN_NUMBER" --dart-define="APP_VERSION=${GITHUB_REF_NAME#v}"
       - run: bash packaging/macos/create_dmg.sh "${GITHUB_REF_NAME#v}"
       - uses: actions/upload-artifact@v4
         with:
@@ -43,7 +43,8 @@ jobs:
       - working-directory: apps/client_flutter
         run: |
           flutter pub get
-          flutter build windows --release
+          $version = $env:GITHUB_REF_NAME -replace '^v',''
+          flutter build windows --release "--build-name=$version" "--build-number=$env:GITHUB_RUN_NUMBER" "--dart-define=APP_VERSION=$version"
       - run: choco install innosetup --no-progress --yes
       - shell: pwsh
         run: iscc "/DMyAppVersion=$($env:GITHUB_REF_NAME -replace '^v','')" packaging/windows/post_killer.iss
@@ -64,7 +65,7 @@ jobs:
       - working-directory: apps/client_flutter
         run: |
           flutter pub get
-          flutter build linux --release
+          flutter build linux --release --build-name="${GITHUB_REF_NAME#v}" --build-number="$GITHUB_RUN_NUMBER" --dart-define="APP_VERSION=${GITHUB_REF_NAME#v}"
       - run: |
           bash packaging/linux/build_deb.sh "${GITHUB_REF_NAME#v}"
           bash packaging/linux/build_appimage.sh "${GITHUB_REF_NAME#v}"
@@ -74,3 +75,18 @@ jobs:
           path: |
             dist/*.deb
             dist/*.AppImage
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos-dmg, windows-exe, linux-packages]
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-files
+          merge-multiple: true
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" release-files/* --generate-notes --verify-tag

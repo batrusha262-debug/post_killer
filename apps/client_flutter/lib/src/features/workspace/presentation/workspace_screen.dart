@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../updates/presentation/update_action.dart';
 import '../application/workspace_bloc.dart';
 import '../domain/workspace_models.dart';
 
@@ -22,6 +23,7 @@ class WorkspaceScreen extends StatelessWidget {
             Text('Post Killer'),
           ],
         ),
+        actions: const [UpdateAction(), SizedBox(width: 8)],
       ),
       body: Row(
         children: [

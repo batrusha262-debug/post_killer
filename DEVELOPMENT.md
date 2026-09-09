@@ -71,6 +71,12 @@
 
 ### Release
 
+- [x] Добавить cross-platform «Проверить обновления»: BLoC проверяет GitHub
+  Releases, показывает подходящий по ОС файл и открывает загрузку только после
+  явного подтверждения пользователя. Release workflow публикует DMG/EXE/DEB/
+  AppImage как постоянные GitHub Release assets, а не только временные Actions
+  artifacts. Автоматическая замена приложения отложена до code signing и
+  notarization.
 - [ ] GitHub Actions для macOS, Windows и Linux; signing/notarization.
 - [ ] Выполнить и проверить первый GitHub Actions packaging run: macOS `.app`/
   DMG, Windows `.exe`, Linux AppImage/DEB artifacts.
@@ -198,7 +204,7 @@
   UI показывает loading, status, response headers/body и безопасные ошибки.
   Результат привязан к вкладке, поэтому не отображается в другой вкладке;
   исключение bridge возвращает кнопку из loading. Релизные проверки: Rust
-  34 passed + 1 ignored, Flutter 14 passed, live HTTPS smoke-test HTTP 200.
+  34 passed + 1 ignored, Flutter 19 passed, live HTTPS smoke-test HTTP 200.
 
 ## Внешние блокеры проверки
 

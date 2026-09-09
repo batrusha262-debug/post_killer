@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
 
+import 'features/updates/application/update_bloc.dart';
+import 'features/updates/data/github_release_gateway.dart';
+import 'features/updates/data/update_repository.dart';
 import 'features/workspace/application/workspace_bloc.dart';
 import 'features/workspace/data/workspace_gateway.dart';
 import 'features/workspace/data/request_executor.dart';
@@ -27,11 +31,26 @@ class PostKillerApp extends StatelessWidget {
           border: OutlineInputBorder(),
         ),
       ),
-      home: BlocProvider(
-        create: (_) => WorkspaceBloc(
-          GatewayWorkspaceRepository(const InMemoryWorkspaceGateway()),
-          executor: const FrbRequestExecutor(),
-        ),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => WorkspaceBloc(
+              GatewayWorkspaceRepository(const InMemoryWorkspaceGateway()),
+              executor: const FrbRequestExecutor(),
+            ),
+          ),
+          BlocProvider(
+            create: (_) => UpdateBloc(
+              GitHubUpdateRepository(
+                gateway: HttpGitHubReleaseGateway(http.Client()),
+                currentVersion: const String.fromEnvironment(
+                  'APP_VERSION',
+                  defaultValue: '0.1.0',
+                ),
+              ),
+            ),
+          ),
+        ],
         child: const WorkspaceScreen(),
       ),
     );
