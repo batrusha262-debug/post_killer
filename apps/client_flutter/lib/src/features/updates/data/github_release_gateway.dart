@@ -38,6 +38,9 @@ class HttpGitHubReleaseGateway implements GitHubReleaseGateway {
           headers: const {
             'Accept': 'application/vnd.github+json',
             'X-GitHub-Api-Version': '2022-11-28',
+            // GitHub's REST API requires a User-Agent for unauthenticated
+            // desktop clients as well.
+            'User-Agent': 'Post-Killer',
           },
         )
         .timeout(const Duration(seconds: 10));
