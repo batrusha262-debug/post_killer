@@ -1,14 +1,19 @@
 import 'package:client_flutter/src/app.dart';
+import 'package:client_flutter/src/features/workspace/data/request_executor.dart';
+import 'package:client_flutter/src/features/workspace/domain/workspace_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  Future<void> pumpApp(WidgetTester tester) async {
+  Future<void> pumpApp(
+    WidgetTester tester, {
+    RequestExecutor? requestExecutor,
+  }) async {
     tester.view.physicalSize = const Size(1440, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const PostKillerApp());
+    await tester.pumpWidget(PostKillerApp(requestExecutor: requestExecutor));
   }
 
   testWidgets('shows desktop workspace with collection and active request', (
@@ -49,6 +54,23 @@ void main() {
     await tester.pump();
 
     expect(find.text('Untitled 1 •'), findsOneWidget);
+  });
+
+  testWidgets('renders the Rust validation error after Send', (tester) async {
+    await pumpApp(tester, requestExecutor: const _ValidationErrorExecutor());
+
+    await tester.tap(find.byKey(const Key('new-request-button')));
+    await tester.pump();
+    await tester.tap(find.text('Send'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('response-tab')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('response-error')), findsOneWidget);
+    expect(
+      find.text('invalid request: request URL must not be empty'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('edits a request body through the body tab', (tester) async {
@@ -117,4 +139,15 @@ void main() {
       expect(find.byIcon(Icons.settings_outlined), findsNothing);
     },
   );
+}
+
+class _ValidationErrorExecutor implements RequestExecutor {
+  const _ValidationErrorExecutor();
+
+  @override
+  Future<RequestExecutionView> execute(RequestTab request) async =>
+      RequestExecutionView.error(
+        requestId: request.id,
+        error: 'invalid request: request URL must not be empty',
+      );
 }

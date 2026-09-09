@@ -12,7 +12,16 @@ import 'features/workspace/data/workspace_repository.dart';
 import 'features/workspace/presentation/workspace_screen.dart';
 
 class PostKillerApp extends StatelessWidget {
-  const PostKillerApp({super.key});
+  const PostKillerApp({
+    super.key,
+    this.workspaceRepository,
+    this.requestExecutor,
+    this.updateRepository,
+  });
+
+  final WorkspaceRepository? workspaceRepository;
+  final RequestExecutor? requestExecutor;
+  final UpdateRepository? updateRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -35,19 +44,21 @@ class PostKillerApp extends StatelessWidget {
         providers: [
           BlocProvider(
             create: (_) => WorkspaceBloc(
-              GatewayWorkspaceRepository(const InMemoryWorkspaceGateway()),
-              executor: const FrbRequestExecutor(),
+              workspaceRepository ??
+                  GatewayWorkspaceRepository(const InMemoryWorkspaceGateway()),
+              executor: requestExecutor ?? const FrbRequestExecutor(),
             ),
           ),
           BlocProvider(
             create: (_) => UpdateBloc(
-              GitHubUpdateRepository(
-                gateway: HttpGitHubReleaseGateway(http.Client()),
-                currentVersion: const String.fromEnvironment(
-                  'APP_VERSION',
-                  defaultValue: '0.1.0',
-                ),
-              ),
+              updateRepository ??
+                  GitHubUpdateRepository(
+                    gateway: HttpGitHubReleaseGateway(http.Client()),
+                    currentVersion: const String.fromEnvironment(
+                      'APP_VERSION',
+                      defaultValue: '0.1.0',
+                    ),
+                  ),
             ),
           ),
         ],

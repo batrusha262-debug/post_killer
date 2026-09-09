@@ -25,31 +25,40 @@ class UpdateAction extends StatelessWidget {
           break;
       }
     },
-    builder: (context, state) => IconButton(
-      key: const Key('check-updates-button'),
-      tooltip: state is UpdateAvailable
+    builder: (context, state) {
+      final label = state is UpdateAvailable
           ? 'Доступна версия ${state.update.version}'
-          : 'Проверить обновления',
-      onPressed: state is UpdateChecking
-          ? null
-          : () {
-              if (state case UpdateAvailable(:final update)) {
-                _showDownloadDialog(context, update);
-              } else {
-                context.read<UpdateBloc>().add(const UpdateCheckRequested());
-              }
-            },
-      icon: state is UpdateChecking
-          ? const SizedBox.square(
-              dimension: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Icon(
-              state is UpdateAvailable
-                  ? Icons.system_update_alt
-                  : Icons.system_update_outlined,
-            ),
-    ),
+          : 'Проверить обновления';
+      return Semantics(
+        button: true,
+        label: label,
+        child: IconButton(
+          key: const Key('check-updates-button'),
+          tooltip: label,
+          onPressed: state is UpdateChecking
+              ? null
+              : () {
+                  if (state case UpdateAvailable(:final update)) {
+                    _showDownloadDialog(context, update);
+                  } else {
+                    context.read<UpdateBloc>().add(
+                      const UpdateCheckRequested(),
+                    );
+                  }
+                },
+          icon: state is UpdateChecking
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(
+                  state is UpdateAvailable
+                      ? Icons.system_update_alt
+                      : Icons.system_update_outlined,
+                ),
+        ),
+      );
+    },
   );
 
   static void _showMessage(BuildContext context, String message) =>

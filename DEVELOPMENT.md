@@ -71,6 +71,16 @@
 
 ### Release
 
+- [x] **QA-006 · Medium · Кнопка обновления не имела доступного имени.**
+  Подтверждено macOS UI smoke-test: в accessibility tree отображалась пустым
+  `button`. Исправлено `Semantics` label `Проверить обновления` / доступная
+  версия; widget-тест фиксирует контракт для screen readers.
+- [ ] **QA-007 · Medium · Нет автоматического desktop E2E runner для FRB.**
+  `flutter test` не загружает macOS native `.framework`, поэтому Dart→FFI
+  нельзя выполнять в обычном widget test. UI тестируется через injected port,
+  Rust FFI integration — отдельным TCP-тестом. Критерий готовности: добавить
+  macOS integration runner в CI, который запускает `.app` и подтверждает
+  `GET https://httpbin.org/get` в Response без mock-слоёв.
 - [x] Добавить cross-platform «Проверить обновления»: BLoC проверяет GitHub
   Releases, показывает подходящий по ОС файл и открывает загрузку только после
   явного подтверждения пользователя. Release workflow публикует DMG/EXE/DEB/
@@ -204,7 +214,7 @@
   UI показывает loading, status, response headers/body и безопасные ошибки.
   Результат привязан к вкладке, поэтому не отображается в другой вкладке;
   исключение bridge возвращает кнопку из loading. Релизные проверки: Rust
-  34 passed + 1 ignored, Flutter 19 passed, live HTTPS smoke-test HTTP 200.
+  34 passed + 1 ignored, Flutter 22 passed, live HTTPS smoke-test HTTP 200.
 
 ## Внешние блокеры проверки
 

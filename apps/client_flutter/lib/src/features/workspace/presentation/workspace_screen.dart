@@ -499,7 +499,7 @@ class _RequestEditor extends StatelessWidget {
                     Tab(text: 'Query'),
                     Tab(text: 'Headers'),
                     Tab(text: 'Body'),
-                    Tab(text: 'Response'),
+                    Tab(key: Key('response-tab'), text: 'Response'),
                   ],
                 ),
                 Expanded(
