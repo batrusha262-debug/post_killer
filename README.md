@@ -90,8 +90,9 @@ cd /Users/adt/Documents/ChatGPT/post_killer/apps/client_flutter
 ```sh
 cd /Users/adt/Documents/ChatGPT/post_killer
 cd apps/client_flutter
-# Build an explicit universal binary: Intel + Apple Silicon.
-/Users/adt/development/flutter/bin/flutter build macos --release --macos-archs=arm64,x86_64
+# Flutter/Xcode build the standard macOS architectures; the packaging script
+# verifies the output contains both Intel and Apple Silicon slices.
+/Users/adt/development/flutter/bin/flutter build macos --release
 cd ../..
 bash packaging/macos/create_dmg.sh 0.1.0
 ```

@@ -23,9 +23,9 @@ jobs:
       - working-directory: apps/client_flutter
         run: |
           flutter pub get
-          # Keep the package installable on both Intel and Apple Silicon Macs.
-          # create_dmg.sh independently verifies that both slices are present.
-          flutter build macos --release --macos-archs=arm64,x86_64
+          # Flutter 3.47 selects macOS standard architectures through Xcode.
+          # create_dmg.sh independently rejects a non-universal output.
+          flutter build macos --release
       - run: bash packaging/macos/create_dmg.sh "${GITHUB_REF_NAME#v}"
       - uses: actions/upload-artifact@v4
         with:
