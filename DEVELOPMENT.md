@@ -198,7 +198,7 @@
   UI показывает loading, status, response headers/body и безопасные ошибки.
   Результат привязан к вкладке, поэтому не отображается в другой вкладке;
   исключение bridge возвращает кнопку из loading. Релизные проверки: Rust
-  34 passed + 1 ignored, Flutter 13 passed, live HTTPS smoke-test HTTP 200.
+  34 passed + 1 ignored, Flutter 14 passed, live HTTPS smoke-test HTTP 200.
 
 ## Внешние блокеры проверки
 
