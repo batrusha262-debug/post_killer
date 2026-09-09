@@ -145,6 +145,10 @@
   Windows setup `.exe` через Inno Setup, Linux `.deb` и AppImage. GitHub Actions
   запускает platform-native builds и загружает каждый artifact; локальная DMG
   сборка ждёт полноценный Xcode (сейчас активны только Command Line Tools).
+- Добавлен отдельный пользовательский гайд `INSTALL.md`: пошаговая установка
+  через GitHub Actions для macOS (Apple Silicon и Intel), Windows и Linux,
+  включая безопасное прохождение Gatekeeper/SmartScreen и текущие ограничения
+  ранней версии.
 
 ## Внешние блокеры проверки
 
