@@ -220,7 +220,20 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     final tab = state.selectedTab;
     if (tab == null || state.isExecuting) return;
     emit(state.copyWith(isExecuting: true));
-    final execution = await _executor.execute(tab);
+    final execution = await _executeSafely(tab);
     emit(state.copyWith(isExecuting: false, execution: execution));
+  }
+
+  Future<RequestExecutionView> _executeSafely(RequestTab tab) async {
+    try {
+      return await _executor.execute(tab);
+    } on Object {
+      // A bridge/runtime failure must not strand the Send button in its loading
+      // state, and its implementation details may contain sensitive data.
+      return RequestExecutionView.error(
+        requestId: tab.id,
+        error: 'Request execution failed unexpectedly.',
+      );
+    }
   }
 }

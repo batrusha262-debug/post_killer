@@ -12,7 +12,10 @@ headers и телом. Коллекции и история хранятся л�
 
 ## Функциональность сейчас
 
-- Desktop UI: collections, tabs, URL, HTTP method, Query, Headers и Body draft.
+- Desktop UI: collections, tabs, URL, HTTP method, Query, Headers, JSON body и
+  response viewer (status, response headers и body).
+- **Send**: Flutter BLoC → `flutter_rust_bridge` → Rust HTTP engine; UI
+  показывает отправку, результат или безопасную typed error.
 - HTTP engine: Rustls TLS, redirects, timeout, bounded response, streaming и
   caller-owned cancellation.
 - Request bodies: empty, text, JSON, form-url-encoded и text multipart.
@@ -25,10 +28,10 @@ headers и телом. Коллекции и история хранятся л�
 
 ## Что пока не готово
 
-- Flutter ↔ Rust bridge ещё не подключён к UI: экран использует development
-  data adapter, а кнопка **Send** ещё не выполняет запрос.
 - Нет Postman/OpenAPI import/export, secure storage, file multipart, proxy,
   custom CA, cookie jar, signing/notarization и auto-update.
+- Создание workspace/collection и их сохранение через UI ещё в работе; текущие
+  demo-коллекции служат для быстрого старта.
 
 Полный актуальный backlog: [DEVELOPMENT.md](DEVELOPMENT.md).
 
@@ -87,8 +90,8 @@ cd /Users/adt/Documents/ChatGPT/post_killer/apps/client_flutter
 ```sh
 cd /Users/adt/Documents/ChatGPT/post_killer
 cd apps/client_flutter
-# Flutter macOS release builds are universal by default: Intel + Apple Silicon.
-/Users/adt/development/flutter/bin/flutter build macos --release
+# Build an explicit universal binary: Intel + Apple Silicon.
+/Users/adt/development/flutter/bin/flutter build macos --release --macos-archs=arm64,x86_64
 cd ../..
 bash packaging/macos/create_dmg.sh 0.1.0
 ```

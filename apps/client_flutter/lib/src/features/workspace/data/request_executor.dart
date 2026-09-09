@@ -12,7 +12,10 @@ class UnavailableRequestExecutor implements RequestExecutor {
 
   @override
   Future<RequestExecutionView> execute(RequestTab request) async =>
-      RequestExecutionView.error('Request engine is unavailable.');
+      RequestExecutionView.error(
+        requestId: request.id,
+        error: 'Request engine is unavailable.',
+      );
 }
 
 class FrbRequestExecutor implements RequestExecutor {
@@ -24,13 +27,22 @@ class FrbRequestExecutor implements RequestExecutor {
     final response = outcome.response;
     if (response != null) {
       return RequestExecutionView.response(
+        requestId: request.id,
         status: response.status,
         durationMillis: response.durationMillis.toInt(),
+        headers: [
+          for (final header in response.headers)
+            RequestResponseHeader(
+              name: header.name,
+              value: utf8.decode(header.value, allowMalformed: true),
+            ),
+        ],
         body: utf8.decode(response.body, allowMalformed: true),
       );
     }
     return RequestExecutionView.error(
-      outcome.error?.message ?? 'Request execution failed unexpectedly.',
+      requestId: request.id,
+      error: outcome.error?.message ?? 'Request execution failed unexpectedly.',
     );
   }
 

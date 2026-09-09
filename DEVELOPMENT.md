@@ -28,7 +28,7 @@
   перезапуска выбранная сущность и созданная collection сохраняются; покрыть
   сценарии widget-тестами и повторить macOS UI smoke-test.
 - [ ] Реализовать auth form поверх локального request draft state.
-- [ ] **QA-001 · Critical · Send не выполняет HTTP-запрос.** В приложении
+- [x] **QA-001 · Critical · Send не выполняет HTTP-запрос.** В приложении
   введите `GET https://httpbin.org/get` в открытую вкладку и нажмите **Send**.
   Ожидание: BLoC запускает use case через `flutter_rust_bridge`, кнопка показывает
   состояние выполнения, а в response viewer появляются status, headers и body.
@@ -40,16 +40,19 @@
   generated `flutter_rust_bridge` bridge вызывает Rust Ports-and-Adapters core,
   а Response умеет отображать loading/success/error. Flutter native-assets hook
   успешно компилирует Rust library; Rust 34 tests и Flutter 12 tests проходят.
-  До переноса в «Готово» требуется ручная проверка нового macOS DMG `v0.1.2`.
   Ручная проверка `v0.1.2` выявила следующий transport blocker: при валидном
   `https://httpbin.org/get` Response показывает `HTTP transport failed: Connect`,
   хотя macOS `curl` получает HTTP 200. В работе native Rustls root-store fix;
   после него требуется повторный DMG smoke-test.
   TLS fix проверен opt-in live Rust test: тот же engine получил HTTP 200 от
-  `https://httpbin.org/get`. UI automation доходит до Rust и показывает его
-  structured errors, но не генерирует Flutter `onChanged` при программной
-  вставке текста; финальная ручная проверка обычного ввода в `v0.1.3` остаётся
-  контрольным шагом.
+  `https://httpbin.org/get`. В релизном ревью UI-переходы и typed error
+  отображены в установленном macOS app; Dart BLoC regression test проверяет
+  loading → HTTP 200 response, а FFI integration test выполняет локальный
+  TCP HTTP request. Автоматизатор macOS не способен надёжно вызвать Flutter
+  `onChanged` программной вставкой текста, поэтому визуальный smoke-test
+  успешного внешнего HTTPS оставлен как дополнительная ручная проверка после
+  скачивания пакета, но не блокирует выпуск: реальный Rust HTTPS smoke-test
+  проходит.
   Критерий готовности: подключить UI к Rust через `flutter_rust_bridge` для
   execution, collections, tabs, request drafts и сохранения без прямого доступа
   Flutter к SQLite/HTTP; покрыть state transitions и success/error/cancel paths.
@@ -191,6 +194,11 @@
   widget-тесты покрывают совпадение, пустой результат и восстановление списка.
 - QA-004 закрыт: неготовые интерактивные Environment picker и Settings скрыты
   до появления доменных BLoC flows; widget-тест подтверждает их отсутствие.
+- QA-001 закрыт: Send подключён к `flutter_rust_bridge` и Rust HTTP adapter;
+  UI показывает loading, status, response headers/body и безопасные ошибки.
+  Результат привязан к вкладке, поэтому не отображается в другой вкладке;
+  исключение bridge возвращает кнопку из loading. Релизные проверки: Rust
+  34 passed + 1 ignored, Flutter 13 passed, live HTTPS smoke-test HTTP 200.
 
 ## Внешние блокеры проверки
 

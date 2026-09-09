@@ -104,34 +104,54 @@ class RequestKeyValue {
 
 class RequestExecutionView {
   const RequestExecutionView._({
+    required this.requestId,
     required this.status,
     required this.durationMillis,
+    required this.headers,
     required this.body,
     required this.error,
   });
 
   factory RequestExecutionView.response({
+    required String requestId,
     required int status,
     required int durationMillis,
+    required List<RequestResponseHeader> headers,
     required String body,
   }) => RequestExecutionView._(
+    requestId: requestId,
     status: status,
     durationMillis: durationMillis,
+    headers: headers,
     body: body,
     error: null,
   );
 
-  factory RequestExecutionView.error(String error) => RequestExecutionView._(
+  factory RequestExecutionView.error({
+    required String requestId,
+    required String error,
+  }) => RequestExecutionView._(
+    requestId: requestId,
     status: null,
     durationMillis: null,
+    headers: const [],
     body: null,
     error: error,
   );
 
+  final String requestId;
   final int? status;
   final int? durationMillis;
+  final List<RequestResponseHeader> headers;
   final String? body;
   final String? error;
+}
+
+class RequestResponseHeader {
+  const RequestResponseHeader({required this.name, required this.value});
+
+  final String name;
+  final String value;
 }
 
 class WorkspaceState {
@@ -179,6 +199,11 @@ class WorkspaceState {
     }
     return null;
   }
+
+  /// A completed request belongs to exactly one tab, so switching tabs never
+  /// leaks a prior response into the editor currently on screen.
+  RequestExecutionView? get selectedExecution =>
+      execution?.requestId == selectedTabId ? execution : null;
 
   WorkspaceState copyWith({
     List<RequestCollection>? collections,

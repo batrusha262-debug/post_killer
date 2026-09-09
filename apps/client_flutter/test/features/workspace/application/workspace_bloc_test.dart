@@ -13,6 +13,37 @@ void main() {
     url: 'https://example.test',
   );
 
+  test('an execution result is visible only in its owning tab', () {
+    final execution = RequestExecutionView.response(
+      requestId: request.id,
+      status: 200,
+      durationMillis: 1,
+      headers: const [],
+      body: '{}',
+    );
+    final state = WorkspaceState(
+      collections: const [],
+      tabs: const [
+        RequestTab(
+          id: 'injected-request',
+          title: 'First',
+          method: HttpMethod.get,
+          url: 'https://example.test',
+        ),
+        RequestTab(
+          id: 'other-request',
+          title: 'Second',
+          method: HttpMethod.get,
+          url: 'https://example.test/other',
+        ),
+      ],
+      selectedTabId: 'other-request',
+      execution: execution,
+    );
+
+    expect(state.selectedExecution, isNull);
+  });
+
   blocTest<WorkspaceBloc, WorkspaceState>(
     'turns a user event into an immutable dirty draft state',
     build: () => WorkspaceBloc(const _FakeWorkspaceRepository(request)),
@@ -89,6 +120,29 @@ void main() {
           .having((state) => state.execution?.body, 'body', '{"ok":true}'),
     ],
   );
+
+  blocTest<WorkspaceBloc, WorkspaceState>(
+    'recovers from a bridge exception without leaving Send disabled',
+    build: () => WorkspaceBloc(
+      const _FakeWorkspaceRepository(request),
+      executor: const _ThrowingRequestExecutor(),
+    ),
+    act: (bloc) => bloc.add(const WorkspaceRequestSent()),
+    expect: () => [
+      isA<WorkspaceState>().having(
+        (state) => state.isExecuting,
+        'loading',
+        true,
+      ),
+      isA<WorkspaceState>()
+          .having((state) => state.isExecuting, 'loading finished', false)
+          .having(
+            (state) => state.execution?.error,
+            'safe error',
+            'Request execution failed unexpectedly.',
+          ),
+    ],
+  );
 }
 
 class _FakeWorkspaceRepository implements WorkspaceRepository {
@@ -110,8 +164,23 @@ class _FakeRequestExecutor implements RequestExecutor {
   @override
   Future<RequestExecutionView> execute(RequestTab request) async =>
       RequestExecutionView.response(
+        requestId: request.id,
         status: 200,
         durationMillis: 1,
+        headers: const [
+          RequestResponseHeader(
+            name: 'content-type',
+            value: 'application/json',
+          ),
+        ],
         body: '{"ok":true}',
       );
+}
+
+class _ThrowingRequestExecutor implements RequestExecutor {
+  const _ThrowingRequestExecutor();
+
+  @override
+  Future<RequestExecutionView> execute(RequestTab request) =>
+      Future<RequestExecutionView>.error(StateError('native bridge failed'));
 }

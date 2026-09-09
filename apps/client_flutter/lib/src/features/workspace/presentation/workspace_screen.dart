@@ -338,7 +338,7 @@ class _RequestWorkspace extends StatelessWidget {
                 onHeaderChanged: onHeaderChanged,
                 onSend: onSend,
                 isExecuting: workspace.isExecuting,
-                execution: workspace.execution,
+                execution: workspace.selectedExecution,
               ),
       ),
     ],
@@ -619,10 +619,15 @@ class _ResponseView extends StatelessWidget {
       return Center(child: Text(error, key: const Key('response-error')));
     }
     if (result?.status case final status?) {
+      final headers = result!.headers
+          .map((header) => '${header.name}: ${header.value}')
+          .join('\n');
       return SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: SelectableText(
-          'HTTP $status · ${result!.durationMillis} ms\n\n${result.body}',
+          'HTTP $status · ${result.durationMillis} ms\n\n'
+          'Headers\n${headers.isEmpty ? '(none)' : headers}\n\n'
+          'Body\n${result.body}',
           key: const Key('response-content'),
         ),
       );

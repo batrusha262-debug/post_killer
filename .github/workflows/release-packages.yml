@@ -23,9 +23,9 @@ jobs:
       - working-directory: apps/client_flutter
         run: |
           flutter pub get
-          # Flutter builds macOS release bundles for x86_64 and arm64 by default.
-          # create_dmg.sh verifies both slices before packaging.
-          flutter build macos --release
+          # Keep the package installable on both Intel and Apple Silicon Macs.
+          # create_dmg.sh independently verifies that both slices are present.
+          flutter build macos --release --macos-archs=arm64,x86_64
       - run: bash packaging/macos/create_dmg.sh "${GITHUB_REF_NAME#v}"
       - uses: actions/upload-artifact@v4
         with:
