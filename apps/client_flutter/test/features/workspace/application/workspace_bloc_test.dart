@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:client_flutter/src/features/workspace/application/workspace_bloc.dart';
 import 'package:client_flutter/src/features/workspace/data/workspace_repository.dart';
+import 'package:client_flutter/src/features/workspace/data/request_executor.dart';
 import 'package:client_flutter/src/features/workspace/domain/workspace_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -68,6 +69,26 @@ void main() {
           ),
     ],
   );
+
+  blocTest<WorkspaceBloc, WorkspaceState>(
+    'runs Send through the execution port and exposes its response state',
+    build: () => WorkspaceBloc(
+      const _FakeWorkspaceRepository(request),
+      executor: const _FakeRequestExecutor(),
+    ),
+    act: (bloc) => bloc.add(const WorkspaceRequestSent()),
+    expect: () => [
+      isA<WorkspaceState>().having(
+        (state) => state.isExecuting,
+        'loading',
+        true,
+      ),
+      isA<WorkspaceState>()
+          .having((state) => state.isExecuting, 'loading finished', false)
+          .having((state) => state.execution?.status, 'status', 200)
+          .having((state) => state.execution?.body, 'body', '{"ok":true}'),
+    ],
+  );
 }
 
 class _FakeWorkspaceRepository implements WorkspaceRepository {
@@ -81,4 +102,16 @@ class _FakeWorkspaceRepository implements WorkspaceRepository {
     tabs: [RequestTab.fromSaved(request)],
     selectedTabId: request.id,
   );
+}
+
+class _FakeRequestExecutor implements RequestExecutor {
+  const _FakeRequestExecutor();
+
+  @override
+  Future<RequestExecutionView> execute(RequestTab request) async =>
+      RequestExecutionView.response(
+        status: 200,
+        durationMillis: 1,
+        body: '{"ok":true}',
+      );
 }
