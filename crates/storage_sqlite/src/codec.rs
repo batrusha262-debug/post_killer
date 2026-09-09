@@ -321,3 +321,33 @@ pub(super) fn map_insert_result(
         Err(error) => Err(StorageError::Database(error)),
     }
 }
+
+/// Validate both ancestor cycles and reverse links before changing a folder.
+pub(super) fn validate_folder_links(
+    transaction: &Transaction<'_>,
+    folder: &Folder,
+) -> Result<(), StorageError> {
+    let cycle: bool = transaction.query_row(
+        "WITH RECURSIVE ancestors(id) AS (          SELECT ?1 UNION SELECT parent_folder_id FROM folders JOIN ancestors ON folders.id = ancestors.id        ) SELECT EXISTS(SELECT 1 FROM ancestors WHERE id = ?2)",
+        (&folder.parent_folder_id, &folder.id),
+        |row| row.get(0),
+    )?;
+    if cycle {
+        return Err(StorageError::InvalidInput {
+            entity: "folder",
+            field: "parent_folder_id",
+        });
+    }
+    let invalid_children: bool = transaction.query_row(
+        "SELECT EXISTS(SELECT 1 FROM folders WHERE parent_folder_id = ?1 AND collection_id != ?2)         OR EXISTS(SELECT 1 FROM requests WHERE folder_id = ?1 AND collection_id != ?2)",
+        (&folder.id, &folder.collection_id),
+        |row| row.get(0),
+    )?;
+    if invalid_children {
+        return Err(StorageError::InvalidInput {
+            entity: "folder",
+            field: "collection_id",
+        });
+    }
+    Ok(())
+}

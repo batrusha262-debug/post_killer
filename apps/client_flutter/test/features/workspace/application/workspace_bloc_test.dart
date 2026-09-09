@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:client_flutter/src/features/workspace/application/workspace_bloc.dart';
 import 'package:client_flutter/src/features/workspace/data/workspace_repository.dart';
@@ -30,6 +32,86 @@ void main() {
       tabs: [RequestTab.fromSaved(request)],
       selectedTabId: request.id,
     ),
+  );
+
+  test('nullable state can be cleared and matching empty collections remain visible', () {
+    final state = WorkspaceState(
+      collections: const [
+        RequestCollection(id: 'empty', name: 'Empty', requests: []),
+      ],
+      tabs: const [],
+      selectedTabId: 'old',
+      storageError: 'old failure',
+      collectionSearchQuery: 'empty',
+    );
+    expect(state.copyWith(selectedTabId: null).selectedTabId, isNull);
+    expect(state.copyWith(storageError: null).storageError, isNull);
+    expect(state.copyWith().storageError, 'old failure');
+    expect(state.filteredCollections.single.id, 'empty');
+  });
+
+  test(
+    'closing a tab preserves in-flight execution and ignores its late result',
+    () async {
+      final executor = _DelayedExecutor();
+      final bloc = buildBloc(executor: executor);
+      bloc.add(const WorkspaceRequestSent());
+      await executor.started.future;
+      final closed = bloc.stream.firstWhere((state) => state.tabs.isEmpty);
+      bloc.add(const WorkspaceTabClosed('injected-request'));
+      await closed;
+      expect(bloc.state.isExecuting, isTrue);
+      final finished = bloc.stream.firstWhere((state) => !state.isExecuting);
+      executor.result.complete(
+        RequestExecutionView.error(requestId: request.id, error: 'late'),
+      );
+      await finished;
+      expect(bloc.state.execution, isNull);
+      await bloc.close();
+    },
+  );
+
+  test(
+    'workspace selection waits for collection creation across event types',
+    () async {
+      final repository = _DelayedRepository(request);
+      final bloc = WorkspaceBloc(
+        repository,
+        autoBootstrap: false,
+        initialState: const WorkspaceState(
+          workspaces: [
+            WorkspaceSummary(id: 'a', name: 'A'),
+            WorkspaceSummary(id: 'b', name: 'B'),
+          ],
+          selectedWorkspaceId: 'a',
+          collections: [],
+          tabs: [],
+          selectedTabId: null,
+        ),
+      );
+      bloc.add(const CollectionCreateRequested('Created in A'));
+      await repository.started.future;
+      bloc.add(const WorkspaceSelected('b'));
+      await Future<void>.delayed(Duration.zero);
+      expect(repository.selections, isEmpty);
+      final selected = bloc.stream.firstWhere(
+        (state) => state.selectedWorkspaceId == 'b' && !state.isLoading,
+      );
+      repository.result.complete(
+        const RequestCollection(
+          id: 'created',
+          name: 'Created in A',
+          requests: [],
+        ),
+      );
+      await selected;
+      expect(repository.selections, ['b']);
+      expect(
+        bloc.state.collections.any((collection) => collection.id == 'created'),
+        isFalse,
+      );
+      await bloc.close();
+    },
   );
 
   test('an execution result is visible only in its owning tab', () {
@@ -231,4 +313,35 @@ class _ThrowingRequestExecutor implements RequestExecutor {
   @override
   Future<RequestExecutionView> execute(RequestTab request) =>
       Future<RequestExecutionView>.error(StateError('native bridge failed'));
+}
+
+class _DelayedExecutor implements RequestExecutor {
+  final started = Completer<void>();
+  final result = Completer<RequestExecutionView>();
+  @override
+  Future<RequestExecutionView> execute(RequestTab request) {
+    started.complete();
+    return result.future;
+  }
+}
+
+class _DelayedRepository extends _FakeWorkspaceRepository {
+  _DelayedRepository(super.request);
+  final started = Completer<void>();
+  final result = Completer<RequestCollection>();
+  final selections = <String>[];
+  @override
+  Future<RequestCollection> createCollection({
+    required String workspaceId,
+    required String name,
+  }) {
+    started.complete();
+    return result.future;
+  }
+
+  @override
+  Future<List<RequestCollection>> listCollections(String workspaceId) {
+    selections.add(workspaceId);
+    return super.listCollections(workspaceId);
+  }
 }

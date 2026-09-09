@@ -1,3 +1,5 @@
+const _unchanged = Object();
+
 enum HttpMethod { get, post, put, patch, delete }
 
 enum WorkspaceSection { collections, history, variables }
@@ -193,19 +195,25 @@ class WorkspaceState {
     final query = collectionSearchQuery.trim().toLowerCase();
     if (query.isEmpty) return collections;
     return [
-      for (final collection in collections)
-        if (collection.name.toLowerCase().contains(query))
-          collection
-        else
-          RequestCollection(
-            id: collection.id,
-            name: collection.name,
-            requests: [
-              for (final request in collection.requests)
-                if (request.name.toLowerCase().contains(query)) request,
-            ],
-          ),
-    ].where((collection) => collection.requests.isNotEmpty).toList();
+          for (final collection in collections)
+            if (collection.name.toLowerCase().contains(query))
+              collection
+            else
+              RequestCollection(
+                id: collection.id,
+                name: collection.name,
+                requests: [
+                  for (final request in collection.requests)
+                    if (request.name.toLowerCase().contains(query)) request,
+                ],
+              ),
+        ]
+        .where(
+          (collection) =>
+              collection.name.toLowerCase().contains(query) ||
+              collection.requests.isNotEmpty,
+        )
+        .toList();
   }
 
   RequestTab? get selectedTab {
@@ -222,27 +230,35 @@ class WorkspaceState {
 
   WorkspaceState copyWith({
     List<WorkspaceSummary>? workspaces,
-    String? selectedWorkspaceId,
+    Object? selectedWorkspaceId = _unchanged,
     List<RequestCollection>? collections,
     List<RequestTab>? tabs,
-    String? selectedTabId,
+    Object? selectedTabId = _unchanged,
     WorkspaceSection? selectedSection,
     String? collectionSearchQuery,
     bool? isExecuting,
-    RequestExecutionView? execution,
+    Object? execution = _unchanged,
     bool? isLoading,
-    String? storageError,
+    Object? storageError = _unchanged,
   }) => WorkspaceState(
     workspaces: workspaces ?? this.workspaces,
-    selectedWorkspaceId: selectedWorkspaceId ?? this.selectedWorkspaceId,
+    selectedWorkspaceId: identical(selectedWorkspaceId, _unchanged)
+        ? this.selectedWorkspaceId
+        : selectedWorkspaceId as String?,
     collections: collections ?? this.collections,
     tabs: tabs ?? this.tabs,
-    selectedTabId: selectedTabId ?? this.selectedTabId,
+    selectedTabId: identical(selectedTabId, _unchanged)
+        ? this.selectedTabId
+        : selectedTabId as String?,
     selectedSection: selectedSection ?? this.selectedSection,
     collectionSearchQuery: collectionSearchQuery ?? this.collectionSearchQuery,
     isExecuting: isExecuting ?? this.isExecuting,
-    execution: execution ?? this.execution,
+    execution: identical(execution, _unchanged)
+        ? this.execution
+        : execution as RequestExecutionView?,
     isLoading: isLoading ?? this.isLoading,
-    storageError: storageError ?? this.storageError,
+    storageError: identical(storageError, _unchanged)
+        ? this.storageError
+        : storageError as String?,
   );
 }

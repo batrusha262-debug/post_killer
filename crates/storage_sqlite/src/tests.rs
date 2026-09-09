@@ -396,3 +396,47 @@ fn execution_history_rejects_invalid_result_metadata() {
         }
     ));
 }
+
+#[test]
+fn folder_updates_reject_cycles_and_cross_collection_descendants() {
+    let mut storage = SqliteStorage::open_in_memory().unwrap();
+    storage
+        .create_workspace("w".into(), "Workspace".into())
+        .unwrap();
+    for id in ["c1", "c2"] {
+        storage
+            .create_collection(id.into(), "w".into(), id.into())
+            .unwrap();
+    }
+    let parent = Folder {
+        id: "parent".into(),
+        collection_id: "c1".into(),
+        parent_folder_id: None,
+        name: "Parent".into(),
+        sort_order: 0,
+    };
+    let child = Folder {
+        id: "child".into(),
+        parent_folder_id: Some("parent".into()),
+        ..parent.clone()
+    };
+    storage.save_folder(parent.clone()).unwrap();
+    storage.save_folder(child).unwrap();
+    assert!(
+        storage
+            .save_folder(Folder {
+                parent_folder_id: Some("child".into()),
+                ..parent.clone()
+            })
+            .is_err()
+    );
+    assert!(
+        storage
+            .save_folder(Folder {
+                collection_id: "c2".into(),
+                ..parent.clone()
+            })
+            .is_err()
+    );
+    assert_eq!(storage.get_folder("parent").unwrap(), Some(parent));
+}

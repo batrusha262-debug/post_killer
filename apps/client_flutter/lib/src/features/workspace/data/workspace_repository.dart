@@ -1,8 +1,7 @@
 import '../domain/workspace_models.dart';
 import 'workspace_gateway.dart';
 
-/// Data boundary for the workspace feature. The FFI-backed implementation will
-/// replace [InMemoryWorkspaceRepository] without changing the view model.
+/// Repository boundary for persisted workspace data.
 abstract interface class WorkspaceRepository {
   Future<List<WorkspaceSummary>> listWorkspaces();
   Future<WorkspaceSummary> createWorkspace(String name);

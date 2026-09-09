@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:client_flutter/src/features/updates/application/update_bloc.dart';
 import 'package:client_flutter/src/features/updates/data/github_release_gateway.dart';
@@ -6,6 +8,21 @@ import 'package:client_flutter/src/features/updates/domain/update_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('duplicate checks share the active lookup', () async {
+    final repository = _DelayedUpdateRepository();
+    final bloc = UpdateBloc(repository);
+    final checking = bloc.stream.firstWhere((state) => state is UpdateChecking);
+    bloc.add(const UpdateCheckRequested());
+    await checking;
+    bloc.add(const UpdateCheckRequested());
+    await Future<void>.delayed(Duration.zero);
+    expect(repository.calls, 1);
+    final complete = bloc.stream.firstWhere((state) => state is UpdateCurrent);
+    repository.result.complete(const UpdateIsCurrent());
+    await complete;
+    await bloc.close();
+  });
+
   blocTest<UpdateBloc, UpdateState>(
     'offers a newer release for explicit download',
     build: () => UpdateBloc(
@@ -52,4 +69,14 @@ class _FailingUpdateRepository implements UpdateRepository {
   @override
   Future<UpdateCheckResult> checkForUpdate() =>
       Future<UpdateCheckResult>.error(const UpdateLookupException());
+}
+
+class _DelayedUpdateRepository implements UpdateRepository {
+  final result = Completer<UpdateCheckResult>();
+  int calls = 0;
+  @override
+  Future<UpdateCheckResult> checkForUpdate() {
+    calls += 1;
+    return result.future;
+  }
 }

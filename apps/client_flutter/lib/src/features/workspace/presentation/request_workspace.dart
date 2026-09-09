@@ -1,0 +1,92 @@
+import 'request_tab_button.dart';
+import 'request_editor.dart';
+import 'empty_workspace.dart';
+
+import 'package:flutter/material.dart';
+
+import '../domain/workspace_models.dart';
+
+class RequestWorkspace extends StatelessWidget {
+  const RequestWorkspace({
+    super.key,
+    required this.workspace,
+    required this.onSelectTab,
+    required this.onCloseTab,
+    required this.onNewTab,
+    required this.onMethodChanged,
+    required this.onUrlChanged,
+    required this.onBodyChanged,
+    required this.onAddQuery,
+    required this.onAddHeader,
+    required this.onQueryChanged,
+    required this.onHeaderChanged,
+    required this.onSend,
+  });
+
+  final WorkspaceState workspace;
+  final ValueChanged<String> onSelectTab;
+  final ValueChanged<String> onCloseTab;
+  final VoidCallback onNewTab;
+  final ValueChanged<HttpMethod> onMethodChanged;
+  final ValueChanged<String> onUrlChanged;
+  final ValueChanged<String> onBodyChanged;
+  final VoidCallback onAddQuery;
+  final VoidCallback onAddHeader;
+  final void Function(String, {String? key, String? value, bool? enabled})
+  onQueryChanged;
+  final void Function(String, {String? key, String? value, bool? enabled})
+  onHeaderChanged;
+  final VoidCallback onSend;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      SizedBox(
+        height: 46,
+        child: Row(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: workspace.tabs.length,
+                itemBuilder: (context, index) {
+                  final tab = workspace.tabs[index];
+                  return RequestTabButton(
+                    tab: tab,
+                    selected: tab.id == workspace.selectedTabId,
+                    onTap: () => onSelectTab(tab.id),
+                    onClose: () => onCloseTab(tab.id),
+                  );
+                },
+              ),
+            ),
+            IconButton(
+              tooltip: 'New tab',
+              onPressed: onNewTab,
+              icon: const Icon(Icons.add, size: 20),
+            ),
+          ],
+        ),
+      ),
+      const Divider(height: 1),
+      Expanded(
+        child: workspace.selectedTab == null
+            ? const EmptyWorkspace()
+            : RequestEditor(
+                key: ValueKey(workspace.selectedTab!.id),
+                tab: workspace.selectedTab!,
+                onMethodChanged: onMethodChanged,
+                onUrlChanged: onUrlChanged,
+                onBodyChanged: onBodyChanged,
+                onAddQuery: onAddQuery,
+                onAddHeader: onAddHeader,
+                onQueryChanged: onQueryChanged,
+                onHeaderChanged: onHeaderChanged,
+                onSend: onSend,
+                isExecuting: workspace.isExecuting,
+                execution: workspace.selectedExecution,
+              ),
+      ),
+    ],
+  );
+}

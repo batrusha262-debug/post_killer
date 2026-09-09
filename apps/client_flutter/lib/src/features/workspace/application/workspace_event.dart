@@ -1,0 +1,96 @@
+import '../domain/workspace_models.dart';
+
+sealed class WorkspaceEvent {
+  const WorkspaceEvent();
+}
+
+sealed class WorkspaceStorageEvent extends WorkspaceEvent {
+  const WorkspaceStorageEvent();
+}
+
+final class WorkspaceTabSelected extends WorkspaceEvent {
+  const WorkspaceTabSelected(this.id);
+  final String id;
+}
+
+final class WorkspaceBootstrapRequested extends WorkspaceStorageEvent {
+  const WorkspaceBootstrapRequested();
+}
+
+final class WorkspaceSelected extends WorkspaceStorageEvent {
+  const WorkspaceSelected(this.id);
+  final String id;
+}
+
+final class WorkspaceCreateRequested extends WorkspaceStorageEvent {
+  const WorkspaceCreateRequested(this.name);
+  final String name;
+}
+
+final class CollectionCreateRequested extends WorkspaceStorageEvent {
+  const CollectionCreateRequested(this.name);
+  final String name;
+}
+
+final class WorkspaceSectionSelected extends WorkspaceEvent {
+  const WorkspaceSectionSelected(this.section);
+  final WorkspaceSection section;
+}
+
+final class WorkspaceCollectionSearchChanged extends WorkspaceEvent {
+  const WorkspaceCollectionSearchChanged(this.query);
+  final String query;
+}
+
+final class WorkspaceRequestOpened extends WorkspaceEvent {
+  const WorkspaceRequestOpened(this.request);
+  final SavedRequest request;
+}
+
+final class WorkspaceRequestCreated extends WorkspaceEvent {
+  const WorkspaceRequestCreated();
+}
+
+final class WorkspaceTabClosed extends WorkspaceEvent {
+  const WorkspaceTabClosed(this.id);
+  final String id;
+}
+
+final class WorkspaceMethodChanged extends WorkspaceEvent {
+  const WorkspaceMethodChanged(this.method);
+  final HttpMethod method;
+}
+
+final class WorkspaceUrlChanged extends WorkspaceEvent {
+  const WorkspaceUrlChanged(this.url);
+  final String url;
+}
+
+final class WorkspaceBodyChanged extends WorkspaceEvent {
+  const WorkspaceBodyChanged(this.body);
+  final String body;
+}
+
+final class WorkspaceRequestSent extends WorkspaceEvent {
+  const WorkspaceRequestSent();
+}
+
+final class WorkspaceKeyValueAdded extends WorkspaceEvent {
+  const WorkspaceKeyValueAdded({required this.isHeader});
+  final bool isHeader;
+}
+
+final class WorkspaceKeyValueChanged extends WorkspaceEvent {
+  const WorkspaceKeyValueChanged({
+    required this.id,
+    required this.isHeader,
+    this.key,
+    this.value,
+    this.enabled,
+  });
+  final String id;
+  final bool isHeader;
+  final String? key;
+  final String? value;
+  final bool? enabled;
+}

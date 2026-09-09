@@ -7,6 +7,7 @@ mod frb_generated;
 
 /// Coarse-grained, owned DTOs consumed by `flutter_rust_bridge` code generation.
 pub mod api;
+mod conversions;
 
 use post_killer_application::RequestExecutionService;
 use post_killer_domain::{RequestDefinition, ValidationError};

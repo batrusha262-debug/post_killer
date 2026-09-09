@@ -47,6 +47,7 @@ class UpdateBloc extends Bloc<UpdateEvent, UpdateState> {
     UpdateCheckRequested event,
     Emitter<UpdateState> emit,
   ) async {
+    if (state is UpdateChecking) return;
     emit(const UpdateChecking());
     try {
       switch (await _repository.checkForUpdate()) {

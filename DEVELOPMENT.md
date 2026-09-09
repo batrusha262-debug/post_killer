@@ -12,6 +12,8 @@
 
 ## Активный план
 
+- [ ] AUDIT-RELEASE: проверить публикацию v0.2.3 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер.
+
 ### Foundation
 
 ### Данные и редактор запросов
@@ -98,6 +100,14 @@
   пользователя через Vercel.
 
 ## Готово
+
+- AUDIT-2026-09: выполнено Rust/Flutter ревью, декомпозированы монолитные файлы,
+  устранены дубли HTTP construction, гонки workspace, ошибки поиска/nullable state,
+  циклы и cross-collection связи папок, зависание streaming backpressure и
+  повторные update checks. Удалена unused Cupertino dependency. Rust: 38 passed,
+  1 ignored; Flutter: 30 passed; fmt/analyze/Clippy/diff clean. Подробный отчёт
+  и оставшиеся ограничения: [docs/reviews/2026-09-09.md](docs/reviews/2026-09-09.md).
+
 
 - Создан Rust workspace (`domain`, `http_engine`, `ffi_bridge`) с
   сериализуемыми моделями запросов, базовой валидацией и устойчивым API
