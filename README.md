@@ -51,9 +51,10 @@ Linux и не требует знаний разработки.
 
 ### macOS
 
-1. Скачайте и распакуйте `post-killer-macos-dmg`.
-2. Откройте `Post-Killer-<version>-macos.dmg`. Это универсальный пакет: один
-   DMG подходит и для Apple Silicon (M1/M2/M3/M4), и для Intel Mac.
+1. Скачайте и распакуйте artifact для своего Mac: `post-killer-macos-arm64-dmg`
+   для Apple Silicon (M1/M2/M3/M4) или `post-killer-macos-x86_64-dmg` для Intel.
+2. Откройте соответствующий файл: `Post-Killer-<version>-macos-arm64.dmg` или
+   `Post-Killer-<version>-macos-x86_64.dmg`.
 3. Перетащите `Post Killer.app` в `/Applications`.
 4. Если Gatekeeper блокирует запуск, подтвердите его в System Settings →
    Privacy & Security.
@@ -94,11 +95,11 @@ cd /Users/adt/Documents/ChatGPT/post_killer/apps/client_flutter
 ```sh
 cd /Users/adt/Documents/ChatGPT/post_killer
 cd apps/client_flutter
-# Flutter/Xcode build the standard macOS architectures; the packaging script
-# verifies the output contains both Intel and Apple Silicon slices.
-/Users/adt/development/flutter/bin/flutter build macos --release
+# Build and package a native Apple Silicon DMG. Use ARCHS=x86_64 for Intel.
+/Users/adt/development/flutter/bin/flutter build macos --config-only
+xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner -configuration Release -derivedDataPath build/macos -destination 'generic/platform=macOS' OBJROOT=build/macos/Build/Intermediates.noindex SYMROOT=build/macos/Build/Products ARCHS=arm64 ONLY_ACTIVE_ARCH=NO
 cd ../..
-bash packaging/macos/create_dmg.sh 0.1.0
+bash packaging/macos/create_dmg.sh 0.2.10 arm64
 ```
 
 Если Flutter не находит `xcodebuild`, установлены только Command Line Tools —

@@ -1,5 +1,14 @@
 enum UpdatePlatform { macos, windows, linux }
 
+enum MacOSArchitecture {
+  arm64('arm64'),
+  x86_64('x86_64');
+
+  const MacOSArchitecture(this.assetSuffix);
+
+  final String assetSuffix;
+}
+
 class AppUpdate {
   const AppUpdate({
     required this.version,

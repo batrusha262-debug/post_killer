@@ -14,6 +14,12 @@ env:
 jobs:
   macos-dmg:
     runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: arm64
+          - architecture: x86_64
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -23,13 +29,14 @@ jobs:
       - working-directory: apps/client_flutter
         run: |
           flutter pub get
-          # Flutter 3.47 selects macOS standard architectures through Xcode.
-          # create_dmg.sh independently rejects a non-universal output.
-          flutter build macos --release --build-name="${GITHUB_REF_NAME#v}" --build-number="$GITHUB_RUN_NUMBER" --dart-define="APP_VERSION=${GITHUB_REF_NAME#v}"
-      - run: bash packaging/macos/create_dmg.sh "${GITHUB_REF_NAME#v}"
+          flutter build macos --config-only --build-name="${GITHUB_REF_NAME#v}" --build-number="$GITHUB_RUN_NUMBER" --dart-define="APP_VERSION=${GITHUB_REF_NAME#v}"
+          # Flutter produces a universal release by default. Invoke Xcode with
+          # one ARCHS value so each artifact runs natively on its target Mac.
+          xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner -configuration Release -derivedDataPath build/macos -destination 'generic/platform=macOS' OBJROOT=build/macos/Build/Intermediates.noindex SYMROOT=build/macos/Build/Products ARCHS="${{ matrix.architecture }}" ONLY_ACTIVE_ARCH=NO
+      - run: bash packaging/macos/create_dmg.sh "${GITHUB_REF_NAME#v}" "${{ matrix.architecture }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: post-killer-macos-dmg
+          name: post-killer-macos-${{ matrix.architecture }}-dmg
           path: dist/*.dmg
 
   windows-exe:

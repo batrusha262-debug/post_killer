@@ -32,6 +32,38 @@ void main() {
 
     expect(await repository.checkForUpdate(), isA<UpdateIsCurrent>());
   });
+
+  test('selects an Apple Silicon macOS package', () async {
+    final repository = GitHubUpdateRepository(
+      gateway: _FakeGateway(),
+      currentVersion: '0.1.6',
+      platform: UpdatePlatform.macos,
+      macosArchitecture: MacOSArchitecture.arm64,
+    );
+
+    final result = await repository.checkForUpdate();
+
+    expect(
+      (result as UpdateIsAvailable).update.assetName,
+      'Post-Killer-0.1.7-macos-arm64.dmg',
+    );
+  });
+
+  test('selects an Intel macOS package', () async {
+    final repository = GitHubUpdateRepository(
+      gateway: _FakeGateway(),
+      currentVersion: '0.1.6',
+      platform: UpdatePlatform.macos,
+      macosArchitecture: MacOSArchitecture.x86_64,
+    );
+
+    final result = await repository.checkForUpdate();
+
+    expect(
+      (result as UpdateIsAvailable).update.assetName,
+      'Post-Killer-0.1.7-macos-x86_64.dmg',
+    );
+  });
 }
 
 class _FakeGateway implements GitHubReleaseGateway {
@@ -44,8 +76,12 @@ class _FakeGateway implements GitHubReleaseGateway {
         version: version,
         assets: [
           ReleaseAssetPayload(
-            name: 'Post-Killer-0.1.7-macos.dmg',
+            name: 'Post-Killer-0.1.7-macos-arm64.dmg',
             downloadUrl: Uri.parse('https://example.test/macos.dmg'),
+          ),
+          ReleaseAssetPayload(
+            name: 'Post-Killer-0.1.7-macos-x86_64.dmg',
+            downloadUrl: Uri.parse('https://example.test/macos-intel.dmg'),
           ),
           ReleaseAssetPayload(
             name: 'Post-Killer-0.1.7-windows-setup.exe',

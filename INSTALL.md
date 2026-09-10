@@ -9,19 +9,22 @@
 > не удаляйте Postman, если он нужен вам для production-сценариев: secure
 > storage, proxy, custom CA и cookie jar пока отсутствуют.
 
-## Установка на Mac — M-чип и Intel
+## Установка на Mac — выберите свой процессор
 
-Один и тот же файл подходит для всех Mac: MacBook с M1/M2/M3/M4 и старых Mac
-с Intel.
+Скачивайте нативную сборку для своего Mac: `arm64` для M1/M2/M3/M4 и `x86_64`
+для Intel. Это исключает запуск через Rosetta и связанные с ним просадки
+плавности интерфейса.
 
 1. Откройте страницу [Actions проекта](https://github.com/batrusha262-debug/post_killer/actions).
 2. Слева нажмите **Release packages**.
 3. Откройте самый свежий запуск с зелёной галочкой ✓. Если галочки нет,
    дождитесь завершения сборки.
 4. Внизу страницы, в разделе **Artifacts**, нажмите
-   **post-killer-macos-dmg**. Скачается ZIP-архив.
+   **post-killer-macos-arm64-dmg** для M-чипа или
+   **post-killer-macos-x86_64-dmg** для Intel. Скачается ZIP-архив.
 5. В папке «Загрузки» дважды нажмите на ZIP — появится файл
-   `Post-Killer-…-macos.dmg`.
+   `Post-Killer-…-macos-arm64.dmg` или
+   `Post-Killer-…-macos-x86_64.dmg`.
 6. Дважды нажмите на `.dmg`. Откроется окно Finder.
 7. Перетащите **Post Killer.app** в папку **Applications / Программы**.
 8. Откройте Launchpad или Spotlight (`⌘` + пробел), введите **Post Killer** и

@@ -2,8 +2,18 @@
 set -euo pipefail
 
 VERSION="${1:?pass package version}"
+ARCHITECTURE="${2:?pass target architecture (arm64 or x86_64)}"
 APP_PATH="apps/client_flutter/build/macos/Build/Products/Release/Post Killer.app"
-OUTPUT="dist/Post-Killer-${VERSION}-macos.dmg"
+
+case "$ARCHITECTURE" in
+  arm64|x86_64) ;;
+  *)
+    echo "Unsupported macOS architecture: $ARCHITECTURE" >&2
+    exit 2
+    ;;
+esac
+
+OUTPUT="dist/Post-Killer-${VERSION}-macos-${ARCHITECTURE}.dmg"
 
 test -d "$APP_PATH"
 
@@ -11,9 +21,8 @@ EXECUTABLE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP_
 EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/$EXECUTABLE_NAME"
 ARCHITECTURES="$(lipo -archs "$EXECUTABLE_PATH")"
 
-if [[ " $ARCHITECTURES " != *" arm64 "* || " $ARCHITECTURES " != *" x86_64 "* ]]; then
-  echo "Expected a universal arm64 + x86_64 app, found: $ARCHITECTURES" >&2
-  echo "Flutter macOS release builds include both architectures by default." >&2
+if [[ "$ARCHITECTURES" != "$ARCHITECTURE" ]]; then
+  echo "Expected a native $ARCHITECTURE app only, found: $ARCHITECTURES" >&2
   exit 1
 fi
 
