@@ -71,6 +71,27 @@ void main() {
     },
   );
 
+  test('a stalled executor returns control to the Send button', () async {
+    final bloc = WorkspaceBloc(
+      const _FakeWorkspaceRepository(request),
+      executor: _DelayedExecutor(),
+      executionTimeout: const Duration(milliseconds: 1),
+      autoBootstrap: false,
+      initialState: WorkspaceState(
+        workspaces: const [WorkspaceSummary(id: 'workspace', name: 'Workspace')],
+        selectedWorkspaceId: 'workspace',
+        collections: const [],
+        tabs: [RequestTab.fromSaved(request)],
+        selectedTabId: request.id,
+      ),
+    );
+    final finished = bloc.stream.firstWhere((state) => !state.isExecuting);
+    bloc.add(const WorkspaceRequestSent());
+    await finished;
+    expect(bloc.state.execution?.error, contains('Превышено время ожидания'));
+    await bloc.close();
+  });
+
   test(
     'workspace selection waits for collection creation across event types',
     () async {

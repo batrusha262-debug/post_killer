@@ -19,6 +19,7 @@ void main() {
           ),
         ),
       );
+      expect(contents, isNot(contains('com.apple.security.app-sandbox')));
     });
   }
 }

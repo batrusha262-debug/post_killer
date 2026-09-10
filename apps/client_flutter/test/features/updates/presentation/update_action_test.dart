@@ -68,7 +68,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Доступна v0.1.8'), findsOneWidget);
-    expect(find.text('Скачать'), findsOneWidget);
+    expect(find.text('Скачать и установить'), findsOneWidget);
   });
 }
 

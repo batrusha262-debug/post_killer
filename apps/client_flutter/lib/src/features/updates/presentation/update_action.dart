@@ -3,19 +3,42 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../application/update_bloc.dart';
+import '../data/update_installer.dart';
 import '../domain/update_models.dart';
 
-class UpdateAction extends StatelessWidget {
-  const UpdateAction({super.key});
+class UpdateAction extends StatefulWidget {
+  const UpdateAction({super.key, this.installer});
+
+  final UpdateInstaller? installer;
+
+  @override
+  State<UpdateAction> createState() => _UpdateActionState();
+}
+
+class _UpdateActionState extends State<UpdateAction> {
+  late final UpdateInstaller _installer =
+      widget.installer ?? HttpPlatformUpdateInstaller();
+  bool _isInstalling = false;
+  var _automaticCheckInProgress = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<UpdateBloc>().add(const UpdateCheckRequested());
+    });
+  }
 
   @override
   Widget build(BuildContext context) => BlocConsumer<UpdateBloc, UpdateState>(
     listener: (context, state) {
       switch (state) {
         case UpdateCurrent():
-          _showMessage(context, 'Установлена последняя версия.');
+          if (!_automaticCheckInProgress) {
+            _showMessage(context, 'Установлена последняя версия.');
+          }
         case UpdateCheckFailed(:final message):
-          _showFailure(context, message);
+          if (!_automaticCheckInProgress) _showFailure(context, message);
         case UpdateAvailable(:final update):
           _showDownloadDialog(context, update);
         case UpdateIdle() || UpdateChecking():
@@ -32,18 +55,19 @@ class UpdateAction extends StatelessWidget {
         child: IconButton(
           key: const Key('check-updates-button'),
           tooltip: label,
-          onPressed: state is UpdateChecking
+          onPressed: state is UpdateChecking || _isInstalling
               ? null
               : () {
                   if (state case UpdateAvailable(:final update)) {
                     _showDownloadDialog(context, update);
-                  } else {
-                    context.read<UpdateBloc>().add(
+                } else {
+                  _automaticCheckInProgress = false;
+                  context.read<UpdateBloc>().add(
                       const UpdateCheckRequested(),
                     );
                   }
                 },
-          icon: state is UpdateChecking
+          icon: state is UpdateChecking || _isInstalling
               ? const SizedBox.square(
                   dimension: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
@@ -58,11 +82,11 @@ class UpdateAction extends StatelessWidget {
     },
   );
 
-  static void _showMessage(BuildContext context, String message) =>
+  void _showMessage(BuildContext context, String message) =>
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
 
-  static Future<void> _showFailure(BuildContext context, String message) =>
+  Future<void> _showFailure(BuildContext context, String message) =>
       showDialog<void>(
         context: context,
         builder: (dialogContext) => AlertDialog(
@@ -89,7 +113,7 @@ class UpdateAction extends StatelessWidget {
         ),
       );
 
-  static Future<void> _openUrl(BuildContext context, Uri uri) async {
+  Future<void> _openUrl(BuildContext context, Uri uri) async {
     try {
       final launched = await launchUrl(
         uri,
@@ -103,7 +127,7 @@ class UpdateAction extends StatelessWidget {
     }
   }
 
-  static Future<void> _showDownloadDialog(
+  Future<void> _showDownloadDialog(
     BuildContext context,
     AppUpdate update,
   ) => showDialog<void>(
@@ -111,8 +135,8 @@ class UpdateAction extends StatelessWidget {
     builder: (dialogContext) => AlertDialog(
       title: Text('Доступна ${update.version}'),
       content: Text(
-        'Будет открыт официальный файл ${update.assetName} из GitHub Releases. '
-        'После загрузки установите его обычным способом с заменой старого приложения.',
+        'Версия ${update.version} будет скачана из GitHub Releases и установлена '
+        'поверх текущей версии. Приложение перезапустится автоматически.',
       ),
       actions: [
         TextButton(
@@ -122,9 +146,16 @@ class UpdateAction extends StatelessWidget {
         FilledButton(
           onPressed: () async {
             Navigator.of(dialogContext).pop();
-            await _openUrl(context, update.downloadUri);
+            setState(() => _isInstalling = true);
+            try {
+              await _installer.downloadAndInstall(update);
+            } on UpdateInstallException catch (error) {
+              if (context.mounted) _showMessage(context, error.message);
+            } finally {
+              if (context.mounted) setState(() => _isInstalling = false);
+            }
           },
-          child: const Text('Скачать'),
+          child: const Text('Скачать и установить'),
         ),
       ],
     ),

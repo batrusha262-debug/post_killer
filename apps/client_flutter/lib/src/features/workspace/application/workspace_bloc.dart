@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../data/workspace_repository.dart';
@@ -13,8 +15,10 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     RequestExecutor? executor,
     WorkspaceState? initialState,
     bool autoBootstrap = true,
+    Duration executionTimeout = const Duration(seconds: 35),
   }) : _repository = repository,
        _executor = executor ?? const UnavailableRequestExecutor(),
+       _executionTimeout = executionTimeout,
        super(
          initialState ??
              const WorkspaceState(
@@ -113,6 +117,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
 
   final WorkspaceRepository _repository;
   final RequestExecutor _executor;
+  final Duration _executionTimeout;
 
   var _untitledCounter = 0;
 
@@ -419,7 +424,14 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
 
   Future<RequestExecutionView> _executeSafely(RequestTab tab) async {
     try {
-      return await _executor.execute(tab);
+      // The Rust transport has its own timeout, but this outer deadline also
+      // protects the UI from a stalled native bridge or DNS resolver.
+      return await _executor.execute(tab).timeout(_executionTimeout);
+    } on TimeoutException {
+      return RequestExecutionView.error(
+        requestId: tab.id,
+        error: 'Превышено время ожидания ответа. Проверьте сеть и адрес запроса.',
+      );
     } on Object {
       // A bridge/runtime failure must not strand the Send button in its loading
       // state, and its implementation details may contain sensitive data.
