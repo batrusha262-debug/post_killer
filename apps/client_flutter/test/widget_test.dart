@@ -1,4 +1,5 @@
 import 'package:client_flutter/src/app.dart';
+import 'package:client_flutter/src/settings/app_settings.dart';
 import 'package:client_flutter/src/features/workspace/data/request_executor.dart';
 import 'package:client_flutter/src/features/workspace/data/workspace_repository.dart';
 import 'package:client_flutter/src/features/workspace/domain/workspace_models.dart';
@@ -173,15 +174,89 @@ void main() {
     expect(find.text('Health check'), findsNWidgets(3));
   });
 
-  testWidgets(
-    'hides environment and settings controls until their flows exist',
-    (tester) async {
-      await pumpApp(tester);
+  testWidgets('settings change themes without losing request drafts', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tester.enterText(
+      find.byKey(const Key('request-url-field')),
+      'https://localhost/draft',
+    );
+    await tester.tap(find.byKey(const Key('settings-button')));
+    await tester.pumpAndSettle();
+    for (final theme in ['dark', 'slay', 'light', 'system']) {
+      await tester.tap(find.byKey(Key('theme-$theme')));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      expect(find.text('https://localhost/draft'), findsOneWidget);
+      final material = tester.widget<MaterialApp>(find.byType(MaterialApp));
+      expect(
+        material.themeMode,
+        theme == 'dark'
+            ? ThemeMode.dark
+            : theme == 'system'
+            ? ThemeMode.system
+            : ThemeMode.light,
+      );
+    }
+    await tester.tap(find.text('Компактный интерфейс'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Уменьшить анимацию'));
+    await tester.pumpAndSettle();
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    expect(app.theme!.visualDensity, VisualDensity.compact);
+    expect(app.themeAnimationDuration, Duration.zero);
+    await tester.tap(find.text('Готово'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('request-tab-create-user')));
+    await tester.pumpAndSettle();
+    expect(find.text('https://api.example.com/users'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('request-tab-health-check')));
+    await tester.pumpAndSettle();
+    expect(find.text('https://localhost/draft'), findsOneWidget);
+  });
 
-      expect(find.text('No environment'), findsNothing);
-      expect(find.byIcon(Icons.settings_outlined), findsNothing);
-    },
-  );
+  testWidgets('request execution works in dark and slay themes', (
+    tester,
+  ) async {
+    for (final appearance in [AppAppearance.dark, AppAppearance.slay]) {
+      final settings = AppSettings();
+      await settings.update(appearance: appearance);
+      tester.view.physicalSize = const Size(1440, 900);
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        PostKillerApp(
+          key: ValueKey(appearance),
+          settings: settings,
+          workspaceRepository: const _WidgetWorkspaceRepository(),
+          requestExecutor: const _ValidationErrorExecutor(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Send'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('response-tab')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('response-error')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      settings.dispose();
+    }
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+
+  testWidgets('narrow desktop window stays usable without overflow', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    tester.view.physicalSize = const Size(900, 700);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('settings-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Настройки'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
 
 class _ValidationErrorExecutor implements RequestExecutor {

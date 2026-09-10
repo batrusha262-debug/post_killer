@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../domain/workspace_models.dart';
+import 'method_color.dart';
 
 class HistoryPane extends StatelessWidget {
   const HistoryPane({super.key, required this.entries});
@@ -29,7 +30,9 @@ class HistoryPane extends StatelessWidget {
               entry.error == null
                   ? Icons.check_circle_outline
                   : Icons.error_outline,
-              color: entry.error == null ? Colors.green : Colors.red,
+              color: entry.error == null
+                  ? methodColor(context, HttpMethod.get)
+                  : Theme.of(context).colorScheme.error,
             ),
             title: Text('${entry.method.label} ${entry.title}'),
             subtitle: Text(

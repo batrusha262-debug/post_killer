@@ -90,6 +90,7 @@ class CollectionsPane extends StatelessWidget {
                   },
           ),
         ),
+      const SizedBox(height: 12),
       if (error case final message?)
         Padding(padding: const EdgeInsets.all(12), child: Text(message)),
       Padding(

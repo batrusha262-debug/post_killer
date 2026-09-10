@@ -49,60 +49,69 @@ class RequestWorkspace extends StatelessWidget {
   final VoidCallback onSend;
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      SizedBox(
-        height: 46,
-        child: Row(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: workspace.tabs.length,
-                itemBuilder: (context, index) {
-                  final tab = workspace.tabs[index];
-                  return RequestTabButton(
-                    tab: tab,
-                    selected: tab.id == workspace.selectedTabId,
-                    onTap: () => onSelectTab(tab.id),
-                    onClose: () => onCloseTab(tab.id),
-                  );
-                },
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.all(12),
+    clipBehavior: Clip.antiAlias,
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+    ),
+    child: Column(
+      children: [
+        SizedBox(
+          height: 46,
+          child: Row(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: workspace.tabs.length,
+                  itemBuilder: (context, index) {
+                    final tab = workspace.tabs[index];
+                    return RequestTabButton(
+                      tab: tab,
+                      selected: tab.id == workspace.selectedTabId,
+                      onTap: () => onSelectTab(tab.id),
+                      onClose: () => onCloseTab(tab.id),
+                    );
+                  },
+                ),
               ),
-            ),
-            IconButton(
-              tooltip: 'New tab',
-              onPressed: onNewTab,
-              icon: const Icon(Icons.add, size: 20),
-            ),
-          ],
+              IconButton(
+                tooltip: 'New tab',
+                onPressed: onNewTab,
+                icon: const Icon(Icons.add, size: 20),
+              ),
+            ],
+          ),
         ),
-      ),
-      const Divider(height: 1),
-      Expanded(
-        child: workspace.selectedTab == null
-            ? const EmptyWorkspace()
-            : RequestEditor(
-                key: ValueKey(workspace.selectedTab!.id),
-                tab: workspace.selectedTab!,
-                onMethodChanged: onMethodChanged,
-                onTitleChanged: onTitleChanged,
-                onUrlChanged: onUrlChanged,
-                onBodyChanged: onBodyChanged,
-                onBodyFormatChanged: onBodyFormatChanged,
-                onAddQuery: onAddQuery,
-                onAddHeader: onAddHeader,
-                onHeaderPreset: onHeaderPreset,
-                onQueryChanged: onQueryChanged,
-                onHeaderChanged: onHeaderChanged,
-                onDeleteHeader: onDeleteHeader,
-                collections: workspace.collections,
-                onSave: onSave,
-                onSend: onSend,
-                isExecuting: workspace.isExecuting,
-                execution: workspace.selectedExecution,
-              ),
-      ),
-    ],
+        const Divider(height: 1),
+        Expanded(
+          child: workspace.selectedTab == null
+              ? const EmptyWorkspace()
+              : RequestEditor(
+                  key: ValueKey(workspace.selectedTab!.id),
+                  tab: workspace.selectedTab!,
+                  onMethodChanged: onMethodChanged,
+                  onTitleChanged: onTitleChanged,
+                  onUrlChanged: onUrlChanged,
+                  onBodyChanged: onBodyChanged,
+                  onBodyFormatChanged: onBodyFormatChanged,
+                  onAddQuery: onAddQuery,
+                  onAddHeader: onAddHeader,
+                  onHeaderPreset: onHeaderPreset,
+                  onQueryChanged: onQueryChanged,
+                  onHeaderChanged: onHeaderChanged,
+                  onDeleteHeader: onDeleteHeader,
+                  collections: workspace.collections,
+                  onSave: onSave,
+                  onSend: onSend,
+                  isExecuting: workspace.isExecuting,
+                  execution: workspace.selectedExecution,
+                ),
+        ),
+      ],
+    ),
   );
 }
