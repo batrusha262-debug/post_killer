@@ -83,7 +83,7 @@ class _PostKillerAppState extends State<PostKillerApp> {
                       gateway: HttpGitHubReleaseGateway(http.Client()),
                       currentVersion: const String.fromEnvironment(
                         'APP_VERSION',
-                        defaultValue: '0.2.13',
+                        defaultValue: '0.2.14',
                       ),
                     ),
               ),

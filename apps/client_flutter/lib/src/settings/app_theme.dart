@@ -32,6 +32,7 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
     useMaterial3: true,
     colorScheme: colors,
     scaffoldBackgroundColor: colors.surfaceContainerLow,
+    splashFactory: InkSparkle.splashFactory,
     visualDensity: settings.compact
         ? VisualDensity.compact
         : VisualDensity.standard,
@@ -65,6 +66,7 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
         fontFamily: 'Roboto',
         fontSize: 11,
       ),
+      elevation: 0,
     ),
     dividerTheme: DividerThemeData(
       color: colors.outlineVariant.withValues(alpha: 0.65),
@@ -88,13 +90,34 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
       style: FilledButton.styleFrom(
         minimumSize: const Size(48, 44),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        elevation: 1,
+        shadowColor: colors.primary.withValues(alpha: 0.22),
       ),
+    ),
+    cardTheme: CardThemeData(
+      color: colors.surface,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: 0.72)),
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     tabBarTheme: TabBarThemeData(
       labelColor: colors.primary,
       unselectedLabelColor: colors.onSurfaceVariant,
       labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
       dividerColor: colors.outlineVariant,
+      indicatorSize: TabBarIndicatorSize.label,
+      indicator: UnderlineTabIndicator(
+        borderSide: BorderSide(color: colors.primary, width: 3),
+        borderRadius: BorderRadius.circular(4),
+      ),
     ),
     tooltipTheme: const TooltipThemeData(
       waitDuration: Duration(milliseconds: 400),

@@ -95,6 +95,10 @@ final class WorkspaceRequestSent extends WorkspaceEvent {
   const WorkspaceRequestSent();
 }
 
+final class WorkspaceRequestCancelled extends WorkspaceEvent {
+  const WorkspaceRequestCancelled();
+}
+
 final class WorkspaceKeyValueAdded extends WorkspaceEvent {
   const WorkspaceKeyValueAdded({required this.isHeader});
   final bool isHeader;

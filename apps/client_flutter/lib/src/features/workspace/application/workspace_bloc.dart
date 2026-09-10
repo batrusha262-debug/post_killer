@@ -117,6 +117,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     on<WorkspaceKeyValueChanged>(_updateKeyValue);
     on<WorkspaceKeyValueDeleted>(_deleteKeyValue);
     on<WorkspaceRequestSent>(_sendRequest);
+    on<WorkspaceRequestCancelled>(_cancelRequest);
     if (autoBootstrap) add(const WorkspaceBootstrapRequested());
   }
 
@@ -125,6 +126,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
   final Duration executionTimeout;
 
   var _untitledCounter = 0;
+  var _executionGeneration = 0;
 
   Future<void> _storageOperation(
     WorkspaceStorageEvent event,
@@ -407,9 +409,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
   ) async {
     final tab = state.selectedTab;
     if (tab == null || state.isExecuting || !tab.auth.isValid) return;
+    final generation = ++_executionGeneration;
     emit(state.copyWith(isExecuting: true));
     final execution = await _executeSafely(tab);
-    if (emit.isDone) return;
+    // Cancellation immediately releases the UI. A native call may resolve a
+    // little later, but its result must never overwrite a newer request.
+    if (emit.isDone || generation != _executionGeneration) return;
     emit(
       state.copyWith(
         isExecuting: false,
@@ -428,6 +433,23 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           ),
           ...state.history,
         ],
+      ),
+    );
+  }
+
+  void _cancelRequest(
+    WorkspaceRequestCancelled event,
+    Emitter<WorkspaceState> emit,
+  ) {
+    if (!state.isExecuting) return;
+    _executionGeneration += 1;
+    emit(
+      state.copyWith(
+        isExecuting: false,
+        execution: RequestExecutionView.error(
+          requestId: state.selectedTabId ?? '',
+          error: 'Request cancelled.',
+        ),
       ),
     );
   }

@@ -23,6 +23,9 @@ class WorkspaceScreen extends StatelessWidget {
     final controller = context.read<WorkspaceBloc>();
     final colors = Theme.of(context).colorScheme;
     final settings = SettingsScope.of(context);
+    final motionDuration = settings.reduceMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 220);
     return Scaffold(
       appBar: AppBar(
         titleSpacing: Platform.isMacOS ? 90 : 20,
@@ -47,6 +50,38 @@ class WorkspaceScreen extends StatelessWidget {
             ),
             SizedBox(width: 8),
             const Text('Post Killer'),
+            AnimatedSwitcher(
+              duration: motionDuration,
+              child: workspace.isExecuting
+                  ? Container(
+                      key: const Key('request-live-indicator'),
+                      margin: const EdgeInsets.only(left: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: colors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text('Live', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
         actions: [
@@ -79,40 +114,60 @@ class WorkspaceScreen extends StatelessWidget {
                 const VerticalDivider(width: 1),
                 SizedBox(
                   width: 240,
-                  child: switch (workspace.selectedSection) {
-                    WorkspaceSection.collections => CollectionsPane(
-                      workspaces: workspace.workspaces,
-                      selectedWorkspaceId: workspace.selectedWorkspaceId,
-                      collections: workspace.filteredCollections,
-                      isLoading: workspace.isLoading,
-                      error: workspace.storageError,
-                      onWorkspaceSelected: (id) =>
-                          controller.add(WorkspaceSelected(id)),
-                      onNewWorkspace: () => _showNameDialog(
-                        context,
-                        title: 'Новая workspace',
-                        onSubmit: (name) =>
-                            controller.add(WorkspaceCreateRequested(name)),
+                  child: AnimatedSwitcher(
+                    duration: motionDuration,
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    layoutBuilder: (currentChild, previousChildren) =>
+                        currentChild ?? const SizedBox.shrink(),
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.025, 0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
                       ),
-                      onNewCollection: () => _showNameDialog(
-                        context,
-                        title: 'Новая collection',
-                        onSubmit: (name) =>
-                            controller.add(CollectionCreateRequested(name)),
-                      ),
-                      onSearchChanged: (query) => controller.add(
-                        WorkspaceCollectionSearchChanged(query),
-                      ),
-                      onOpenRequest: (request) =>
-                          controller.add(WorkspaceRequestOpened(request)),
-                      onNewRequest: () =>
-                          controller.add(const WorkspaceRequestCreated()),
                     ),
-                    WorkspaceSection.history => HistoryPane(
-                      entries: workspace.history,
+                    child: KeyedSubtree(
+                      key: ValueKey(workspace.selectedSection),
+                      child: switch (workspace.selectedSection) {
+                        WorkspaceSection.collections => CollectionsPane(
+                          workspaces: workspace.workspaces,
+                          selectedWorkspaceId: workspace.selectedWorkspaceId,
+                          collections: workspace.filteredCollections,
+                          isLoading: workspace.isLoading,
+                          error: workspace.storageError,
+                          onWorkspaceSelected: (id) =>
+                              controller.add(WorkspaceSelected(id)),
+                          onNewWorkspace: () => _showNameDialog(
+                            context,
+                            title: 'Новая workspace',
+                            onSubmit: (name) =>
+                                controller.add(WorkspaceCreateRequested(name)),
+                          ),
+                          onNewCollection: () => _showNameDialog(
+                            context,
+                            title: 'Новая collection',
+                            onSubmit: (name) =>
+                                controller.add(CollectionCreateRequested(name)),
+                          ),
+                          onSearchChanged: (query) => controller.add(
+                            WorkspaceCollectionSearchChanged(query),
+                          ),
+                          onOpenRequest: (request) =>
+                              controller.add(WorkspaceRequestOpened(request)),
+                          onNewRequest: () =>
+                              controller.add(const WorkspaceRequestCreated()),
+                        ),
+                        WorkspaceSection.history => HistoryPane(
+                          entries: workspace.history,
+                        ),
+                        WorkspaceSection.variables => const VariablesPane(),
+                      },
                     ),
-                    WorkspaceSection.variables => const VariablesPane(),
-                  },
+                  ),
                 ),
                 const VerticalDivider(width: 1),
                 Expanded(
@@ -167,6 +222,8 @@ class WorkspaceScreen extends StatelessWidget {
                     onHeaderPreset: (name, value) =>
                         controller.add(WorkspaceHeaderPresetAdded(name, value)),
                     onSend: () => controller.add(const WorkspaceRequestSent()),
+                    onCancel: () =>
+                        controller.add(const WorkspaceRequestCancelled()),
                     onSave: (collectionId) => controller.add(
                       WorkspaceRequestSaveRequested(collectionId),
                     ),

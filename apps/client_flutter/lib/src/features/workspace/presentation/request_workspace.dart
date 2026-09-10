@@ -27,6 +27,7 @@ class RequestWorkspace extends StatelessWidget {
     required this.onDeleteHeader,
     required this.onSave,
     required this.onSend,
+    required this.onCancel,
   });
 
   final WorkspaceState workspace;
@@ -49,6 +50,7 @@ class RequestWorkspace extends StatelessWidget {
   final ValueChanged<String> onDeleteHeader;
   final ValueChanged<String> onSave;
   final VoidCallback onSend;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -110,6 +112,7 @@ class RequestWorkspace extends StatelessWidget {
                   collections: workspace.collections,
                   onSave: onSave,
                   onSend: onSend,
+                  onCancel: onCancel,
                   isExecuting: workspace.isExecuting,
                   execution: workspace.selectedExecution,
                 ),

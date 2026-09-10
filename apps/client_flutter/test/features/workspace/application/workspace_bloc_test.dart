@@ -94,6 +94,32 @@ void main() {
     await bloc.close();
   });
 
+  test('cancelling releases the UI and discards a late response', () async {
+    final executor = _DelayedExecutor();
+    final bloc = buildBloc(executor: executor);
+    bloc.add(const WorkspaceRequestSent());
+    await executor.started.future;
+
+    final cancelled = bloc.stream.firstWhere((state) => !state.isExecuting);
+    bloc.add(const WorkspaceRequestCancelled());
+    await cancelled;
+    expect(bloc.state.execution?.error, 'Request cancelled.');
+
+    executor.result.complete(
+      RequestExecutionView.response(
+        requestId: request.id,
+        status: 200,
+        durationMillis: 1,
+        headers: const [],
+        body: 'late response',
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(bloc.state.execution?.error, 'Request cancelled.');
+    expect(bloc.state.history, isEmpty);
+    await bloc.close();
+  });
+
   test(
     'workspace selection waits for collection creation across event types',
     () async {

@@ -27,6 +27,7 @@ class RequestEditor extends StatelessWidget {
     required this.collections,
     required this.onSave,
     required this.onSend,
+    required this.onCancel,
     required this.isExecuting,
     required this.execution,
   });
@@ -49,6 +50,7 @@ class RequestEditor extends StatelessWidget {
   final List<RequestCollection> collections;
   final ValueChanged<String> onSave;
   final VoidCallback onSend;
+  final VoidCallback onCancel;
   final bool isExecuting;
   final RequestExecutionView? execution;
 
@@ -131,16 +133,33 @@ class RequestEditor extends StatelessWidget {
                         child: Icon(Icons.folder_outlined, size: 18),
                       ),
                     ),
-                    FilledButton.icon(
-                      onPressed: isExecuting || !canSend ? null : onSend,
-                      icon: const Icon(Icons.send, size: 17),
-                      label: Text(
-                        isExecuting
-                            ? 'Sending…'
-                            : canSend
-                            ? 'Send'
-                            : 'Fix JSON to send',
-                      ),
+                    AnimatedSwitcher(
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 180),
+                      child: isExecuting
+                          ? FilledButton.icon(
+                              key: const Key('cancel-request-button'),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .error,
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .onError,
+                              ),
+                              onPressed: onCancel,
+                              icon: const Icon(Icons.close_rounded, size: 17),
+                              label: const Text('Cancel'),
+                            )
+                          : FilledButton.icon(
+                              key: const Key('send-request-button'),
+                              onPressed: canSend ? onSend : null,
+                              icon: const Icon(Icons.send_rounded, size: 17),
+                              label: Text(
+                                canSend ? 'Send' : 'Fix JSON to send',
+                              ),
+                            ),
                     ),
                   ],
                 ),
