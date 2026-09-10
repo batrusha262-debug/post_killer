@@ -50,7 +50,7 @@ class RequestWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.all(12),
+    margin: const EdgeInsets.all(8),
     clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surface,
@@ -60,7 +60,7 @@ class RequestWorkspace extends StatelessWidget {
     child: Column(
       children: [
         SizedBox(
-          height: 46,
+          height: 40,
           child: Row(
             children: [
               Expanded(

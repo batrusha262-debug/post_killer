@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../../../settings/app_settings.dart';
 import '../../../settings/settings_dialog.dart';
 import 'navigation_panes.dart';
@@ -23,7 +25,7 @@ class WorkspaceScreen extends StatelessWidget {
     final settings = SettingsScope.of(context);
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: 20,
+        titleSpacing: Platform.isMacOS ? 90 : 20,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -65,7 +67,7 @@ class WorkspaceScreen extends StatelessWidget {
         builder: (context, constraints) => SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SizedBox(
-            width: constraints.maxWidth < 1000 ? 1000 : constraints.maxWidth,
+            width: constraints.maxWidth < 1100 ? 1100 : constraints.maxWidth,
             height: constraints.maxHeight,
             child: Row(
               children: [
@@ -76,7 +78,7 @@ class WorkspaceScreen extends StatelessWidget {
                 ),
                 const VerticalDivider(width: 1),
                 SizedBox(
-                  width: 280,
+                  width: 240,
                   child: switch (workspace.selectedSection) {
                     WorkspaceSection.collections => CollectionsPane(
                       workspaces: workspace.workspaces,

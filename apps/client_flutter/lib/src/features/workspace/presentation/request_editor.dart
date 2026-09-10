@@ -54,54 +54,27 @@ class RequestEditor extends StatelessWidget {
     final canSend =
         tab.bodyFormat == RequestBodyFormat.text || isValidJson(tab.body);
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Expanded(
+              SizedBox(
+                width: 160,
                 child: TextFormField(
                   key: const Key('request-name-field'),
                   initialValue: tab.title,
                   onChanged: onTitleChanged,
                   decoration: const InputDecoration(
                     isDense: true,
-                    labelText: 'Request name',
+                    hintText: 'Request name',
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              PopupMenuButton<String>(
-                key: const Key('save-request-menu'),
-                tooltip: 'Save to folder',
-                enabled: collections.isNotEmpty,
-                onSelected: onSave,
-                itemBuilder: (context) => [
-                  for (final collection in collections)
-                    PopupMenuItem(
-                      value: collection.id,
-                      child: Text(collection.name),
-                    ),
-                ],
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Row(
-                    children: [
-                      Icon(Icons.folder_outlined, size: 18),
-                      SizedBox(width: 4),
-                      Text('Save'),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
               SizedBox(
-                width: 160,
+                width: 116,
                 child: DropdownButtonFormField<HttpMethod>(
                   key: const Key('method-picker'),
                   initialValue: tab.method,
@@ -131,6 +104,23 @@ class RequestEditor extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              PopupMenuButton<String>(
+                key: const Key('save-request-menu'),
+                tooltip: 'Save to folder',
+                enabled: collections.isNotEmpty,
+                onSelected: onSave,
+                itemBuilder: (context) => [
+                  for (final collection in collections)
+                    PopupMenuItem(
+                      value: collection.id,
+                      child: Text(collection.name),
+                    ),
+                ],
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Icon(Icons.folder_outlined, size: 18),
+                ),
+              ),
               FilledButton.icon(
                 onPressed: isExecuting || !canSend ? null : onSend,
                 icon: const Icon(Icons.send, size: 17),
@@ -144,7 +134,7 @@ class RequestEditor extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Expanded(
             child: DefaultTabController(
               length: 4,
