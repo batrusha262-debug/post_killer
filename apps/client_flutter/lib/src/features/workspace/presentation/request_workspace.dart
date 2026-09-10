@@ -14,13 +14,17 @@ class RequestWorkspace extends StatelessWidget {
     required this.onCloseTab,
     required this.onNewTab,
     required this.onMethodChanged,
+    required this.onTitleChanged,
     required this.onUrlChanged,
     required this.onBodyChanged,
+    required this.onBodyFormatChanged,
     required this.onAddQuery,
     required this.onAddHeader,
     required this.onHeaderPreset,
     required this.onQueryChanged,
     required this.onHeaderChanged,
+    required this.onDeleteHeader,
+    required this.onSave,
     required this.onSend,
   });
 
@@ -29,8 +33,10 @@ class RequestWorkspace extends StatelessWidget {
   final ValueChanged<String> onCloseTab;
   final VoidCallback onNewTab;
   final ValueChanged<HttpMethod> onMethodChanged;
+  final ValueChanged<String> onTitleChanged;
   final ValueChanged<String> onUrlChanged;
   final ValueChanged<String> onBodyChanged;
+  final ValueChanged<RequestBodyFormat> onBodyFormatChanged;
   final VoidCallback onAddQuery;
   final VoidCallback onAddHeader;
   final void Function(String, String) onHeaderPreset;
@@ -38,6 +44,8 @@ class RequestWorkspace extends StatelessWidget {
   onQueryChanged;
   final void Function(String, {String? key, String? value, bool? enabled})
   onHeaderChanged;
+  final ValueChanged<String> onDeleteHeader;
+  final ValueChanged<String> onSave;
   final VoidCallback onSend;
 
   @override
@@ -78,13 +86,18 @@ class RequestWorkspace extends StatelessWidget {
                 key: ValueKey(workspace.selectedTab!.id),
                 tab: workspace.selectedTab!,
                 onMethodChanged: onMethodChanged,
+                onTitleChanged: onTitleChanged,
                 onUrlChanged: onUrlChanged,
                 onBodyChanged: onBodyChanged,
+                onBodyFormatChanged: onBodyFormatChanged,
                 onAddQuery: onAddQuery,
                 onAddHeader: onAddHeader,
                 onHeaderPreset: onHeaderPreset,
                 onQueryChanged: onQueryChanged,
                 onHeaderChanged: onHeaderChanged,
+                onDeleteHeader: onDeleteHeader,
+                collections: workspace.collections,
+                onSave: onSave,
                 onSend: onSend,
                 isExecuting: workspace.isExecuting,
                 execution: workspace.selectedExecution,

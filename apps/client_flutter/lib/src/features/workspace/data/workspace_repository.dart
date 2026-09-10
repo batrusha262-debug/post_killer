@@ -10,6 +10,10 @@ abstract interface class WorkspaceRepository {
     required String workspaceId,
     required String name,
   });
+  Future<SavedRequest> saveRequest({
+    required String collectionId,
+    required RequestTab request,
+  });
 }
 
 class GatewayWorkspaceRepository implements WorkspaceRepository {
@@ -33,4 +37,10 @@ class GatewayWorkspaceRepository implements WorkspaceRepository {
     required String workspaceId,
     required String name,
   }) => _gateway.createCollection(workspaceId: workspaceId, name: name);
+
+  @override
+  Future<SavedRequest> saveRequest({
+    required String collectionId,
+    required RequestTab request,
+  }) => _gateway.saveRequest(collectionId: collectionId, request: request);
 }

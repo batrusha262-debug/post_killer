@@ -62,7 +62,9 @@ class FrbRequestExecutor implements RequestExecutor {
     body: FfiRequestBody(
       kind: request.body.isEmpty
           ? FfiRequestBodyKind.empty
-          : FfiRequestBodyKind.json,
+          : request.bodyFormat == RequestBodyFormat.json
+          ? FfiRequestBodyKind.json
+          : FfiRequestBodyKind.text,
       content: request.body,
       fields: const [],
     ),

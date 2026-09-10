@@ -7,8 +7,8 @@ import 'frb_generated.dart';
 
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `app_data_directory`, `error`, `next_id`, `success`, `validation_field`, `with_storage`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `from`, `from`, `from`, `from`, `from`, `from`, `from`, `try_from`, `try_from`
+// These functions are ignored because they are not marked as `pub`: `app_data_directory`, `error`, `next_id`, `success`, `with_storage`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Lists persisted local workspaces. The database is owned exclusively by the
 /// Rust storage adapter; Flutter only receives owned DTOs through FRB.
@@ -29,6 +29,22 @@ Future<FfiCollection> createCollection({
 }) => PostKillerRustLib.instance.api.crateApiCreateCollection(
   workspaceId: workspaceId,
   name: name,
+);
+
+Future<List<FfiStoredRequest>> listRequests({required String collectionId}) =>
+    PostKillerRustLib.instance.api.crateApiListRequests(
+      collectionId: collectionId,
+    );
+
+/// Creates or updates a request in the selected collection/folder.
+Future<FfiStoredRequest> saveRequest({
+  required String collectionId,
+  String? folderId,
+  required FfiRequest request,
+}) => PostKillerRustLib.instance.api.crateApiSaveRequest(
+  collectionId: collectionId,
+  folderId: folderId,
+  request: request,
 );
 
 /// Executes a request using conservative transport defaults. FRB maps this
@@ -379,6 +395,34 @@ class FfiResponseHeader {
           runtimeType == other.runtimeType &&
           name == other.name &&
           value == other.value;
+}
+
+/// A complete saved request. Keeping the collection association alongside the
+/// request lets Flutter show a saved request in its folder and reopen it with
+/// all fields intact.
+class FfiStoredRequest {
+  final String collectionId;
+  final String? folderId;
+  final FfiRequest request;
+
+  const FfiStoredRequest({
+    required this.collectionId,
+    this.folderId,
+    required this.request,
+  });
+
+  @override
+  int get hashCode =>
+      collectionId.hashCode ^ folderId.hashCode ^ request.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiStoredRequest &&
+          runtimeType == other.runtimeType &&
+          collectionId == other.collectionId &&
+          folderId == other.folderId &&
+          request == other.request;
 }
 
 class FfiWorkspace {

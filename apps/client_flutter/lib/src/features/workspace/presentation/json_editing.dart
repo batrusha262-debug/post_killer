@@ -126,7 +126,27 @@ List<JsonCompletion> jsonCompletions(TextEditingValue value) {
     ];
   }
   final match = RegExp(r'[A-Za-z]+$').firstMatch(before);
-  if (match == null) return [];
+  if (match == null) {
+    final context = before.trimRight();
+    if (!RegExp(r'[:\[,]$').hasMatch(context)) return [];
+    return const [
+          JsonCompletion('string', 0, 0, '""'),
+          JsonCompletion('object', 0, 0, '{}'),
+          JsonCompletion('array', 0, 0, '[]'),
+          JsonCompletion('true', 0, 0, 'true'),
+          JsonCompletion('false', 0, 0, 'false'),
+          JsonCompletion('null', 0, 0, 'null'),
+        ]
+        .map(
+          (completion) => JsonCompletion(
+            completion.label,
+            end,
+            end,
+            completion.replacement,
+          ),
+        )
+        .toList();
+  }
   final context = before.substring(0, match.start).trimRight();
   if (context.isNotEmpty && !RegExp(r'[:\[,]$').hasMatch(context)) return [];
   return [

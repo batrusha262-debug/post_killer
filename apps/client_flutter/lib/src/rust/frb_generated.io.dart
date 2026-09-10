@@ -94,6 +94,9 @@ abstract class PostKillerRustLibApiImplPlatform
   FfiResponseHeader dco_decode_ffi_response_header(dynamic raw);
 
   @protected
+  FfiStoredRequest dco_decode_ffi_stored_request(dynamic raw);
+
+  @protected
   FfiWorkspace dco_decode_ffi_workspace(dynamic raw);
 
   @protected
@@ -107,6 +110,9 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   List<FfiResponseHeader> dco_decode_list_ffi_response_header(dynamic raw);
+
+  @protected
+  List<FfiStoredRequest> dco_decode_list_ffi_stored_request(dynamic raw);
 
   @protected
   List<FfiWorkspace> dco_decode_list_ffi_workspace(dynamic raw);
@@ -242,6 +248,9 @@ abstract class PostKillerRustLibApiImplPlatform
   );
 
   @protected
+  FfiStoredRequest sse_decode_ffi_stored_request(SseDeserializer deserializer);
+
+  @protected
   FfiWorkspace sse_decode_ffi_workspace(SseDeserializer deserializer);
 
   @protected
@@ -257,6 +266,11 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   List<FfiResponseHeader> sse_decode_list_ffi_response_header(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FfiStoredRequest> sse_decode_list_ffi_stored_request(
     SseDeserializer deserializer,
   );
 
@@ -420,6 +434,12 @@ abstract class PostKillerRustLibApiImplPlatform
   );
 
   @protected
+  void sse_encode_ffi_stored_request(
+    FfiStoredRequest self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_ffi_workspace(FfiWorkspace self, SseSerializer serializer);
 
   @protected
@@ -440,6 +460,12 @@ abstract class PostKillerRustLibApiImplPlatform
   @protected
   void sse_encode_list_ffi_response_header(
     List<FfiResponseHeader> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ffi_stored_request(
+    List<FfiStoredRequest> self,
     SseSerializer serializer,
   );
 

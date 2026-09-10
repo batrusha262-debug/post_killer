@@ -7,7 +7,7 @@
 use post_killer_application::RequestExecutionService;
 use post_killer_domain::RequestDefinition;
 use post_killer_http_engine::{ExecutionOptions, ReqwestRequestExecutor};
-use post_killer_storage_sqlite::{Repository, SqliteStorage};
+use post_killer_storage_sqlite::{Repository, SqliteStorage, StoredRequest};
 use std::{
     path::PathBuf,
     sync::{Mutex, OnceLock},
@@ -27,6 +27,16 @@ pub struct FfiCollection {
     pub id: String,
     pub workspace_id: String,
     pub name: String,
+}
+
+/// A complete saved request. Keeping the collection association alongside the
+/// request lets Flutter show a saved request in its folder and reopen it with
+/// all fields intact.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FfiStoredRequest {
+    pub collection_id: String,
+    pub folder_id: Option<String>,
+    pub request: FfiRequest,
 }
 
 /// Lists persisted local workspaces. The database is owned exclusively by the
@@ -63,6 +73,35 @@ pub fn create_collection(workspace_id: String, name: String) -> Result<FfiCollec
             .map_err(|error| error.to_string())
     })
     .map(Into::into)
+}
+
+pub fn list_requests(collection_id: String) -> Result<Vec<FfiStoredRequest>, String> {
+    with_storage(|storage| {
+        storage
+            .list_requests(&collection_id)
+            .map_err(|error| error.to_string())
+    })
+    .map(|requests| requests.into_iter().map(Into::into).collect())
+}
+
+/// Creates or updates a request in the selected collection/folder.
+pub fn save_request(
+    collection_id: String,
+    folder_id: Option<String>,
+    request: FfiRequest,
+) -> Result<FfiStoredRequest, String> {
+    let definition = RequestDefinition::try_from(request).map_err(|error| error.message)?;
+    let stored = StoredRequest {
+        collection_id,
+        folder_id,
+        definition,
+    };
+    with_storage(|storage| {
+        storage
+            .save_request(stored.clone())
+            .map_err(|error| error.to_string())
+    })?;
+    Ok(stored.into())
 }
 
 fn with_storage<T>(

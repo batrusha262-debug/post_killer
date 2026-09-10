@@ -5,7 +5,7 @@ use post_killer_domain::{
 use post_killer_http_engine::{
     ExecuteError, ExecutionOptions, RedirectPolicy, ResponsePayload, TransportErrorKind,
 };
-use post_killer_storage_sqlite::{Collection, Workspace};
+use post_killer_storage_sqlite::{Collection, StoredRequest, Workspace};
 use std::time::Duration;
 
 impl TryFrom<FfiRequest> for RequestDefinition {
@@ -103,8 +103,32 @@ impl From<FfiRequestMethod> for RequestMethod {
     }
 }
 
+impl From<RequestMethod> for FfiRequestMethod {
+    fn from(value: RequestMethod) -> Self {
+        match value {
+            RequestMethod::Get => Self::Get,
+            RequestMethod::Post => Self::Post,
+            RequestMethod::Put => Self::Put,
+            RequestMethod::Patch => Self::Patch,
+            RequestMethod::Delete => Self::Delete,
+            RequestMethod::Head => Self::Head,
+            RequestMethod::Options => Self::Options,
+        }
+    }
+}
+
 impl From<FfiKeyValue> for KeyValue {
     fn from(value: FfiKeyValue) -> Self {
+        Self {
+            key: value.key,
+            value: value.value,
+            enabled: value.enabled,
+        }
+    }
+}
+
+impl From<KeyValue> for FfiKeyValue {
+    fn from(value: KeyValue) -> Self {
         Self {
             key: value.key,
             value: value.value,
@@ -118,6 +142,15 @@ impl From<FfiApiKeyPlacement> for ApiKeyPlacement {
         match value {
             FfiApiKeyPlacement::Header => Self::Header,
             FfiApiKeyPlacement::Query => Self::Query,
+        }
+    }
+}
+
+impl From<ApiKeyPlacement> for FfiApiKeyPlacement {
+    fn from(value: ApiKeyPlacement) -> Self {
+        match value {
+            ApiKeyPlacement::Header => Self::Header,
+            ApiKeyPlacement::Query => Self::Query,
         }
     }
 }
@@ -137,6 +170,107 @@ impl From<Collection> for FfiCollection {
             id: value.id,
             workspace_id: value.workspace_id,
             name: value.name,
+        }
+    }
+}
+
+impl From<StoredRequest> for FfiStoredRequest {
+    fn from(value: StoredRequest) -> Self {
+        Self {
+            collection_id: value.collection_id,
+            folder_id: value.folder_id,
+            request: value.definition.into(),
+        }
+    }
+}
+
+impl From<RequestDefinition> for FfiRequest {
+    fn from(value: RequestDefinition) -> Self {
+        let body = match value.body {
+            Body::Empty => FfiRequestBody {
+                kind: FfiRequestBodyKind::Empty,
+                content: String::new(),
+                content_type: None,
+                fields: vec![],
+            },
+            Body::Text {
+                content,
+                content_type,
+            } => FfiRequestBody {
+                kind: FfiRequestBodyKind::Text,
+                content,
+                content_type,
+                fields: vec![],
+            },
+            Body::Json { content } => FfiRequestBody {
+                kind: FfiRequestBodyKind::Json,
+                content: content.to_string(),
+                content_type: None,
+                fields: vec![],
+            },
+            Body::FormUrlEncoded { fields } => FfiRequestBody {
+                kind: FfiRequestBodyKind::FormUrlEncoded,
+                content: String::new(),
+                content_type: None,
+                fields: fields.into_iter().map(Into::into).collect(),
+            },
+            Body::Multipart { fields } => FfiRequestBody {
+                kind: FfiRequestBodyKind::Multipart,
+                content: String::new(),
+                content_type: None,
+                fields: fields.into_iter().map(Into::into).collect(),
+            },
+        };
+        Self {
+            id: value.id,
+            name: value.name,
+            method: value.method.into(),
+            url: value.url,
+            query_params: value.query_params.into_iter().map(Into::into).collect(),
+            headers: value.headers.into_iter().map(Into::into).collect(),
+            body,
+            auth: match value.auth {
+                RequestAuth::None => FfiRequestAuth {
+                    kind: FfiRequestAuthKind::None,
+                    username: String::new(),
+                    password: String::new(),
+                    token: String::new(),
+                    key: String::new(),
+                    value: String::new(),
+                    placement: FfiApiKeyPlacement::Header,
+                },
+                RequestAuth::Basic { username, password } => FfiRequestAuth {
+                    kind: FfiRequestAuthKind::Basic,
+                    username,
+                    password,
+                    token: String::new(),
+                    key: String::new(),
+                    value: String::new(),
+                    placement: FfiApiKeyPlacement::Header,
+                },
+                RequestAuth::Bearer { token } => FfiRequestAuth {
+                    kind: FfiRequestAuthKind::Bearer,
+                    username: String::new(),
+                    password: String::new(),
+                    token,
+                    key: String::new(),
+                    value: String::new(),
+                    placement: FfiApiKeyPlacement::Header,
+                },
+                RequestAuth::ApiKey {
+                    key,
+                    value,
+                    placement,
+                } => FfiRequestAuth {
+                    kind: FfiRequestAuthKind::ApiKey,
+                    username: String::new(),
+                    password: String::new(),
+                    token: String::new(),
+                    key,
+                    value,
+                    placement: placement.into(),
+                },
+            },
         }
     }
 }

@@ -73,7 +73,7 @@ class PostKillerRustLib
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -22269857;
+  int get rustContentHash => 628990917;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -107,7 +107,17 @@ abstract class PostKillerRustLibApi extends BaseApi {
     required String workspaceId,
   });
 
+  Future<List<FfiStoredRequest>> crateApiListRequests({
+    required String collectionId,
+  });
+
   Future<List<FfiWorkspace>> crateApiListWorkspaces();
+
+  Future<FfiStoredRequest> crateApiSaveRequest({
+    required String collectionId,
+    String? folderId,
+    required FfiRequest request,
+  });
 }
 
 class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
@@ -309,6 +319,38 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   );
 
   @override
+  Future<List<FfiStoredRequest>> crateApiListRequests({
+    required String collectionId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(collectionId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_ffi_stored_request,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiListRequestsConstMeta,
+        argValues: [collectionId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiListRequestsConstMeta => const TaskConstMeta(
+    debugName: "list_requests",
+    argNames: ["collectionId"],
+  );
+
+  @override
   Future<List<FfiWorkspace>> crateApiListWorkspaces() {
     return handler.executeNormal(
       NormalTask(
@@ -317,7 +359,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 8,
             port: port_,
           );
         },
@@ -334,6 +376,42 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
 
   TaskConstMeta get kCrateApiListWorkspacesConstMeta =>
       const TaskConstMeta(debugName: "list_workspaces", argNames: []);
+
+  @override
+  Future<FfiStoredRequest> crateApiSaveRequest({
+    required String collectionId,
+    String? folderId,
+    required FfiRequest request,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(collectionId, serializer);
+          sse_encode_opt_String(folderId, serializer);
+          sse_encode_box_autoadd_ffi_request(request, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_ffi_stored_request,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiSaveRequestConstMeta,
+        argValues: [collectionId, folderId, request],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiSaveRequestConstMeta => const TaskConstMeta(
+    debugName: "save_request",
+    argNames: ["collectionId", "folderId", "request"],
+  );
 
   @protected
   int dco_decode_CastedPrimitive_u_64(dynamic raw) {
@@ -562,6 +640,19 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  FfiStoredRequest dco_decode_ffi_stored_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FfiStoredRequest(
+      collectionId: dco_decode_String(arr[0]),
+      folderId: dco_decode_opt_String(arr[1]),
+      request: dco_decode_ffi_request(arr[2]),
+    );
+  }
+
+  @protected
   FfiWorkspace dco_decode_ffi_workspace(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -595,6 +686,12 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   List<FfiResponseHeader> dco_decode_list_ffi_response_header(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_ffi_response_header).toList();
+  }
+
+  @protected
+  List<FfiStoredRequest> dco_decode_list_ffi_stored_request(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_stored_request).toList();
   }
 
   @protected
@@ -933,6 +1030,19 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  FfiStoredRequest sse_decode_ffi_stored_request(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_collectionId = sse_decode_String(deserializer);
+    var var_folderId = sse_decode_opt_String(deserializer);
+    var var_request = sse_decode_ffi_request(deserializer);
+    return FfiStoredRequest(
+      collectionId: var_collectionId,
+      folderId: var_folderId,
+      request: var_request,
+    );
+  }
+
+  @protected
   FfiWorkspace sse_decode_ffi_workspace(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
@@ -984,6 +1094,20 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     var ans_ = <FfiResponseHeader>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_ffi_response_header(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FfiStoredRequest> sse_decode_list_ffi_stored_request(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FfiStoredRequest>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_stored_request(deserializer));
     }
     return ans_;
   }
@@ -1319,6 +1443,17 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  void sse_encode_ffi_stored_request(
+    FfiStoredRequest self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.collectionId, serializer);
+    sse_encode_opt_String(self.folderId, serializer);
+    sse_encode_ffi_request(self.request, serializer);
+  }
+
+  @protected
   void sse_encode_ffi_workspace(FfiWorkspace self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
@@ -1364,6 +1499,18 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_ffi_response_header(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ffi_stored_request(
+    List<FfiStoredRequest> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_stored_request(item, serializer);
     }
   }
 

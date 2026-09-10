@@ -61,6 +61,16 @@ final class WorkspaceMethodChanged extends WorkspaceEvent {
   final HttpMethod method;
 }
 
+final class WorkspaceRequestTitleChanged extends WorkspaceEvent {
+  const WorkspaceRequestTitleChanged(this.title);
+  final String title;
+}
+
+final class WorkspaceRequestSaveRequested extends WorkspaceStorageEvent {
+  const WorkspaceRequestSaveRequested(this.collectionId);
+  final String collectionId;
+}
+
 final class WorkspaceUrlChanged extends WorkspaceEvent {
   const WorkspaceUrlChanged(this.url);
   final String url;
@@ -69,6 +79,11 @@ final class WorkspaceUrlChanged extends WorkspaceEvent {
 final class WorkspaceBodyChanged extends WorkspaceEvent {
   const WorkspaceBodyChanged(this.body);
   final String body;
+}
+
+final class WorkspaceBodyFormatChanged extends WorkspaceEvent {
+  const WorkspaceBodyFormatChanged(this.format);
+  final RequestBodyFormat format;
 }
 
 final class WorkspaceRequestSent extends WorkspaceEvent {
@@ -93,6 +108,12 @@ final class WorkspaceKeyValueChanged extends WorkspaceEvent {
   final String? key;
   final String? value;
   final bool? enabled;
+}
+
+final class WorkspaceKeyValueDeleted extends WorkspaceEvent {
+  const WorkspaceKeyValueDeleted({required this.id, required this.isHeader});
+  final String id;
+  final bool isHeader;
 }
 
 final class WorkspaceHeaderPresetAdded extends WorkspaceEvent {

@@ -59,6 +59,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         (tab) => tab.copyWith(method: event.method, isDirty: true),
       ),
     );
+    on<WorkspaceRequestTitleChanged>(
+      (event, emit) => _updateSelected(
+        emit,
+        (tab) => tab.copyWith(title: event.title, isDirty: true),
+      ),
+    );
     on<WorkspaceUrlChanged>(
       (event, emit) => _updateSelected(
         emit,
@@ -69,6 +75,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
       (event, emit) => _updateSelected(
         emit,
         (tab) => tab.copyWith(body: event.body, isDirty: true),
+      ),
+    );
+    on<WorkspaceBodyFormatChanged>(
+      (event, emit) => _updateSelected(
+        emit,
+        (tab) => tab.copyWith(bodyFormat: event.format, isDirty: true),
       ),
     );
     on<WorkspaceHeaderPresetAdded>(
@@ -94,6 +106,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     );
     on<WorkspaceKeyValueAdded>(_addKeyValue);
     on<WorkspaceKeyValueChanged>(_updateKeyValue);
+    on<WorkspaceKeyValueDeleted>(_deleteKeyValue);
     on<WorkspaceRequestSent>(_sendRequest);
     if (autoBootstrap) add(const WorkspaceBootstrapRequested());
   }
@@ -116,6 +129,8 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         await _createWorkspace(event, emit);
       case CollectionCreateRequested():
         await _createCollection(event, emit);
+      case WorkspaceRequestSaveRequested():
+        await _saveRequest(event, emit);
     }
   }
 
@@ -241,13 +256,55 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     }
   }
 
+  Future<void> _saveRequest(
+    WorkspaceRequestSaveRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    final tab = state.selectedTab;
+    if (tab == null ||
+        !state.collections.any((item) => item.id == event.collectionId)) {
+      return;
+    }
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      final saved = await _repository.saveRequest(
+        collectionId: event.collectionId,
+        request: tab,
+      );
+      final collections = [
+        for (final collection in state.collections)
+          if (collection.id == event.collectionId)
+            RequestCollection(
+              id: collection.id,
+              name: collection.name,
+              requests: [
+                for (final request in collection.requests)
+                  if (request.id != saved.id) request,
+                saved,
+              ],
+            )
+          else
+            collection,
+      ];
+      _updateSelected(emit, (draft) => RequestTab.fromSaved(saved));
+      emit(state.copyWith(collections: collections, isLoading: false));
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось сохранить запрос в папку.',
+        ),
+      );
+    }
+  }
+
   void _createRequest(
     WorkspaceRequestCreated event,
     Emitter<WorkspaceState> emit,
   ) {
     _untitledCounter += 1;
     final tab = RequestTab(
-      id: 'local-untitled-$_untitledCounter',
+      id: 'draft-${DateTime.now().microsecondsSinceEpoch}',
       title: 'Untitled $_untitledCounter',
       method: HttpMethod.get,
       url: '',
@@ -299,6 +356,20 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         ? tab.copyWith(headers: next, isDirty: true)
         : tab.copyWith(query: next, isDirty: true);
   });
+
+  void _deleteKeyValue(
+    WorkspaceKeyValueDeleted event,
+    Emitter<WorkspaceState> emit,
+  ) => _updateSelected(emit, (tab) {
+    final values = event.isHeader ? tab.headers : tab.query;
+    final next = [
+      for (final value in values)
+        if (value.id != event.id) value,
+    ];
+    return event.isHeader
+        ? tab.copyWith(headers: next, isDirty: true)
+        : tab.copyWith(query: next, isDirty: true);
+  });
   void _updateSelected(
     Emitter<WorkspaceState> emit,
     RequestTab Function(RequestTab) update,
@@ -330,6 +401,18 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         execution: state.tabs.any((item) => item.id == tab.id)
             ? execution
             : null,
+        history: [
+          RequestHistoryEntry(
+            id: '${tab.id}-${DateTime.now().microsecondsSinceEpoch}',
+            title: tab.title,
+            method: tab.method,
+            url: tab.url,
+            executedAt: DateTime.now(),
+            status: execution.status,
+            error: execution.error,
+          ),
+          ...state.history,
+        ],
       ),
     );
   }

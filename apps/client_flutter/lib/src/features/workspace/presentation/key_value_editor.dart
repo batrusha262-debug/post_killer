@@ -13,6 +13,7 @@ class KeyValueEditor extends StatelessWidget {
     required this.emptyLabel,
     required this.onAdd,
     required this.onChanged,
+    this.onDelete,
   });
   final List<RequestKeyValue> values;
   final bool isHeader;
@@ -21,6 +22,7 @@ class KeyValueEditor extends StatelessWidget {
   final VoidCallback onAdd;
   final void Function(String, {String? key, String? value, bool? enabled})
   onChanged;
+  final ValueChanged<String>? onDelete;
   @override
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(12),
@@ -57,6 +59,13 @@ class KeyValueEditor extends StatelessWidget {
                 onChanged: (value) => onChanged(entry.id, value: value),
               ),
             ),
+            if (onDelete != null)
+              IconButton(
+                key: Key('delete-key-value-${entry.id}'),
+                tooltip: 'Delete row',
+                onPressed: () => onDelete!(entry.id),
+                icon: const Icon(Icons.delete_outline, size: 19),
+              ),
           ],
         ),
       if (values.isEmpty)

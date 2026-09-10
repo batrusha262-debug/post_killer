@@ -200,6 +200,31 @@ void main() {
   );
 
   blocTest<WorkspaceBloc, WorkspaceState>(
+    'edits a draft name and removes a header row',
+    build: buildBloc,
+    act: (bloc) => bloc
+      ..add(const WorkspaceRequestTitleChanged('Create account'))
+      ..add(
+        const WorkspaceKeyValueDeleted(id: 'header-accept', isHeader: true),
+      ),
+    verify: (bloc) {
+      expect(bloc.state.selectedTab!.title, 'Create account');
+      expect(bloc.state.selectedTab!.headers, isEmpty);
+    },
+  );
+
+  blocTest<WorkspaceBloc, WorkspaceState>(
+    'adds a sent request to history',
+    build: () => buildBloc(executor: const _FakeRequestExecutor()),
+    act: (bloc) => bloc.add(const WorkspaceRequestSent()),
+    verify: (bloc) {
+      expect(bloc.state.history, hasLength(1));
+      expect(bloc.state.history.single.status, 200);
+      expect(bloc.state.history.single.title, 'Injected request');
+    },
+  );
+
+  blocTest<WorkspaceBloc, WorkspaceState>(
     'creates a persisted collection for the selected workspace',
     build: buildBloc,
     act: (bloc) => bloc.add(const CollectionCreateRequested('Backend')),
@@ -311,6 +336,20 @@ class _FakeWorkspaceRepository implements WorkspaceRepository {
     id: 'created-collection',
     name: name,
     requests: const [],
+  );
+
+  @override
+  Future<SavedRequest> saveRequest({
+    required String collectionId,
+    required RequestTab request,
+  }) async => SavedRequest(
+    id: request.id,
+    name: request.title,
+    method: request.method,
+    url: request.url,
+    query: request.query,
+    headers: request.headers,
+    body: request.body,
   );
 }
 

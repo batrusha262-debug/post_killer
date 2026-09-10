@@ -2,6 +2,8 @@ const _unchanged = Object();
 
 enum HttpMethod { get, post, put, patch, delete }
 
+enum RequestBodyFormat { json, text }
+
 enum WorkspaceSection { collections, history, variables }
 
 extension HttpMethodLabel on HttpMethod {
@@ -14,12 +16,20 @@ class SavedRequest {
     required this.name,
     required this.method,
     required this.url,
+    this.query = const [],
+    this.headers = const [],
+    this.body = '',
+    this.bodyFormat = RequestBodyFormat.json,
   });
 
   final String id;
   final String name;
   final HttpMethod method;
   final String url;
+  final List<RequestKeyValue> query;
+  final List<RequestKeyValue> headers;
+  final String body;
+  final RequestBodyFormat bodyFormat;
 }
 
 class WorkspaceSummary {
@@ -56,6 +66,7 @@ class RequestTab {
       ),
     ],
     this.body = '',
+    this.bodyFormat = RequestBodyFormat.json,
     this.isDirty = false,
   });
 
@@ -64,6 +75,18 @@ class RequestTab {
     title: request.name,
     method: request.method,
     url: request.url,
+    query: request.query,
+    headers: request.headers.isEmpty
+        ? const [
+            RequestKeyValue(
+              id: 'header-accept',
+              key: 'Accept',
+              value: 'application/json',
+            ),
+          ]
+        : request.headers,
+    body: request.body,
+    bodyFormat: request.bodyFormat,
   );
 
   final String id;
@@ -73,6 +96,7 @@ class RequestTab {
   final List<RequestKeyValue> query;
   final List<RequestKeyValue> headers;
   final String body;
+  final RequestBodyFormat bodyFormat;
   final bool isDirty;
 
   RequestTab copyWith({
@@ -82,6 +106,7 @@ class RequestTab {
     List<RequestKeyValue>? query,
     List<RequestKeyValue>? headers,
     String? body,
+    RequestBodyFormat? bodyFormat,
     bool? isDirty,
   }) => RequestTab(
     id: id,
@@ -91,8 +116,29 @@ class RequestTab {
     query: query ?? this.query,
     headers: headers ?? this.headers,
     body: body ?? this.body,
+    bodyFormat: bodyFormat ?? this.bodyFormat,
     isDirty: isDirty ?? this.isDirty,
   );
+}
+
+class RequestHistoryEntry {
+  const RequestHistoryEntry({
+    required this.id,
+    required this.title,
+    required this.method,
+    required this.url,
+    required this.executedAt,
+    this.status,
+    this.error,
+  });
+
+  final String id;
+  final String title;
+  final HttpMethod method;
+  final String url;
+  final DateTime executedAt;
+  final int? status;
+  final String? error;
 }
 
 class RequestKeyValue {
@@ -182,6 +228,7 @@ class WorkspaceState {
     this.execution,
     this.isLoading = false,
     this.storageError,
+    this.history = const [],
   });
 
   final List<WorkspaceSummary> workspaces;
@@ -195,6 +242,7 @@ class WorkspaceState {
   final RequestExecutionView? execution;
   final bool isLoading;
   final String? storageError;
+  final List<RequestHistoryEntry> history;
 
   /// A derived view so searching never replaces the repository-backed source.
   List<RequestCollection> get filteredCollections {
@@ -246,6 +294,7 @@ class WorkspaceState {
     Object? execution = _unchanged,
     bool? isLoading,
     Object? storageError = _unchanged,
+    List<RequestHistoryEntry>? history,
   }) => WorkspaceState(
     workspaces: workspaces ?? this.workspaces,
     selectedWorkspaceId: identical(selectedWorkspaceId, _unchanged)
@@ -266,5 +315,6 @@ class WorkspaceState {
     storageError: identical(storageError, _unchanged)
         ? this.storageError
         : storageError as String?,
+    history: history ?? this.history,
   );
 }

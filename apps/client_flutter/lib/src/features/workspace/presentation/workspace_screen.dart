@@ -68,7 +68,9 @@ class WorkspaceScreen extends StatelessWidget {
                 onNewRequest: () =>
                     controller.add(const WorkspaceRequestCreated()),
               ),
-              WorkspaceSection.history => const HistoryPane(),
+              WorkspaceSection.history => HistoryPane(
+                entries: workspace.history,
+              ),
               WorkspaceSection.variables => const VariablesPane(),
             },
           ),
@@ -81,9 +83,13 @@ class WorkspaceScreen extends StatelessWidget {
               onNewTab: () => controller.add(const WorkspaceRequestCreated()),
               onMethodChanged: (method) =>
                   controller.add(WorkspaceMethodChanged(method)),
+              onTitleChanged: (title) =>
+                  controller.add(WorkspaceRequestTitleChanged(title)),
               onUrlChanged: (url) => controller.add(WorkspaceUrlChanged(url)),
               onBodyChanged: (body) =>
                   controller.add(WorkspaceBodyChanged(body)),
+              onBodyFormatChanged: (format) =>
+                  controller.add(WorkspaceBodyFormatChanged(format)),
               onAddQuery: () =>
                   controller.add(const WorkspaceKeyValueAdded(isHeader: false)),
               onAddHeader: () =>
@@ -106,9 +112,14 @@ class WorkspaceScreen extends StatelessWidget {
                   enabled: enabled,
                 ),
               ),
+              onDeleteHeader: (id) => controller.add(
+                WorkspaceKeyValueDeleted(id: id, isHeader: true),
+              ),
               onHeaderPreset: (name, value) =>
                   controller.add(WorkspaceHeaderPresetAdded(name, value)),
               onSend: () => controller.add(const WorkspaceRequestSent()),
+              onSave: (collectionId) =>
+                  controller.add(WorkspaceRequestSaveRequested(collectionId)),
             ),
           ),
         ],

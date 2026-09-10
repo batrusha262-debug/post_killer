@@ -1,14 +1,45 @@
 import 'package:flutter/material.dart';
 
+import '../domain/workspace_models.dart';
+
 class HistoryPane extends StatelessWidget {
-  const HistoryPane({super.key});
+  const HistoryPane({super.key, required this.entries});
+
+  final List<RequestHistoryEntry> entries;
 
   @override
-  Widget build(BuildContext context) => const SectionPlaceholder(
-    title: 'History',
-    icon: Icons.history,
-    message: 'No request history yet',
-  );
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) {
+      return const SectionPlaceholder(
+        title: 'History',
+        icon: Icons.history,
+        message: 'No request history yet',
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        Text('History', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        for (final entry in entries)
+          ListTile(
+            key: Key('history-entry-${entry.id}'),
+            dense: true,
+            leading: Icon(
+              entry.error == null
+                  ? Icons.check_circle_outline
+                  : Icons.error_outline,
+              color: entry.error == null ? Colors.green : Colors.red,
+            ),
+            title: Text('${entry.method.label} ${entry.title}'),
+            subtitle: Text(
+              entry.error ?? '${entry.url}\nHTTP ${entry.status ?? '—'}',
+            ),
+            isThreeLine: entry.error == null,
+          ),
+      ],
+    );
+  }
 }
 
 class VariablesPane extends StatelessWidget {

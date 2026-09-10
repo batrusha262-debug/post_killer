@@ -30,7 +30,7 @@ void main() {
 
     expect(find.text('Post Killer'), findsOneWidget);
     expect(find.text('Getting started'), findsOneWidget);
-    expect(find.text('Health check'), findsNWidgets(2));
+    expect(find.text('Health check'), findsNWidgets(3));
     expect(find.text('https://api.example.com/health'), findsOneWidget);
     expect(find.text('No query parameters'), findsOneWidget);
   });
@@ -52,7 +52,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('new-request-button')));
     await tester.pump();
-    expect(find.text('Untitled 1'), findsOneWidget);
+    expect(find.text('Untitled 1'), findsNWidgets(2));
 
     await tester.enterText(
       find.byKey(const Key('request-url-field')),
@@ -156,7 +156,7 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Create user'), findsNWidgets(2));
-    expect(find.text('Health check'), findsOneWidget);
+    expect(find.text('Health check'), findsNWidgets(2));
 
     await tester.enterText(
       find.byKey(const Key('collection-search-field')),
@@ -170,7 +170,7 @@ void main() {
       '',
     );
     await tester.pump();
-    expect(find.text('Health check'), findsNWidgets(2));
+    expect(find.text('Health check'), findsNWidgets(3));
   });
 
   testWidgets(
@@ -236,4 +236,18 @@ class _WidgetWorkspaceRepository implements WorkspaceRepository {
     required String name,
   }) async =>
       RequestCollection(id: 'new-collection', name: name, requests: const []);
+
+  @override
+  Future<SavedRequest> saveRequest({
+    required String collectionId,
+    required RequestTab request,
+  }) async => SavedRequest(
+    id: request.id,
+    name: request.title,
+    method: request.method,
+    url: request.url,
+    query: request.query,
+    headers: request.headers,
+    body: request.body,
+  );
 }
