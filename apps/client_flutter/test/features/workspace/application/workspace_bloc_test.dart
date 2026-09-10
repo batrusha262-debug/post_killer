@@ -78,7 +78,9 @@ void main() {
       executionTimeout: const Duration(milliseconds: 1),
       autoBootstrap: false,
       initialState: WorkspaceState(
-        workspaces: const [WorkspaceSummary(id: 'workspace', name: 'Workspace')],
+        workspaces: const [
+          WorkspaceSummary(id: 'workspace', name: 'Workspace'),
+        ],
         selectedWorkspaceId: 'workspace',
         collections: const [],
         tabs: [RequestTab.fromSaved(request)],
@@ -205,6 +207,40 @@ void main() {
           )
           .having((state) => state.selectedTab?.isDirty, 'dirty', true),
     ],
+  );
+
+  blocTest<WorkspaceBloc, WorkspaceState>(
+    'keeps credentials draft-local while preserving URL and body',
+    build: buildBloc,
+    act: (bloc) => bloc.add(
+      const WorkspaceAuthChanged(
+        RequestAuth(kind: RequestAuthKind.bearer, token: 'top-secret'),
+      ),
+    ),
+    verify: (bloc) {
+      final tab = bloc.state.selectedTab!;
+      expect(tab.auth.token, 'top-secret');
+      expect(tab.url, request.url);
+      expect(tab.body, isEmpty);
+      expect(RequestTab.fromSaved(request).auth.kind, RequestAuthKind.none);
+    },
+  );
+
+  test(
+    'invalid authentication prevents execution and history writes',
+    () async {
+      final executor = _CountingExecutor();
+      final bloc = buildBloc(executor: executor);
+      bloc.add(
+        const WorkspaceAuthChanged(RequestAuth(kind: RequestAuthKind.bearer)),
+      );
+      await Future<void>.delayed(Duration.zero);
+      bloc.add(const WorkspaceRequestSent());
+      await Future<void>.delayed(Duration.zero);
+      expect(executor.calls, 0);
+      expect(bloc.state.history, isEmpty);
+      await bloc.close();
+    },
   );
 
   blocTest<WorkspaceBloc, WorkspaceState>(
@@ -391,6 +427,16 @@ class _FakeRequestExecutor implements RequestExecutor {
         ],
         body: '{"ok":true}',
       );
+}
+
+class _CountingExecutor implements RequestExecutor {
+  var calls = 0;
+
+  @override
+  Future<RequestExecutionView> execute(RequestTab request) async {
+    calls += 1;
+    return RequestExecutionView.error(requestId: request.id, error: 'unused');
+  }
 }
 
 class _ThrowingRequestExecutor implements RequestExecutor {

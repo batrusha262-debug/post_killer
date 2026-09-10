@@ -2,6 +2,7 @@ import 'key_value_editor.dart';
 import 'json_body_editor.dart';
 import 'text_body_editor.dart';
 import 'response_view.dart';
+import 'request_auth_editor.dart';
 
 import 'package:flutter/material.dart';
 
@@ -16,6 +17,7 @@ class RequestEditor extends StatelessWidget {
     required this.onUrlChanged,
     required this.onBodyChanged,
     required this.onBodyFormatChanged,
+    required this.onAuthChanged,
     required this.onAddQuery,
     required this.onAddHeader,
     required this.onHeaderPreset,
@@ -35,6 +37,7 @@ class RequestEditor extends StatelessWidget {
   final ValueChanged<String> onUrlChanged;
   final ValueChanged<String> onBodyChanged;
   final ValueChanged<RequestBodyFormat> onBodyFormatChanged;
+  final ValueChanged<RequestAuth> onAuthChanged;
   final VoidCallback onAddQuery;
   final VoidCallback onAddHeader;
   final void Function(String, String) onHeaderPreset;
@@ -52,98 +55,109 @@ class RequestEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canSend =
-        tab.bodyFormat == RequestBodyFormat.text || isValidJson(tab.body);
+        (tab.bodyFormat == RequestBodyFormat.text || isValidJson(tab.body)) &&
+        tab.auth.isValid;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              SizedBox(
-                width: 160,
-                child: TextFormField(
-                  key: const Key('request-name-field'),
-                  initialValue: tab.title,
-                  onChanged: onTitleChanged,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    hintText: 'Request name',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                width: 116,
-                child: DropdownButtonFormField<HttpMethod>(
-                  key: const Key('method-picker'),
-                  initialValue: tab.method,
-                  decoration: const InputDecoration(isDense: true),
-                  items: [
-                    for (final method in HttpMethod.values)
-                      DropdownMenuItem(
-                        value: method,
-                        child: Text(method.label),
+          LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: constraints.maxWidth < 620 ? 620 : constraints.maxWidth,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 160,
+                      child: TextFormField(
+                        key: const Key('request-name-field'),
+                        initialValue: tab.title,
+                        onChanged: onTitleChanged,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          hintText: 'Request name',
+                        ),
                       ),
-                  ],
-                  onChanged: (method) {
-                    if (method != null) onMethodChanged(method);
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextFormField(
-                  key: const Key('request-url-field'),
-                  initialValue: tab.url,
-                  onChanged: onUrlChanged,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    hintText: 'https://api.example.com/resource',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              PopupMenuButton<String>(
-                key: const Key('save-request-menu'),
-                tooltip: 'Save to folder',
-                enabled: collections.isNotEmpty,
-                onSelected: onSave,
-                itemBuilder: (context) => [
-                  for (final collection in collections)
-                    PopupMenuItem(
-                      value: collection.id,
-                      child: Text(collection.name),
                     ),
-                ],
-                child: const Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Icon(Icons.folder_outlined, size: 18),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 116,
+                      child: DropdownButtonFormField<HttpMethod>(
+                        key: const Key('method-picker'),
+                        initialValue: tab.method,
+                        isExpanded: true,
+                        decoration: const InputDecoration(isDense: true),
+                        items: [
+                          for (final method in HttpMethod.values)
+                            DropdownMenuItem(
+                              value: method,
+                              child: Text(method.label),
+                            ),
+                        ],
+                        onChanged: (method) {
+                          if (method != null) onMethodChanged(method);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        key: const Key('request-url-field'),
+                        initialValue: tab.url,
+                        onChanged: onUrlChanged,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          hintText: 'https://api.example.com/resource',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    PopupMenuButton<String>(
+                      key: const Key('save-request-menu'),
+                      tooltip: 'Save to folder',
+                      enabled: collections.isNotEmpty,
+                      onSelected: onSave,
+                      itemBuilder: (context) => [
+                        for (final collection in collections)
+                          PopupMenuItem(
+                            value: collection.id,
+                            child: Text(collection.name),
+                          ),
+                      ],
+                      child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Icon(Icons.folder_outlined, size: 18),
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: isExecuting || !canSend ? null : onSend,
+                      icon: const Icon(Icons.send, size: 17),
+                      label: Text(
+                        isExecuting
+                            ? 'Sending…'
+                            : canSend
+                            ? 'Send'
+                            : 'Fix JSON to send',
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              FilledButton.icon(
-                onPressed: isExecuting || !canSend ? null : onSend,
-                icon: const Icon(Icons.send, size: 17),
-                label: Text(
-                  isExecuting
-                      ? 'Sending…'
-                      : canSend
-                      ? 'Send'
-                      : 'Fix JSON to send',
-                ),
-              ),
-            ],
+            ),
           ),
           const SizedBox(height: 8),
           Expanded(
             child: DefaultTabController(
-              length: 4,
+              length: 5,
               child: Column(
                 children: [
                   const TabBar(
                     tabs: [
                       Tab(text: 'Query'),
                       Tab(text: 'Headers'),
+                      Tab(key: Key('auth-tab'), text: 'Auth'),
                       Tab(text: 'Body'),
                       Tab(key: Key('response-tab'), text: 'Response'),
                     ],
@@ -165,6 +179,10 @@ class RequestEditor extends StatelessWidget {
                           onAdd: onAddHeader,
                           onChanged: onHeaderChanged,
                           onDelete: onDeleteHeader,
+                        ),
+                        RequestAuthEditor(
+                          auth: tab.auth,
+                          onChanged: onAuthChanged,
                         ),
                         Column(
                           children: [

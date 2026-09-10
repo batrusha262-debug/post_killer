@@ -6,6 +6,57 @@ enum RequestBodyFormat { json, text }
 
 enum WorkspaceSection { collections, history, variables }
 
+/// Credentials belong only to an open draft and are never persisted or added
+/// to request history.
+enum RequestAuthKind { none, basic, bearer, apiKey }
+
+enum ApiKeyPlacement { header, query }
+
+class RequestAuth {
+  const RequestAuth({
+    this.kind = RequestAuthKind.none,
+    this.username = '',
+    this.password = '',
+    this.token = '',
+    this.key = '',
+    this.value = '',
+    this.placement = ApiKeyPlacement.header,
+  });
+
+  final RequestAuthKind kind;
+  final String username;
+  final String password;
+  final String token;
+  final String key;
+  final String value;
+  final ApiKeyPlacement placement;
+
+  bool get isValid => switch (kind) {
+    RequestAuthKind.none => true,
+    RequestAuthKind.basic => username.trim().isNotEmpty && password.isNotEmpty,
+    RequestAuthKind.bearer => token.trim().isNotEmpty,
+    RequestAuthKind.apiKey => key.trim().isNotEmpty && value.isNotEmpty,
+  };
+
+  RequestAuth copyWith({
+    RequestAuthKind? kind,
+    String? username,
+    String? password,
+    String? token,
+    String? key,
+    String? value,
+    ApiKeyPlacement? placement,
+  }) => RequestAuth(
+    kind: kind ?? this.kind,
+    username: username ?? this.username,
+    password: password ?? this.password,
+    token: token ?? this.token,
+    key: key ?? this.key,
+    value: value ?? this.value,
+    placement: placement ?? this.placement,
+  );
+}
+
 extension HttpMethodLabel on HttpMethod {
   String get label => name.toUpperCase();
 }
@@ -67,6 +118,7 @@ class RequestTab {
     ],
     this.body = '',
     this.bodyFormat = RequestBodyFormat.json,
+    this.auth = const RequestAuth(),
     this.isDirty = false,
   });
 
@@ -97,6 +149,7 @@ class RequestTab {
   final List<RequestKeyValue> headers;
   final String body;
   final RequestBodyFormat bodyFormat;
+  final RequestAuth auth;
   final bool isDirty;
 
   RequestTab copyWith({
@@ -107,6 +160,7 @@ class RequestTab {
     List<RequestKeyValue>? headers,
     String? body,
     RequestBodyFormat? bodyFormat,
+    RequestAuth? auth,
     bool? isDirty,
   }) => RequestTab(
     id: id,
@@ -117,6 +171,7 @@ class RequestTab {
     headers: headers ?? this.headers,
     body: body ?? this.body,
     bodyFormat: bodyFormat ?? this.bodyFormat,
+    auth: auth ?? this.auth,
     isDirty: isDirty ?? this.isDirty,
   );
 }

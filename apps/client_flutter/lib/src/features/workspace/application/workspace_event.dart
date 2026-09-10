@@ -86,6 +86,11 @@ final class WorkspaceBodyFormatChanged extends WorkspaceEvent {
   final RequestBodyFormat format;
 }
 
+final class WorkspaceAuthChanged extends WorkspaceEvent {
+  const WorkspaceAuthChanged(this.auth);
+  final RequestAuth auth;
+}
+
 final class WorkspaceRequestSent extends WorkspaceEvent {
   const WorkspaceRequestSent();
 }

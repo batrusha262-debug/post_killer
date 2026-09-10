@@ -68,14 +68,21 @@ class FrbRequestExecutor implements RequestExecutor {
       content: request.body,
       fields: const [],
     ),
-    auth: const FfiRequestAuth(
-      kind: FfiRequestAuthKind.none,
-      username: '',
-      password: '',
-      token: '',
-      key: '',
-      value: '',
-      placement: FfiApiKeyPlacement.header,
+    auth: FfiRequestAuth(
+      kind: switch (request.auth.kind) {
+        RequestAuthKind.none => FfiRequestAuthKind.none,
+        RequestAuthKind.basic => FfiRequestAuthKind.basic,
+        RequestAuthKind.bearer => FfiRequestAuthKind.bearer,
+        RequestAuthKind.apiKey => FfiRequestAuthKind.apiKey,
+      },
+      username: request.auth.username,
+      password: request.auth.password,
+      token: request.auth.token,
+      key: request.auth.key,
+      value: request.auth.value,
+      placement: request.auth.placement == ApiKeyPlacement.header
+          ? FfiApiKeyPlacement.header
+          : FfiApiKeyPlacement.query,
     ),
   );
 

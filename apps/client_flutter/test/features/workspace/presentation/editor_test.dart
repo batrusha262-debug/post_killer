@@ -2,6 +2,7 @@ import 'package:client_flutter/src/features/workspace/presentation/json_body_edi
 import 'package:client_flutter/src/features/workspace/presentation/json_editing.dart';
 import 'package:client_flutter/src/features/workspace/presentation/json_syntax.dart';
 import 'package:client_flutter/src/features/workspace/presentation/response_view.dart';
+import 'package:client_flutter/src/features/workspace/presentation/request_auth_editor.dart';
 import 'package:client_flutter/src/features/workspace/domain/workspace_models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -136,4 +137,55 @@ void main() {
       expect(find.text('content-type'), findsOneWidget);
     },
   );
+
+  testWidgets('auth editor exposes required-field errors for Basic auth', (
+    tester,
+  ) async {
+    RequestAuth? edited;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: RequestAuthEditor(
+            auth: const RequestAuth(kind: RequestAuthKind.basic),
+            onChanged: (auth) => edited = auth,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Username is required'), findsOneWidget);
+    expect(find.text('Password is required'), findsOneWidget);
+    expect(
+      tester
+          .widget<TextField>(
+            find.descendant(
+              of: find.byKey(const Key('auth-password-field')),
+              matching: find.byType(TextField),
+            ),
+          )
+          .obscureText,
+      isTrue,
+    );
+    await tester.enterText(find.byKey(const Key('auth-username-field')), 'ada');
+    expect(edited!.username, 'ada');
+  });
+
+  testWidgets('API key auth selects header or query placement', (tester) async {
+    RequestAuth? edited;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: RequestAuthEditor(
+            auth: const RequestAuth(kind: RequestAuthKind.apiKey),
+            onChanged: (auth) => edited = auth,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('auth-api-placement-picker')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Query parameter').last);
+    expect(edited!.placement, ApiKeyPlacement.query);
+  });
 }

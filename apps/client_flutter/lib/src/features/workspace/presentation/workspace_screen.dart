@@ -133,6 +133,8 @@ class WorkspaceScreen extends StatelessWidget {
                         controller.add(WorkspaceBodyChanged(body)),
                     onBodyFormatChanged: (format) =>
                         controller.add(WorkspaceBodyFormatChanged(format)),
+                    onAuthChanged: (auth) =>
+                        controller.add(WorkspaceAuthChanged(auth)),
                     onAddQuery: () => controller.add(
                       const WorkspaceKeyValueAdded(isHeader: false),
                     ),

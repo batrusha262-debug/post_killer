@@ -15,10 +15,9 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     RequestExecutor? executor,
     WorkspaceState? initialState,
     bool autoBootstrap = true,
-    Duration executionTimeout = const Duration(seconds: 35),
+    this.executionTimeout = const Duration(seconds: 35),
   }) : _repository = repository,
        _executor = executor ?? const UnavailableRequestExecutor(),
-       _executionTimeout = executionTimeout,
        super(
          initialState ??
              const WorkspaceState(
@@ -87,6 +86,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         (tab) => tab.copyWith(bodyFormat: event.format, isDirty: true),
       ),
     );
+    on<WorkspaceAuthChanged>(
+      (event, emit) => _updateSelected(
+        emit,
+        (tab) => tab.copyWith(auth: event.auth, isDirty: true),
+      ),
+    );
     on<WorkspaceHeaderPresetAdded>(
       (event, emit) => _updateSelected(emit, (tab) {
         if (tab.headers.any(
@@ -117,7 +122,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
 
   final WorkspaceRepository _repository;
   final RequestExecutor _executor;
-  final Duration _executionTimeout;
+  final Duration executionTimeout;
 
   var _untitledCounter = 0;
 
@@ -291,7 +296,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           else
             collection,
       ];
-      _updateSelected(emit, (draft) => RequestTab.fromSaved(saved));
+      // Saved requests deliberately omit credentials, but saving must not
+      // discard the credentials already entered in this open draft.
+      _updateSelected(
+        emit,
+        (draft) => RequestTab.fromSaved(saved).copyWith(auth: draft.auth),
+      );
       emit(state.copyWith(collections: collections, isLoading: false));
     } on Object {
       emit(
@@ -396,7 +406,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     Emitter<WorkspaceState> emit,
   ) async {
     final tab = state.selectedTab;
-    if (tab == null || state.isExecuting) return;
+    if (tab == null || state.isExecuting || !tab.auth.isValid) return;
     emit(state.copyWith(isExecuting: true));
     final execution = await _executeSafely(tab);
     if (emit.isDone) return;
@@ -426,11 +436,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     try {
       // The Rust transport has its own timeout, but this outer deadline also
       // protects the UI from a stalled native bridge or DNS resolver.
-      return await _executor.execute(tab).timeout(_executionTimeout);
+      return await _executor.execute(tab).timeout(executionTimeout);
     } on TimeoutException {
       return RequestExecutionView.error(
         requestId: tab.id,
-        error: 'Превышено время ожидания ответа. Проверьте сеть и адрес запроса.',
+        error:
+            'Превышено время ожидания ответа. Проверьте сеть и адрес запроса.',
       );
     } on Object {
       // A bridge/runtime failure must not strand the Send button in its loading
