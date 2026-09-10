@@ -32,7 +32,7 @@ jobs:
           flutter build macos --config-only --build-name="${GITHUB_REF_NAME#v}" --build-number="$GITHUB_RUN_NUMBER" --dart-define="APP_VERSION=${GITHUB_REF_NAME#v}"
           # Flutter produces a universal release by default. Invoke Xcode with
           # one ARCHS value so each artifact runs natively on its target Mac.
-          xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner -configuration Release -derivedDataPath build/macos -destination 'generic/platform=macOS' OBJROOT=build/macos/Build/Intermediates.noindex SYMROOT=build/macos/Build/Products ARCHS="${{ matrix.architecture }}" ONLY_ACTIVE_ARCH=NO
+          xcrun xcodebuild -clonedSourcePackagesDirPath build/macos/SourcePackages -skipPackagePluginValidation -skipPackageSignatureValidation -workspace macos/Runner.xcworkspace -scheme Runner -configuration Release -derivedDataPath build/macos -destination 'generic/platform=macOS' OBJROOT=build/macos/Build/Intermediates.noindex SYMROOT=build/macos/Build/Products COMPILER_INDEX_STORE_ENABLE=NO ARCHS="${{ matrix.architecture }}" ONLY_ACTIVE_ARCH=NO
       - run: bash packaging/macos/create_dmg.sh "${GITHUB_REF_NAME#v}" "${{ matrix.architecture }}"
       - uses: actions/upload-artifact@v4
         with:

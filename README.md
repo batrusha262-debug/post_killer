@@ -99,7 +99,7 @@ cd apps/client_flutter
 /Users/adt/development/flutter/bin/flutter build macos --config-only
 xcodebuild -workspace macos/Runner.xcworkspace -scheme Runner -configuration Release -derivedDataPath build/macos -destination 'generic/platform=macOS' OBJROOT=build/macos/Build/Intermediates.noindex SYMROOT=build/macos/Build/Products ARCHS=arm64 ONLY_ACTIVE_ARCH=NO
 cd ../..
-bash packaging/macos/create_dmg.sh 0.2.10 arm64
+bash packaging/macos/create_dmg.sh 0.2.11 arm64
 ```
 
 Если Flutter не находит `xcodebuild`, установлены только Command Line Tools —
