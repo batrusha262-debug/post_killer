@@ -46,6 +46,10 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     on<WorkspaceCollectionSearchChanged>(
       (event, emit) => emit(state.copyWith(collectionSearchQuery: event.query)),
     );
+    on<WorkspaceHistorySearchChanged>(
+      (event, emit) => emit(state.copyWith(historySearchQuery: event.query)),
+    );
+    on<WorkspaceHistoryEntryOpened>(_openHistoryEntry);
     on<WorkspaceRequestOpened>((event, emit) {
       final isOpen = state.tabs.any((tab) => tab.id == event.request.id);
       emit(
@@ -165,6 +169,8 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         await _saveEnvironmentVariable(event, emit);
       case EnvironmentVariableDeleteRequested():
         await _deleteEnvironmentVariable(event, emit);
+      case WorkspaceHistoryClearRequested():
+        await _clearHistory(event, emit);
     }
   }
 
@@ -380,6 +386,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
       final selected = workspaces.first;
       final collections = await _repository.listCollections(selected.id);
       final environments = await _repository.listEnvironments(selected.id);
+      final history = await _repository.listExecutionHistory(selected.id);
       final tabs = [
         for (final collection in collections)
           for (final request in collection.requests)
@@ -396,6 +403,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
               : environments.first.id,
           tabs: tabs,
           selectedTabId: tabs.isEmpty ? null : tabs.first.id,
+          history: _historyEntries(history, collections),
           isLoading: false,
         ),
       );
@@ -418,6 +426,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     try {
       final collections = await _repository.listCollections(event.id);
       final environments = await _repository.listEnvironments(event.id);
+      final history = await _repository.listExecutionHistory(event.id);
+      final tabs = [
+        for (final collection in collections)
+          for (final request in collection.requests)
+            RequestTab.fromSaved(request),
+      ];
       emit(
         state.copyWith(
           selectedWorkspaceId: event.id,
@@ -426,6 +440,9 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           selectedEnvironmentId: environments.isEmpty
               ? null
               : environments.first.id,
+          tabs: tabs,
+          selectedTabId: tabs.isEmpty ? null : tabs.first.id,
+          history: _historyEntries(history, collections),
           isLoading: false,
         ),
       );
@@ -454,6 +471,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           collections: const [],
           environments: const [],
           selectedEnvironmentId: null,
+          history: const [],
           isLoading: false,
         ),
       );
@@ -495,6 +513,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
       final selected = workspaces.first;
       final collections = await _repository.listCollections(selected.id);
       final environments = await _repository.listEnvironments(selected.id);
+      final history = await _repository.listExecutionHistory(selected.id);
       final tabs = [
         for (final collection in collections)
           for (final request in collection.requests)
@@ -511,6 +530,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
               : environments.first.id,
           tabs: tabs,
           selectedTabId: tabs.isEmpty ? null : tabs.first.id,
+          history: _historyEntries(history, collections),
           isLoading: false,
         ),
       );
@@ -575,6 +595,10 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
               if (item.id != event.id) item,
           ],
           tabs: tabs,
+          history: [
+            for (final entry in state.history)
+              if (!requestIds.contains(entry.requestId)) entry,
+          ],
           selectedTabId: tabs.any((tab) => tab.id == state.selectedTabId)
               ? state.selectedTabId
               : (tabs.isEmpty ? null : tabs.first.id),
@@ -676,6 +700,10 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           selectedTabId: state.selectedTabId == event.requestId
               ? (tabs.isEmpty ? null : tabs.first.id)
               : state.selectedTabId,
+          history: [
+            for (final entry in state.history)
+              if (entry.requestId != event.requestId) entry,
+          ],
           isLoading: false,
         ),
       );
@@ -878,27 +906,150 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     // Cancellation immediately releases the UI. A native call may resolve a
     // little later, but its result must never overwrite a newer request.
     if (emit.isDone || generation != _executionGeneration) return;
+    final record = _historyRecord(tab, execution);
+    if (_isSavedRequest(tab.id)) {
+      try {
+        await _repository.saveExecutionHistory(record);
+      } on Object {
+        // A completed HTTP request is still useful even if a non-sensitive
+        // audit entry cannot be written. Never replace its response with a
+        // storage failure.
+      }
+    }
+    if (emit.isDone || generation != _executionGeneration) return;
     emit(
       state.copyWith(
         isExecuting: false,
         execution: state.tabs.any((item) => item.id == tab.id)
             ? execution
             : null,
-        history: [
-          RequestHistoryEntry(
-            id: '${tab.id}-${DateTime.now().microsecondsSinceEpoch}',
-            title: tab.title,
-            method: tab.method,
-            url: tab.url,
-            executedAt: DateTime.now(),
-            status: execution.status,
-            error: execution.error,
-          ),
-          ...state.history,
-        ],
+        history: _isSavedRequest(tab.id)
+            ? [_historyEntry(record, tab), ...state.history]
+            : state.history,
       ),
     );
   }
+
+  Future<void> _clearHistory(
+    WorkspaceHistoryClearRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    final workspaceId = state.selectedWorkspaceId;
+    if (workspaceId == null || state.history.isEmpty) return;
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      await _repository.clearExecutionHistory(workspaceId);
+      emit(state.copyWith(history: const [], isLoading: false));
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось очистить историю запросов.',
+        ),
+      );
+    }
+  }
+
+  void _openHistoryEntry(
+    WorkspaceHistoryEntryOpened event,
+    Emitter<WorkspaceState> emit,
+  ) {
+    SavedRequest? saved;
+    for (final collection in state.collections) {
+      for (final request in collection.requests) {
+        if (request.id == event.requestId) {
+          saved = request;
+          break;
+        }
+      }
+      if (saved != null) break;
+    }
+    if (saved == null) return;
+    final isOpen = state.tabs.any((tab) => tab.id == saved!.id);
+    emit(
+      state.copyWith(
+        tabs: isOpen
+            ? state.tabs
+            : [...state.tabs, RequestTab.fromSaved(saved)],
+        selectedTabId: saved.id,
+        selectedSection: WorkspaceSection.collections,
+      ),
+    );
+  }
+
+  bool _isSavedRequest(String requestId) => state.collections.any(
+    (collection) =>
+        collection.requests.any((request) => request.id == requestId),
+  );
+
+  StoredExecutionHistoryRecord _historyRecord(
+    RequestTab tab,
+    RequestExecutionView execution,
+  ) {
+    final error = execution.error?.toLowerCase() ?? '';
+    final category = execution.error == null
+        ? null
+        : switch (error) {
+            _ when error.contains('timeout') || error.contains('превышено') =>
+              ExecutionHistoryErrorCategory.timeout,
+            _ when error.contains('dns') => ExecutionHistoryErrorCategory.dns,
+            _ when error.contains('tls') => ExecutionHistoryErrorCategory.tls,
+            _ when error.contains('proxy') =>
+              ExecutionHistoryErrorCategory.proxy,
+            _ when error.contains('redirect') =>
+              ExecutionHistoryErrorCategory.redirect,
+            _ when error.contains('response') && error.contains('body') =>
+              ExecutionHistoryErrorCategory.responseBody,
+            _ when error.contains('body') =>
+              ExecutionHistoryErrorCategory.requestBody,
+            _ when error.contains('connect') || error.contains('connection') =>
+              ExecutionHistoryErrorCategory.connection,
+            _ => ExecutionHistoryErrorCategory.other,
+          };
+    return StoredExecutionHistoryRecord(
+      id: '${tab.id}-${DateTime.now().microsecondsSinceEpoch}',
+      requestId: tab.id,
+      executedAt: DateTime.now(),
+      result: execution.error == null
+          ? ExecutionHistoryResult.response
+          : ExecutionHistoryResult.error,
+      status: execution.status,
+      durationMillis: execution.durationMillis ?? 0,
+      responseSizeBytes: utf8.encode(execution.body ?? '').length,
+      errorCategory: category,
+    );
+  }
+
+  List<RequestHistoryEntry> _historyEntries(
+    List<StoredExecutionHistoryRecord> records,
+    List<RequestCollection> collections,
+  ) {
+    final requests = {
+      for (final collection in collections)
+        for (final request in collection.requests) request.id: request,
+    };
+    return [
+      for (final record in records)
+        if (requests[record.requestId] case final request?)
+          _historyEntry(record, RequestTab.fromSaved(request)),
+    ];
+  }
+
+  RequestHistoryEntry _historyEntry(
+    StoredExecutionHistoryRecord record,
+    RequestTab request,
+  ) => RequestHistoryEntry(
+    id: record.id,
+    requestId: record.requestId,
+    title: request.title,
+    method: request.method,
+    executedAt: record.executedAt,
+    result: record.result,
+    status: record.status,
+    durationMillis: record.durationMillis,
+    responseSizeBytes: record.responseSizeBytes,
+    errorCategory: record.errorCategory,
+  );
 
   RequestTab? _findRequest(String id) {
     for (final tab in state.tabs) {

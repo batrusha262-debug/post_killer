@@ -23,6 +23,9 @@ abstract class PostKillerRustLibApiImplPlatform
   });
 
   @protected
+  int dco_decode_CastedPrimitive_i_64(dynamic raw);
+
+  @protected
   int dco_decode_CastedPrimitive_u_64(dynamic raw);
 
   @protected
@@ -40,6 +43,15 @@ abstract class PostKillerRustLibApiImplPlatform
   FfiExecutionError dco_decode_box_autoadd_ffi_execution_error(dynamic raw);
 
   @protected
+  FfiExecutionHistoryErrorCategory
+  dco_decode_box_autoadd_ffi_execution_history_error_category(dynamic raw);
+
+  @protected
+  FfiExecutionHistoryRecord dco_decode_box_autoadd_ffi_execution_history_record(
+    dynamic raw,
+  );
+
+  @protected
   FfiExecutionOptions dco_decode_box_autoadd_ffi_execution_options(dynamic raw);
 
   @protected
@@ -49,6 +61,9 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   FfiRequest dco_decode_box_autoadd_ffi_request(dynamic raw);
+
+  @protected
+  int dco_decode_box_autoadd_u_16(dynamic raw);
 
   @protected
   int dco_decode_box_autoadd_u_32(dynamic raw);
@@ -70,6 +85,20 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   FfiExecutionErrorKind dco_decode_ffi_execution_error_kind(dynamic raw);
+
+  @protected
+  FfiExecutionHistoryErrorCategory
+  dco_decode_ffi_execution_history_error_category(dynamic raw);
+
+  @protected
+  FfiExecutionHistoryRecord dco_decode_ffi_execution_history_record(
+    dynamic raw,
+  );
+
+  @protected
+  FfiExecutionHistoryResultKind dco_decode_ffi_execution_history_result_kind(
+    dynamic raw,
+  );
 
   @protected
   FfiExecutionOptions dco_decode_ffi_execution_options(dynamic raw);
@@ -114,6 +143,9 @@ abstract class PostKillerRustLibApiImplPlatform
   int dco_decode_i_32(dynamic raw);
 
   @protected
+  PlatformInt64 dco_decode_i_64(dynamic raw);
+
+  @protected
   List<FfiCollection> dco_decode_list_ffi_collection(dynamic raw);
 
   @protected
@@ -121,6 +153,11 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   List<FfiEnvironmentVariable> dco_decode_list_ffi_environment_variable(
+    dynamic raw,
+  );
+
+  @protected
+  List<FfiExecutionHistoryRecord> dco_decode_list_ffi_execution_history_record(
     dynamic raw,
   );
 
@@ -151,9 +188,16 @@ abstract class PostKillerRustLibApiImplPlatform
   );
 
   @protected
+  FfiExecutionHistoryErrorCategory?
+  dco_decode_opt_box_autoadd_ffi_execution_history_error_category(dynamic raw);
+
+  @protected
   FfiExecutionResponse? dco_decode_opt_box_autoadd_ffi_execution_response(
     dynamic raw,
   );
+
+  @protected
+  int? dco_decode_opt_box_autoadd_u_16(dynamic raw);
 
   @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
@@ -172,6 +216,9 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   void dco_decode_unit(dynamic raw);
+
+  @protected
+  int sse_decode_CastedPrimitive_i_64(SseDeserializer deserializer);
 
   @protected
   int sse_decode_CastedPrimitive_u_64(SseDeserializer deserializer);
@@ -193,6 +240,17 @@ abstract class PostKillerRustLibApiImplPlatform
   );
 
   @protected
+  FfiExecutionHistoryErrorCategory
+  sse_decode_box_autoadd_ffi_execution_history_error_category(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FfiExecutionHistoryRecord sse_decode_box_autoadd_ffi_execution_history_record(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FfiExecutionOptions sse_decode_box_autoadd_ffi_execution_options(
     SseDeserializer deserializer,
   );
@@ -204,6 +262,9 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   FfiRequest sse_decode_box_autoadd_ffi_request(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_box_autoadd_u_16(SseDeserializer deserializer);
 
   @protected
   int sse_decode_box_autoadd_u_32(SseDeserializer deserializer);
@@ -231,6 +292,20 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   FfiExecutionErrorKind sse_decode_ffi_execution_error_kind(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FfiExecutionHistoryErrorCategory
+  sse_decode_ffi_execution_history_error_category(SseDeserializer deserializer);
+
+  @protected
+  FfiExecutionHistoryRecord sse_decode_ffi_execution_history_record(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  FfiExecutionHistoryResultKind sse_decode_ffi_execution_history_result_kind(
     SseDeserializer deserializer,
   );
 
@@ -289,6 +364,9 @@ abstract class PostKillerRustLibApiImplPlatform
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
+  PlatformInt64 sse_decode_i_64(SseDeserializer deserializer);
+
+  @protected
   List<FfiCollection> sse_decode_list_ffi_collection(
     SseDeserializer deserializer,
   );
@@ -300,6 +378,11 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   List<FfiEnvironmentVariable> sse_decode_list_ffi_environment_variable(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FfiExecutionHistoryRecord> sse_decode_list_ffi_execution_history_record(
     SseDeserializer deserializer,
   );
 
@@ -336,9 +419,18 @@ abstract class PostKillerRustLibApiImplPlatform
   );
 
   @protected
+  FfiExecutionHistoryErrorCategory?
+  sse_decode_opt_box_autoadd_ffi_execution_history_error_category(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FfiExecutionResponse? sse_decode_opt_box_autoadd_ffi_execution_response(
     SseDeserializer deserializer,
   );
+
+  @protected
+  int? sse_decode_opt_box_autoadd_u_16(SseDeserializer deserializer);
 
   @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
@@ -357,6 +449,9 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
+
+  @protected
+  void sse_encode_CastedPrimitive_i_64(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_CastedPrimitive_u_64(int self, SseSerializer serializer);
@@ -380,6 +475,18 @@ abstract class PostKillerRustLibApiImplPlatform
   );
 
   @protected
+  void sse_encode_box_autoadd_ffi_execution_history_error_category(
+    FfiExecutionHistoryErrorCategory self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_ffi_execution_history_record(
+    FfiExecutionHistoryRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_ffi_execution_options(
     FfiExecutionOptions self,
     SseSerializer serializer,
@@ -396,6 +503,9 @@ abstract class PostKillerRustLibApiImplPlatform
     FfiRequest self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_box_autoadd_u_16(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_box_autoadd_u_32(int self, SseSerializer serializer);
@@ -430,6 +540,24 @@ abstract class PostKillerRustLibApiImplPlatform
   @protected
   void sse_encode_ffi_execution_error_kind(
     FfiExecutionErrorKind self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_ffi_execution_history_error_category(
+    FfiExecutionHistoryErrorCategory self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_ffi_execution_history_record(
+    FfiExecutionHistoryRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_ffi_execution_history_result_kind(
+    FfiExecutionHistoryResultKind self,
     SseSerializer serializer,
   );
 
@@ -506,6 +634,9 @@ abstract class PostKillerRustLibApiImplPlatform
   void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_i_64(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
   void sse_encode_list_ffi_collection(
     List<FfiCollection> self,
     SseSerializer serializer,
@@ -520,6 +651,12 @@ abstract class PostKillerRustLibApiImplPlatform
   @protected
   void sse_encode_list_ffi_environment_variable(
     List<FfiEnvironmentVariable> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ffi_execution_history_record(
+    List<FfiExecutionHistoryRecord> self,
     SseSerializer serializer,
   );
 
@@ -566,10 +703,19 @@ abstract class PostKillerRustLibApiImplPlatform
   );
 
   @protected
+  void sse_encode_opt_box_autoadd_ffi_execution_history_error_category(
+    FfiExecutionHistoryErrorCategory? self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_opt_box_autoadd_ffi_execution_response(
     FfiExecutionResponse? self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_opt_box_autoadd_u_16(int? self, SseSerializer serializer);
 
   @protected
   void sse_encode_opt_box_autoadd_u_32(int? self, SseSerializer serializer);

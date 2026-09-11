@@ -212,7 +212,26 @@ class WorkspaceScreen extends StatelessWidget {
                                 controller.add(const WorkspaceRequestCreated()),
                           ),
                           WorkspaceSection.history => HistoryPane(
-                            entries: workspace.history,
+                            entries: workspace.filteredHistory,
+                            query: workspace.historySearchQuery,
+                            onQueryChanged: (query) => controller.add(
+                              WorkspaceHistorySearchChanged(query),
+                            ),
+                            onOpen: (requestId) => controller.add(
+                              WorkspaceHistoryEntryOpened(requestId),
+                            ),
+                            onClear: () async {
+                              if (await _confirmDelete(
+                                context,
+                                title: 'Очистить историю?',
+                                message: 'Будут удалены только локальные метаданные запусков. Запросы и environments останутся.',
+                                confirmLabel: 'Очистить историю',
+                              )) {
+                                controller.add(
+                                  const WorkspaceHistoryClearRequested(),
+                                );
+                              }
+                            },
                           ),
                           WorkspaceSection.variables => VariablesPane(
                             environments: workspace.environments,

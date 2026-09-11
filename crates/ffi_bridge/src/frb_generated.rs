@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 2126520274;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1768134463;
 
 // Section: executor
 
@@ -47,6 +47,40 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
+fn wire__crate__api__clear_workspace_execution_history_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "clear_workspace_execution_history",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_workspace_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok =
+                        crate::api::clear_workspace_execution_history(api_workspace_id)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__create_collection_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -594,6 +628,39 @@ fn wire__crate__api__list_requests_impl(
         },
     )
 }
+fn wire__crate__api__list_workspace_execution_history_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "list_workspace_execution_history",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_workspace_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::api::list_workspace_execution_history(api_workspace_id)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
 fn wire__crate__api__list_workspaces_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -653,6 +720,39 @@ fn wire__crate__api__save_environment_variable_impl(
             move |context| {
                 transform_result_sse::<_, String>((move || {
                     let output_ok = crate::api::save_environment_variable(api_variable)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__save_execution_history_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "save_execution_history",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_record = <crate::api::FfiExecutionHistoryRecord>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::api::save_execution_history(api_record)?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -807,6 +907,70 @@ impl SseDecode for crate::api::FfiExecutionErrorKind {
             12 => crate::api::FfiExecutionErrorKind::ResponseTooLarge,
             13 => crate::api::FfiExecutionErrorKind::Internal,
             _ => unreachable!("Invalid variant for FfiExecutionErrorKind: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::api::FfiExecutionHistoryErrorCategory {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::api::FfiExecutionHistoryErrorCategory::Timeout,
+            1 => crate::api::FfiExecutionHistoryErrorCategory::Dns,
+            2 => crate::api::FfiExecutionHistoryErrorCategory::Connection,
+            3 => crate::api::FfiExecutionHistoryErrorCategory::Tls,
+            4 => crate::api::FfiExecutionHistoryErrorCategory::Proxy,
+            5 => crate::api::FfiExecutionHistoryErrorCategory::Redirect,
+            6 => crate::api::FfiExecutionHistoryErrorCategory::RequestBody,
+            7 => crate::api::FfiExecutionHistoryErrorCategory::ResponseBody,
+            8 => crate::api::FfiExecutionHistoryErrorCategory::Other,
+            _ => unreachable!(
+                "Invalid variant for FfiExecutionHistoryErrorCategory: {}",
+                inner
+            ),
+        };
+    }
+}
+
+impl SseDecode for crate::api::FfiExecutionHistoryRecord {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_executionId = <String>::sse_decode(deserializer);
+        let mut var_requestId = <String>::sse_decode(deserializer);
+        let mut var_executedAtUnixMs = <i64>::sse_decode(deserializer);
+        let mut var_statusCode = <Option<u16>>::sse_decode(deserializer);
+        let mut var_durationMs = <u64>::sse_decode(deserializer);
+        let mut var_responseSizeBytes = <u64>::sse_decode(deserializer);
+        let mut var_resultKind =
+            <crate::api::FfiExecutionHistoryResultKind>::sse_decode(deserializer);
+        let mut var_errorCategory =
+            <Option<crate::api::FfiExecutionHistoryErrorCategory>>::sse_decode(deserializer);
+        return crate::api::FfiExecutionHistoryRecord {
+            execution_id: var_executionId,
+            request_id: var_requestId,
+            executed_at_unix_ms: var_executedAtUnixMs,
+            status_code: var_statusCode,
+            duration_ms: var_durationMs,
+            response_size_bytes: var_responseSizeBytes,
+            result_kind: var_resultKind,
+            error_category: var_errorCategory,
+        };
+    }
+}
+
+impl SseDecode for crate::api::FfiExecutionHistoryResultKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::api::FfiExecutionHistoryResultKind::Response,
+            1 => crate::api::FfiExecutionHistoryResultKind::Error,
+            2 => crate::api::FfiExecutionHistoryResultKind::Cancelled,
+            _ => unreachable!(
+                "Invalid variant for FfiExecutionHistoryResultKind: {}",
+                inner
+            ),
         };
     }
 }
@@ -1024,6 +1188,13 @@ impl SseDecode for i32 {
     }
 }
 
+impl SseDecode for i64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i64::<NativeEndian>().unwrap()
+    }
+}
+
 impl SseDecode for Vec<crate::api::FfiCollection> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1055,6 +1226,20 @@ impl SseDecode for Vec<crate::api::FfiEnvironmentVariable> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::FfiEnvironmentVariable>::sse_decode(
+                deserializer,
+            ));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::FfiExecutionHistoryRecord> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::FfiExecutionHistoryRecord>::sse_decode(
                 deserializer,
             ));
         }
@@ -1155,11 +1340,35 @@ impl SseDecode for Option<crate::api::FfiExecutionError> {
     }
 }
 
+impl SseDecode for Option<crate::api::FfiExecutionHistoryErrorCategory> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<crate::api::FfiExecutionHistoryErrorCategory>::sse_decode(
+                deserializer,
+            ));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for Option<crate::api::FfiExecutionResponse> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         if (<bool>::sse_decode(deserializer)) {
             return Some(<crate::api::FfiExecutionResponse>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
+impl SseDecode for Option<u16> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<u16>::sse_decode(deserializer));
         } else {
             return None;
         }
@@ -1219,31 +1428,44 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        1 => wire__crate__api__create_collection_impl(port, ptr, rust_vec_len, data_len),
-        2 => wire__crate__api__create_environment_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__create_workspace_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__delete_collection_impl(port, ptr, rust_vec_len, data_len),
-        5 => wire__crate__api__delete_environment_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__delete_environment_variable_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__delete_request_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__delete_workspace_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__execute_request_impl(port, ptr, rust_vec_len, data_len),
-        10 => {
+        1 => wire__crate__api__clear_workspace_execution_history_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        2 => wire__crate__api__create_collection_impl(port, ptr, rust_vec_len, data_len),
+        3 => wire__crate__api__create_environment_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__create_workspace_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__delete_collection_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__delete_environment_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__delete_environment_variable_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__delete_request_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__delete_workspace_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__execute_request_impl(port, ptr, rust_vec_len, data_len),
+        11 => {
             wire__crate__api__execute_request_with_options_impl(port, ptr, rust_vec_len, data_len)
         }
-        11 => {
+        12 => {
             wire__crate__api__execute_request_with_variables_impl(port, ptr, rust_vec_len, data_len)
         }
-        12 => {
+        13 => {
             wire__crate__api__ffi_execution_options_default_impl(port, ptr, rust_vec_len, data_len)
         }
-        13 => wire__crate__api__list_collections_impl(port, ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__list_environment_variables_impl(port, ptr, rust_vec_len, data_len),
-        15 => wire__crate__api__list_environments_impl(port, ptr, rust_vec_len, data_len),
-        16 => wire__crate__api__list_requests_impl(port, ptr, rust_vec_len, data_len),
-        17 => wire__crate__api__list_workspaces_impl(port, ptr, rust_vec_len, data_len),
-        18 => wire__crate__api__save_environment_variable_impl(port, ptr, rust_vec_len, data_len),
-        19 => wire__crate__api__save_request_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__list_collections_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__list_environment_variables_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__list_environments_impl(port, ptr, rust_vec_len, data_len),
+        17 => wire__crate__api__list_requests_impl(port, ptr, rust_vec_len, data_len),
+        18 => wire__crate__api__list_workspace_execution_history_impl(
+            port,
+            ptr,
+            rust_vec_len,
+            data_len,
+        ),
+        19 => wire__crate__api__list_workspaces_impl(port, ptr, rust_vec_len, data_len),
+        20 => wire__crate__api__save_environment_variable_impl(port, ptr, rust_vec_len, data_len),
+        21 => wire__crate__api__save_execution_history_impl(port, ptr, rust_vec_len, data_len),
+        22 => wire__crate__api__save_request_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }
@@ -1391,6 +1613,83 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::FfiExecutionErrorKind>
     for crate::api::FfiExecutionErrorKind
 {
     fn into_into_dart(self) -> crate::api::FfiExecutionErrorKind {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::FfiExecutionHistoryErrorCategory {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Timeout => 0.into_dart(),
+            Self::Dns => 1.into_dart(),
+            Self::Connection => 2.into_dart(),
+            Self::Tls => 3.into_dart(),
+            Self::Proxy => 4.into_dart(),
+            Self::Redirect => 5.into_dart(),
+            Self::RequestBody => 6.into_dart(),
+            Self::ResponseBody => 7.into_dart(),
+            Self::Other => 8.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::FfiExecutionHistoryErrorCategory
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::FfiExecutionHistoryErrorCategory>
+    for crate::api::FfiExecutionHistoryErrorCategory
+{
+    fn into_into_dart(self) -> crate::api::FfiExecutionHistoryErrorCategory {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::FfiExecutionHistoryRecord {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.execution_id.into_into_dart().into_dart(),
+            self.request_id.into_into_dart().into_dart(),
+            self.executed_at_unix_ms.into_into_dart().into_dart(),
+            self.status_code.into_into_dart().into_dart(),
+            self.duration_ms.into_into_dart().into_dart(),
+            self.response_size_bytes.into_into_dart().into_dart(),
+            self.result_kind.into_into_dart().into_dart(),
+            self.error_category.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::FfiExecutionHistoryRecord
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::FfiExecutionHistoryRecord>
+    for crate::api::FfiExecutionHistoryRecord
+{
+    fn into_into_dart(self) -> crate::api::FfiExecutionHistoryRecord {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::FfiExecutionHistoryResultKind {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::Response => 0.into_dart(),
+            Self::Error => 1.into_dart(),
+            Self::Cancelled => 2.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::FfiExecutionHistoryResultKind
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::FfiExecutionHistoryResultKind>
+    for crate::api::FfiExecutionHistoryResultKind
+{
+    fn into_into_dart(self) -> crate::api::FfiExecutionHistoryResultKind {
         self
     }
 }
@@ -1761,6 +2060,63 @@ impl SseEncode for crate::api::FfiExecutionErrorKind {
     }
 }
 
+impl SseEncode for crate::api::FfiExecutionHistoryErrorCategory {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::api::FfiExecutionHistoryErrorCategory::Timeout => 0,
+                crate::api::FfiExecutionHistoryErrorCategory::Dns => 1,
+                crate::api::FfiExecutionHistoryErrorCategory::Connection => 2,
+                crate::api::FfiExecutionHistoryErrorCategory::Tls => 3,
+                crate::api::FfiExecutionHistoryErrorCategory::Proxy => 4,
+                crate::api::FfiExecutionHistoryErrorCategory::Redirect => 5,
+                crate::api::FfiExecutionHistoryErrorCategory::RequestBody => 6,
+                crate::api::FfiExecutionHistoryErrorCategory::ResponseBody => 7,
+                crate::api::FfiExecutionHistoryErrorCategory::Other => 8,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::FfiExecutionHistoryRecord {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.execution_id, serializer);
+        <String>::sse_encode(self.request_id, serializer);
+        <i64>::sse_encode(self.executed_at_unix_ms, serializer);
+        <Option<u16>>::sse_encode(self.status_code, serializer);
+        <u64>::sse_encode(self.duration_ms, serializer);
+        <u64>::sse_encode(self.response_size_bytes, serializer);
+        <crate::api::FfiExecutionHistoryResultKind>::sse_encode(self.result_kind, serializer);
+        <Option<crate::api::FfiExecutionHistoryErrorCategory>>::sse_encode(
+            self.error_category,
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::FfiExecutionHistoryResultKind {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::api::FfiExecutionHistoryResultKind::Response => 0,
+                crate::api::FfiExecutionHistoryResultKind::Error => 1,
+                crate::api::FfiExecutionHistoryResultKind::Cancelled => 2,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
 impl SseEncode for crate::api::FfiExecutionOptions {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1926,6 +2282,13 @@ impl SseEncode for i32 {
     }
 }
 
+impl SseEncode for i64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i64::<NativeEndian>(self).unwrap();
+    }
+}
+
 impl SseEncode for Vec<crate::api::FfiCollection> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1952,6 +2315,16 @@ impl SseEncode for Vec<crate::api::FfiEnvironmentVariable> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::FfiEnvironmentVariable>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::FfiExecutionHistoryRecord> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::FfiExecutionHistoryRecord>::sse_encode(item, serializer);
         }
     }
 }
@@ -2036,12 +2409,32 @@ impl SseEncode for Option<crate::api::FfiExecutionError> {
     }
 }
 
+impl SseEncode for Option<crate::api::FfiExecutionHistoryErrorCategory> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <crate::api::FfiExecutionHistoryErrorCategory>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for Option<crate::api::FfiExecutionResponse> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <bool>::sse_encode(self.is_some(), serializer);
         if let Some(value) = self {
             <crate::api::FfiExecutionResponse>::sse_encode(value, serializer);
+        }
+    }
+}
+
+impl SseEncode for Option<u16> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <u16>::sse_encode(value, serializer);
         }
     }
 }

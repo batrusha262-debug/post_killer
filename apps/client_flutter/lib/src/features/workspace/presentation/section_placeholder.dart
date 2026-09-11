@@ -4,45 +4,107 @@ import '../domain/workspace_models.dart';
 import 'method_color.dart';
 
 class HistoryPane extends StatelessWidget {
-  const HistoryPane({super.key, required this.entries});
+  const HistoryPane({
+    super.key,
+    required this.entries,
+    required this.query,
+    required this.onQueryChanged,
+    required this.onOpen,
+    required this.onClear,
+  });
 
   final List<RequestHistoryEntry> entries;
+  final String query;
+  final ValueChanged<String> onQueryChanged;
+  final ValueChanged<String> onOpen;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
-    if (entries.isEmpty) {
-      return const SectionPlaceholder(
-        title: 'History',
-        icon: Icons.history,
-        message: 'No request history yet',
-      );
-    }
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
-        Text('History', style: Theme.of(context).textTheme.titleMedium),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'History',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: entries.isEmpty ? null : onClear,
+              icon: const Icon(Icons.delete_sweep_outlined),
+              label: const Text('Clear'),
+            ),
+          ],
+        ),
         const SizedBox(height: 8),
-        for (final entry in entries)
-          ListTile(
-            key: Key('history-entry-${entry.id}'),
-            dense: true,
-            leading: Icon(
-              entry.error == null
-                  ? Icons.check_circle_outline
-                  : Icons.error_outline,
-              color: entry.error == null
-                  ? methodColor(context, HttpMethod.get)
-                  : Theme.of(context).colorScheme.error,
-            ),
-            title: Text('${entry.method.label} ${entry.title}'),
-            subtitle: Text(
-              entry.error ?? '${entry.url}\nHTTP ${entry.status ?? '—'}',
-            ),
-            isThreeLine: entry.error == null,
+        TextField(
+          key: const Key('history-search'),
+          onChanged: onQueryChanged,
+          decoration: const InputDecoration(
+            prefixIcon: Icon(Icons.search),
+            hintText: 'Filter by request name or method',
           ),
+        ),
+        const SizedBox(height: 8),
+        if (entries.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 36),
+            child: Center(
+              child: Text(
+                query.isEmpty
+                    ? 'No request history yet'
+                    : 'No matching requests',
+              ),
+            ),
+          )
+        else
+          for (final entry in entries)
+            ListTile(
+              key: Key('history-entry-${entry.id}'),
+              dense: true,
+              onTap: () => onOpen(entry.requestId),
+              leading: Icon(
+                entry.result == ExecutionHistoryResult.response
+                    ? Icons.check_circle_outline
+                    : Icons.error_outline,
+                color: entry.result == ExecutionHistoryResult.response
+                    ? methodColor(context, entry.method)
+                    : Theme.of(context).colorScheme.error,
+              ),
+              title: Text('${entry.method.label} ${entry.title}'),
+              subtitle: Text(_summary(entry)),
+              trailing: const Icon(Icons.open_in_new_rounded, size: 18),
+            ),
       ],
     );
   }
+
+  String _summary(RequestHistoryEntry entry) {
+    if (entry.result != ExecutionHistoryResult.response) {
+      return 'Failed · ${_errorLabel(entry.errorCategory)}';
+    }
+    return 'HTTP ${entry.status ?? '—'} · ${entry.durationMillis} ms · '
+        '${_bytes(entry.responseSizeBytes)}';
+  }
+
+  String _errorLabel(ExecutionHistoryErrorCategory? category) =>
+      switch (category) {
+        ExecutionHistoryErrorCategory.timeout => 'timeout',
+        ExecutionHistoryErrorCategory.dns => 'DNS',
+        ExecutionHistoryErrorCategory.connection => 'connection',
+        ExecutionHistoryErrorCategory.tls => 'TLS',
+        ExecutionHistoryErrorCategory.proxy => 'proxy',
+        ExecutionHistoryErrorCategory.redirect => 'redirect',
+        ExecutionHistoryErrorCategory.requestBody => 'request body',
+        ExecutionHistoryErrorCategory.responseBody => 'response body',
+        _ => 'other error',
+      };
+
+  String _bytes(int bytes) =>
+      bytes < 1024 ? '$bytes B' : '${(bytes / 1024).toStringAsFixed(1)} KB';
 }
 
 class VariablesPane extends StatelessWidget {

@@ -62,6 +62,43 @@ impl SqliteStorage {
             .collect()
     }
 
+    /// Lists privacy-safe metadata for every request that still belongs to a
+    /// workspace. The query deliberately reads only `execution_history`
+    /// columns: a URL, payload, header, cookie or credential cannot cross this
+    /// boundary by accident.
+    pub(super) fn list_workspace_execution_history(
+        &self,
+        workspace_id: &str,
+    ) -> Result<Vec<ExecutionHistoryRecord>, StorageError> {
+        validate_non_empty("execution history", "workspace_id", workspace_id)?;
+        let mut statement = self.connection.prepare(
+            "SELECT h.execution_id, h.request_id, h.executed_at_unix_ms, h.status_code, h.duration_ms, h.response_size_bytes, h.result_kind, h.error_category \
+             FROM execution_history h \
+             INNER JOIN requests r ON r.id = h.request_id \
+             INNER JOIN collections c ON c.id = r.collection_id \
+             WHERE c.workspace_id = ?1 \
+             ORDER BY h.executed_at_unix_ms DESC, h.execution_id DESC",
+        )?;
+        statement
+            .query_map([workspace_id], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, i64>(2)?,
+                    row.get::<_, Option<i64>>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, i64>(5)?,
+                    row.get::<_, String>(6)?,
+                    row.get::<_, Option<String>>(7)?,
+                ))
+            })?
+            .map(|row| {
+                row.map_err(StorageError::Database)
+                    .and_then(decode_execution_history)
+            })
+            .collect()
+    }
+
     pub(super) fn delete_execution_history(
         &mut self,
         request_id: &str,
@@ -92,6 +129,27 @@ impl SqliteStorage {
         let changed = transaction.execute(
             "DELETE FROM execution_history WHERE request_id = ?1",
             [request_id],
+        )?;
+        transaction.commit()?;
+        Ok(changed)
+    }
+
+    /// Deletes only execution metadata belonging to this workspace. The
+    /// request definitions themselves remain untouched.
+    pub(super) fn clear_workspace_execution_history(
+        &mut self,
+        workspace_id: &str,
+    ) -> Result<usize, StorageError> {
+        validate_non_empty("execution history", "workspace_id", workspace_id)?;
+        let transaction = self.begin_write()?;
+        ensure_workspace_exists(&transaction, workspace_id)?;
+        let changed = transaction.execute(
+            "DELETE FROM execution_history WHERE request_id IN (\
+                 SELECT r.id FROM requests r \
+                 INNER JOIN collections c ON c.id = r.collection_id \
+                 WHERE c.workspace_id = ?1\
+             )",
+            [workspace_id],
         )?;
         transaction.commit()?;
         Ok(changed)

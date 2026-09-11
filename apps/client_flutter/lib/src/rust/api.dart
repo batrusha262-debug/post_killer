@@ -8,7 +8,7 @@ import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `app_data_directory`, `error`, `next_id`, `success`, `with_storage`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Lists persisted local workspaces. The database is owned exclusively by the
 /// Rust storage adapter; Flutter only receives owned DTOs through FRB.
@@ -81,6 +81,26 @@ Future<List<FfiStoredRequest>> listRequests({required String collectionId}) =>
 /// Deletes one saved request. Its local execution history is cascaded too.
 Future<void> deleteRequest({required String id}) =>
     PostKillerRustLib.instance.api.crateApiDeleteRequest(id: id);
+
+/// Records only sanitized execution metadata for a saved request. Drafts are
+/// intentionally never accepted by storage because they have no persisted ID.
+Future<void> saveExecutionHistory({
+  required FfiExecutionHistoryRecord record,
+}) =>
+    PostKillerRustLib.instance.api.crateApiSaveExecutionHistory(record: record);
+
+/// Returns workspace-wide execution metadata, newest first. The bridge never
+/// returns request content, URL or any authentication material here.
+Future<List<FfiExecutionHistoryRecord>> listWorkspaceExecutionHistory({
+  required String workspaceId,
+}) => PostKillerRustLib.instance.api.crateApiListWorkspaceExecutionHistory(
+  workspaceId: workspaceId,
+);
+
+Future<int> clearWorkspaceExecutionHistory({required String workspaceId}) =>
+    PostKillerRustLib.instance.api.crateApiClearWorkspaceExecutionHistory(
+      workspaceId: workspaceId,
+    );
 
 /// Creates or updates a request in the selected collection/folder.
 Future<FfiStoredRequest> saveRequest({
@@ -252,6 +272,69 @@ enum FfiExecutionErrorKind {
   responseTooLarge,
   internal,
 }
+
+enum FfiExecutionHistoryErrorCategory {
+  timeout,
+  dns,
+  connection,
+  tls,
+  proxy,
+  redirect,
+  requestBody,
+  responseBody,
+  other,
+}
+
+/// Privacy-safe execution metadata. It intentionally has no URL, request or
+/// response body, headers, cookies, credentials or raw error text.
+class FfiExecutionHistoryRecord {
+  final String executionId;
+  final String requestId;
+  final int executedAtUnixMs;
+  final int? statusCode;
+  final int durationMs;
+  final int responseSizeBytes;
+  final FfiExecutionHistoryResultKind resultKind;
+  final FfiExecutionHistoryErrorCategory? errorCategory;
+
+  const FfiExecutionHistoryRecord({
+    required this.executionId,
+    required this.requestId,
+    required this.executedAtUnixMs,
+    this.statusCode,
+    required this.durationMs,
+    required this.responseSizeBytes,
+    required this.resultKind,
+    this.errorCategory,
+  });
+
+  @override
+  int get hashCode =>
+      executionId.hashCode ^
+      requestId.hashCode ^
+      executedAtUnixMs.hashCode ^
+      statusCode.hashCode ^
+      durationMs.hashCode ^
+      responseSizeBytes.hashCode ^
+      resultKind.hashCode ^
+      errorCategory.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiExecutionHistoryRecord &&
+          runtimeType == other.runtimeType &&
+          executionId == other.executionId &&
+          requestId == other.requestId &&
+          executedAtUnixMs == other.executedAtUnixMs &&
+          statusCode == other.statusCode &&
+          durationMs == other.durationMs &&
+          responseSizeBytes == other.responseSizeBytes &&
+          resultKind == other.resultKind &&
+          errorCategory == other.errorCategory;
+}
+
+enum FfiExecutionHistoryResultKind { response, error, cancelled }
 
 class FfiExecutionOptions {
   final int timeoutMillis;

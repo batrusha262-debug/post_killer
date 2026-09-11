@@ -90,6 +90,20 @@ final class WorkspaceCollectionSearchChanged extends WorkspaceEvent {
   final String query;
 }
 
+final class WorkspaceHistorySearchChanged extends WorkspaceEvent {
+  const WorkspaceHistorySearchChanged(this.query);
+  final String query;
+}
+
+final class WorkspaceHistoryClearRequested extends WorkspaceStorageEvent {
+  const WorkspaceHistoryClearRequested();
+}
+
+final class WorkspaceHistoryEntryOpened extends WorkspaceEvent {
+  const WorkspaceHistoryEntryOpened(this.requestId);
+  final String requestId;
+}
+
 final class WorkspaceRequestOpened extends WorkspaceEvent {
   const WorkspaceRequestOpened(this.request);
   final SavedRequest request;

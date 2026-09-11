@@ -12,7 +12,7 @@
 
 ## Активный план
 
-- [ ] API-WORKBENCH-3: подключить уже существующую SQLite privacy-safe execution history к typed FFI и Flutter BLoC; дать пользователю просматривать, фильтровать, повторять и очищать локальную историю без сохранения payloads, URLs или credentials.
+- [ ] API-WORKBENCH-4: расширить interoperability до надёжного импорта OpenAPI 3.0/3.1 (JSON/YAML) и безопасного экспорта собственной коллекции; импорт не должен выполнять сетевые запросы, а экспорт обязан исключать runtime-ответы, history и credentials.
 - [ ] AUDIT-RELEASE: проверить публикацию v0.2.5 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
 
 ### Foundation
@@ -101,6 +101,16 @@
   пользователя через Vercel.
 
 ## Готово
+
+- API-WORKBENCH-3 (2026-09-11): privacy-safe SQLite execution history
+  подключена через generated Flutter Rust Bridge к repository/BLoC. Для
+  сохранённых запросов локально записываются только ID, время, HTTP status,
+  duration, response size и typed error category; schema, FFI DTO и History UI
+  не содержат URLs, body, headers, cookies, credentials или raw error text.
+  История загружается по workspace после перезапуска, фильтруется, открывает
+  исходный saved request и очищается с явным подтверждением, не затрагивая
+  сами запросы и environments. Flutter analyze и 67 tests, Rust fmt/test (41
+  passed, 1 ignored)/Clippy, `git diff --check` проходят.
 
 - API-WORKBENCH-2 (2026-09-11): SQLite environments подключены через generated Flutter Rust Bridge к repository/BLoC и полноценному Variables screen. Пользователь создаёт, выбирает и удаляет local environment и переменные; включённые значения подставляются Rust domain resolver в копию запроса только перед отправкой. Переменные не мутируют draft и не попадают в response/history. Flutter analyze и 66 tests, Rust fmt/test (40 passed, 1 ignored)/Clippy, `git diff --check` проходят.
 

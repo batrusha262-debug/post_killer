@@ -416,6 +416,45 @@ void main() {
     },
   );
 
+  test(
+    'persists only sanitized execution metadata for a saved request',
+    () async {
+      final repository = _RecordingHistoryRepository(request);
+      final bloc = WorkspaceBloc(
+        repository,
+        executor: const _FakeRequestExecutor(),
+        autoBootstrap: false,
+        initialState: WorkspaceState(
+          workspaces: const [
+            WorkspaceSummary(id: 'workspace', name: 'Workspace'),
+          ],
+          selectedWorkspaceId: 'workspace',
+          collections: [
+            RequestCollection(
+              id: 'injected',
+              name: 'Injected',
+              requests: const [request],
+            ),
+          ],
+          tabs: [RequestTab.fromSaved(request)],
+          selectedTabId: request.id,
+        ),
+      );
+      final finished = bloc.stream.firstWhere((state) => !state.isExecuting);
+      bloc.add(const WorkspaceRequestSent());
+      await finished;
+
+      final record = repository.saved.single;
+      expect(record.requestId, request.id);
+      expect(record.status, 200);
+      expect(record.durationMillis, 1);
+      expect(record.responseSizeBytes, 11);
+      expect(record.result, ExecutionHistoryResult.response);
+      expect(record.errorCategory, isNull);
+      await bloc.close();
+    },
+  );
+
   blocTest<WorkspaceBloc, WorkspaceState>(
     'creates a persisted collection for the selected workspace',
     build: buildBloc,
@@ -609,6 +648,29 @@ class _FakeWorkspaceRepository implements WorkspaceRepository {
 
   @override
   Future<void> deleteRequest(String id) async {}
+
+  @override
+  Future<List<StoredExecutionHistoryRecord>> listExecutionHistory(
+    String workspaceId,
+  ) async => const [];
+
+  @override
+  Future<void> saveExecutionHistory(
+    StoredExecutionHistoryRecord record,
+  ) async {}
+
+  @override
+  Future<void> clearExecutionHistory(String workspaceId) async {}
+}
+
+class _RecordingHistoryRepository extends _FakeWorkspaceRepository {
+  _RecordingHistoryRepository(super.request);
+  final saved = <StoredExecutionHistoryRecord>[];
+
+  @override
+  Future<void> saveExecutionHistory(StoredExecutionHistoryRecord record) async {
+    saved.add(record);
+  }
 }
 
 class _FakeRequestExecutor implements RequestExecutor {

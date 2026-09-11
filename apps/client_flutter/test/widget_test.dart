@@ -371,4 +371,17 @@ class _WidgetWorkspaceRepository implements WorkspaceRepository {
 
   @override
   Future<void> deleteRequest(String id) async {}
+
+  @override
+  Future<List<StoredExecutionHistoryRecord>> listExecutionHistory(
+    String workspaceId,
+  ) async => const [];
+
+  @override
+  Future<void> saveExecutionHistory(
+    StoredExecutionHistoryRecord record,
+  ) async {}
+
+  @override
+  Future<void> clearExecutionHistory(String workspaceId) async {}
 }

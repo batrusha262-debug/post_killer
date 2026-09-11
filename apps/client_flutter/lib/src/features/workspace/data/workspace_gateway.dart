@@ -29,6 +29,11 @@ abstract interface class WorkspaceGateway {
     required RequestTab request,
   });
   Future<void> deleteRequest(String id);
+  Future<List<StoredExecutionHistoryRecord>> listExecutionHistory(
+    String workspaceId,
+  );
+  Future<void> saveExecutionHistory(StoredExecutionHistoryRecord record);
+  Future<void> clearExecutionHistory(String workspaceId);
 }
 
 class FrbWorkspaceGateway implements WorkspaceGateway {
@@ -170,6 +175,102 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
 
   @override
   Future<void> deleteRequest(String id) => rust_api.deleteRequest(id: id);
+
+  @override
+  Future<List<StoredExecutionHistoryRecord>> listExecutionHistory(
+    String workspaceId,
+  ) async => [
+    for (final record in await rust_api.listWorkspaceExecutionHistory(
+      workspaceId: workspaceId,
+    ))
+      _historyRecord(record),
+  ];
+
+  @override
+  Future<void> saveExecutionHistory(StoredExecutionHistoryRecord record) =>
+      rust_api.saveExecutionHistory(
+        record: rust_api.FfiExecutionHistoryRecord(
+          executionId: record.id,
+          requestId: record.requestId,
+          executedAtUnixMs: record.executedAt.millisecondsSinceEpoch,
+          statusCode: record.status,
+          durationMs: record.durationMillis,
+          responseSizeBytes: record.responseSizeBytes,
+          resultKind: switch (record.result) {
+            ExecutionHistoryResult.response =>
+              rust_api.FfiExecutionHistoryResultKind.response,
+            ExecutionHistoryResult.error =>
+              rust_api.FfiExecutionHistoryResultKind.error,
+            ExecutionHistoryResult.cancelled =>
+              rust_api.FfiExecutionHistoryResultKind.cancelled,
+          },
+          errorCategory: switch (record.errorCategory) {
+            ExecutionHistoryErrorCategory.timeout =>
+              rust_api.FfiExecutionHistoryErrorCategory.timeout,
+            ExecutionHistoryErrorCategory.dns =>
+              rust_api.FfiExecutionHistoryErrorCategory.dns,
+            ExecutionHistoryErrorCategory.connection =>
+              rust_api.FfiExecutionHistoryErrorCategory.connection,
+            ExecutionHistoryErrorCategory.tls =>
+              rust_api.FfiExecutionHistoryErrorCategory.tls,
+            ExecutionHistoryErrorCategory.proxy =>
+              rust_api.FfiExecutionHistoryErrorCategory.proxy,
+            ExecutionHistoryErrorCategory.redirect =>
+              rust_api.FfiExecutionHistoryErrorCategory.redirect,
+            ExecutionHistoryErrorCategory.requestBody =>
+              rust_api.FfiExecutionHistoryErrorCategory.requestBody,
+            ExecutionHistoryErrorCategory.responseBody =>
+              rust_api.FfiExecutionHistoryErrorCategory.responseBody,
+            ExecutionHistoryErrorCategory.other =>
+              rust_api.FfiExecutionHistoryErrorCategory.other,
+            null => null,
+          },
+        ),
+      );
+
+  @override
+  Future<void> clearExecutionHistory(String workspaceId) =>
+      rust_api.clearWorkspaceExecutionHistory(workspaceId: workspaceId);
+
+  StoredExecutionHistoryRecord _historyRecord(
+    rust_api.FfiExecutionHistoryRecord record,
+  ) => StoredExecutionHistoryRecord(
+    id: record.executionId,
+    requestId: record.requestId,
+    executedAt: DateTime.fromMillisecondsSinceEpoch(record.executedAtUnixMs),
+    status: record.statusCode,
+    durationMillis: record.durationMs,
+    responseSizeBytes: record.responseSizeBytes,
+    result: switch (record.resultKind) {
+      rust_api.FfiExecutionHistoryResultKind.response =>
+        ExecutionHistoryResult.response,
+      rust_api.FfiExecutionHistoryResultKind.error =>
+        ExecutionHistoryResult.error,
+      rust_api.FfiExecutionHistoryResultKind.cancelled =>
+        ExecutionHistoryResult.cancelled,
+    },
+    errorCategory: switch (record.errorCategory) {
+      rust_api.FfiExecutionHistoryErrorCategory.timeout =>
+        ExecutionHistoryErrorCategory.timeout,
+      rust_api.FfiExecutionHistoryErrorCategory.dns =>
+        ExecutionHistoryErrorCategory.dns,
+      rust_api.FfiExecutionHistoryErrorCategory.connection =>
+        ExecutionHistoryErrorCategory.connection,
+      rust_api.FfiExecutionHistoryErrorCategory.tls =>
+        ExecutionHistoryErrorCategory.tls,
+      rust_api.FfiExecutionHistoryErrorCategory.proxy =>
+        ExecutionHistoryErrorCategory.proxy,
+      rust_api.FfiExecutionHistoryErrorCategory.redirect =>
+        ExecutionHistoryErrorCategory.redirect,
+      rust_api.FfiExecutionHistoryErrorCategory.requestBody =>
+        ExecutionHistoryErrorCategory.requestBody,
+      rust_api.FfiExecutionHistoryErrorCategory.responseBody =>
+        ExecutionHistoryErrorCategory.responseBody,
+      rust_api.FfiExecutionHistoryErrorCategory.other =>
+        ExecutionHistoryErrorCategory.other,
+      null => null,
+    },
+  );
 
   SavedRequest _savedRequest(rust_api.FfiRequest request) => SavedRequest(
     id: request.id,

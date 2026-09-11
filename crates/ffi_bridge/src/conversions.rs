@@ -6,7 +6,8 @@ use post_killer_http_engine::{
     ExecuteError, ExecutionOptions, RedirectPolicy, ResponsePayload, TransportErrorKind,
 };
 use post_killer_storage_sqlite::{
-    Collection, Environment, EnvironmentVariable, StoredRequest, Workspace,
+    Collection, Environment, EnvironmentVariable, ExecutionErrorCategory, ExecutionHistoryRecord,
+    ExecutionResultKind, StoredRequest, Workspace,
 };
 use std::time::Duration;
 
@@ -221,6 +222,96 @@ impl TryFrom<FfiEnvironmentVariable> for EnvironmentVariable {
     }
 }
 
+impl From<ExecutionHistoryRecord> for FfiExecutionHistoryRecord {
+    fn from(value: ExecutionHistoryRecord) -> Self {
+        Self {
+            execution_id: value.execution_id,
+            request_id: value.request_id,
+            executed_at_unix_ms: value.executed_at_unix_ms,
+            status_code: value.status_code,
+            duration_ms: value.duration_ms,
+            response_size_bytes: value.response_size_bytes,
+            result_kind: value.result_kind.into(),
+            error_category: value.error_category.map(Into::into),
+        }
+    }
+}
+
+impl TryFrom<FfiExecutionHistoryRecord> for ExecutionHistoryRecord {
+    type Error = FfiExecutionError;
+
+    fn try_from(value: FfiExecutionHistoryRecord) -> Result<Self, Self::Error> {
+        if value.execution_id.trim().is_empty() {
+            return Err(invalid_history_field("execution_id"));
+        }
+        if value.request_id.trim().is_empty() {
+            return Err(invalid_history_field("request_id"));
+        }
+        Ok(Self {
+            execution_id: value.execution_id,
+            request_id: value.request_id,
+            executed_at_unix_ms: value.executed_at_unix_ms,
+            status_code: value.status_code,
+            duration_ms: value.duration_ms,
+            response_size_bytes: value.response_size_bytes,
+            result_kind: value.result_kind.into(),
+            error_category: value.error_category.map(Into::into),
+        })
+    }
+}
+
+impl From<ExecutionResultKind> for FfiExecutionHistoryResultKind {
+    fn from(value: ExecutionResultKind) -> Self {
+        match value {
+            ExecutionResultKind::Response => Self::Response,
+            ExecutionResultKind::Error => Self::Error,
+            ExecutionResultKind::Cancelled => Self::Cancelled,
+        }
+    }
+}
+
+impl From<FfiExecutionHistoryResultKind> for ExecutionResultKind {
+    fn from(value: FfiExecutionHistoryResultKind) -> Self {
+        match value {
+            FfiExecutionHistoryResultKind::Response => Self::Response,
+            FfiExecutionHistoryResultKind::Error => Self::Error,
+            FfiExecutionHistoryResultKind::Cancelled => Self::Cancelled,
+        }
+    }
+}
+
+impl From<ExecutionErrorCategory> for FfiExecutionHistoryErrorCategory {
+    fn from(value: ExecutionErrorCategory) -> Self {
+        match value {
+            ExecutionErrorCategory::Timeout => Self::Timeout,
+            ExecutionErrorCategory::Dns => Self::Dns,
+            ExecutionErrorCategory::Connection => Self::Connection,
+            ExecutionErrorCategory::Tls => Self::Tls,
+            ExecutionErrorCategory::Proxy => Self::Proxy,
+            ExecutionErrorCategory::Redirect => Self::Redirect,
+            ExecutionErrorCategory::RequestBody => Self::RequestBody,
+            ExecutionErrorCategory::ResponseBody => Self::ResponseBody,
+            ExecutionErrorCategory::Other => Self::Other,
+        }
+    }
+}
+
+impl From<FfiExecutionHistoryErrorCategory> for ExecutionErrorCategory {
+    fn from(value: FfiExecutionHistoryErrorCategory) -> Self {
+        match value {
+            FfiExecutionHistoryErrorCategory::Timeout => Self::Timeout,
+            FfiExecutionHistoryErrorCategory::Dns => Self::Dns,
+            FfiExecutionHistoryErrorCategory::Connection => Self::Connection,
+            FfiExecutionHistoryErrorCategory::Tls => Self::Tls,
+            FfiExecutionHistoryErrorCategory::Proxy => Self::Proxy,
+            FfiExecutionHistoryErrorCategory::Redirect => Self::Redirect,
+            FfiExecutionHistoryErrorCategory::RequestBody => Self::RequestBody,
+            FfiExecutionHistoryErrorCategory::ResponseBody => Self::ResponseBody,
+            FfiExecutionHistoryErrorCategory::Other => Self::Other,
+        }
+    }
+}
+
 impl From<StoredRequest> for FfiStoredRequest {
     fn from(value: StoredRequest) -> Self {
         Self {
@@ -411,6 +502,15 @@ fn invalid_environment_variable_field(field: &str) -> FfiExecutionError {
         kind: FfiExecutionErrorKind::InvalidRequest,
         message: format!("environment variable {field} must not be empty"),
         field: Some(format!("environment.{field}")),
+        limit_bytes: None,
+    }
+}
+
+fn invalid_history_field(field: &str) -> FfiExecutionError {
+    FfiExecutionError {
+        kind: FfiExecutionErrorKind::InvalidRequest,
+        message: format!("execution history {field} must not be empty"),
+        field: Some(format!("history.{field}")),
         limit_bytes: None,
     }
 }

@@ -455,6 +455,13 @@ impl Repository for SqliteStorage {
         SqliteStorage::list_execution_history(self, request_id)
     }
 
+    fn list_workspace_execution_history(
+        &self,
+        workspace_id: &str,
+    ) -> Result<Vec<ExecutionHistoryRecord>, StorageError> {
+        SqliteStorage::list_workspace_execution_history(self, workspace_id)
+    }
+
     fn delete_execution_history(
         &mut self,
         request_id: &str,
@@ -465,5 +472,12 @@ impl Repository for SqliteStorage {
 
     fn clear_execution_history(&mut self, request_id: &str) -> Result<usize, StorageError> {
         SqliteStorage::clear_execution_history(self, request_id)
+    }
+
+    fn clear_workspace_execution_history(
+        &mut self,
+        workspace_id: &str,
+    ) -> Result<usize, StorageError> {
+        SqliteStorage::clear_workspace_execution_history(self, workspace_id)
     }
 }

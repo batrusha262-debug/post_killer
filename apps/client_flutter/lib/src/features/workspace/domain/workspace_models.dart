@@ -209,21 +209,65 @@ class RequestTab {
 class RequestHistoryEntry {
   const RequestHistoryEntry({
     required this.id,
+    required this.requestId,
     required this.title,
     required this.method,
-    required this.url,
     required this.executedAt,
+    required this.result,
     this.status,
-    this.error,
+    required this.durationMillis,
+    required this.responseSizeBytes,
+    this.errorCategory,
   });
 
   final String id;
+  final String requestId;
   final String title;
   final HttpMethod method;
-  final String url;
   final DateTime executedAt;
+  final ExecutionHistoryResult result;
   final int? status;
-  final String? error;
+  final int durationMillis;
+  final int responseSizeBytes;
+  final ExecutionHistoryErrorCategory? errorCategory;
+}
+
+enum ExecutionHistoryResult { response, error, cancelled }
+
+enum ExecutionHistoryErrorCategory {
+  timeout,
+  dns,
+  connection,
+  tls,
+  proxy,
+  redirect,
+  requestBody,
+  responseBody,
+  other,
+}
+
+/// Record that crosses the repository boundary. It intentionally contains no
+/// request URL, payload, header, cookie, credential or raw error message.
+class StoredExecutionHistoryRecord {
+  const StoredExecutionHistoryRecord({
+    required this.id,
+    required this.requestId,
+    required this.executedAt,
+    required this.result,
+    this.status,
+    required this.durationMillis,
+    required this.responseSizeBytes,
+    this.errorCategory,
+  });
+
+  final String id;
+  final String requestId;
+  final DateTime executedAt;
+  final ExecutionHistoryResult result;
+  final int? status;
+  final int durationMillis;
+  final int responseSizeBytes;
+  final ExecutionHistoryErrorCategory? errorCategory;
 }
 
 class RequestKeyValue {
@@ -332,6 +376,7 @@ class WorkspaceState {
     required this.selectedTabId,
     this.selectedSection = WorkspaceSection.collections,
     this.collectionSearchQuery = '',
+    this.historySearchQuery = '',
     this.isExecuting = false,
     this.execution,
     this.isLoading = false,
@@ -348,6 +393,7 @@ class WorkspaceState {
   final String? selectedTabId;
   final WorkspaceSection selectedSection;
   final String collectionSearchQuery;
+  final String historySearchQuery;
   final bool isExecuting;
   final RequestExecutionView? execution;
   final bool isLoading;
@@ -389,6 +435,18 @@ class WorkspaceState {
         .toList();
   }
 
+  List<RequestHistoryEntry> get filteredHistory {
+    final query = historySearchQuery.trim().toLowerCase();
+    if (query.isEmpty) return history;
+    return [
+      for (final entry in history)
+        if ('${entry.method.label} ${entry.title}'.toLowerCase().contains(
+          query,
+        ))
+          entry,
+    ];
+  }
+
   RequestTab? get selectedTab {
     for (final tab in tabs) {
       if (tab.id == selectedTabId) return tab;
@@ -409,6 +467,7 @@ class WorkspaceState {
     Object? selectedTabId = _unchanged,
     WorkspaceSection? selectedSection,
     String? collectionSearchQuery,
+    String? historySearchQuery,
     bool? isExecuting,
     Object? execution = _unchanged,
     bool? isLoading,
@@ -428,6 +487,7 @@ class WorkspaceState {
         : selectedTabId as String?,
     selectedSection: selectedSection ?? this.selectedSection,
     collectionSearchQuery: collectionSearchQuery ?? this.collectionSearchQuery,
+    historySearchQuery: historySearchQuery ?? this.historySearchQuery,
     isExecuting: isExecuting ?? this.isExecuting,
     execution: identical(execution, _unchanged)
         ? this.execution

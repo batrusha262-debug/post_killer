@@ -28,6 +28,11 @@ abstract interface class WorkspaceRepository {
     required RequestTab request,
   });
   Future<void> deleteRequest(String id);
+  Future<List<StoredExecutionHistoryRecord>> listExecutionHistory(
+    String workspaceId,
+  );
+  Future<void> saveExecutionHistory(StoredExecutionHistoryRecord record);
+  Future<void> clearExecutionHistory(String workspaceId);
 }
 
 class GatewayWorkspaceRepository implements WorkspaceRepository {
@@ -92,4 +97,17 @@ class GatewayWorkspaceRepository implements WorkspaceRepository {
 
   @override
   Future<void> deleteRequest(String id) => _gateway.deleteRequest(id);
+
+  @override
+  Future<List<StoredExecutionHistoryRecord>> listExecutionHistory(
+    String workspaceId,
+  ) => _gateway.listExecutionHistory(workspaceId);
+
+  @override
+  Future<void> saveExecutionHistory(StoredExecutionHistoryRecord record) =>
+      _gateway.saveExecutionHistory(record);
+
+  @override
+  Future<void> clearExecutionHistory(String workspaceId) =>
+      _gateway.clearExecutionHistory(workspaceId);
 }

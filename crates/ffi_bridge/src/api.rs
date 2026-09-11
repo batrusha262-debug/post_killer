@@ -8,7 +8,8 @@ use post_killer_application::RequestExecutionService;
 use post_killer_domain::RequestDefinition;
 use post_killer_http_engine::{ExecutionOptions, ReqwestRequestExecutor};
 use post_killer_storage_sqlite::{
-    Environment, EnvironmentVariable, Repository, SqliteStorage, StoredRequest,
+    Environment, EnvironmentVariable, ExecutionHistoryRecord, Repository, SqliteStorage,
+    StoredRequest,
 };
 use std::collections::BTreeMap;
 use std::{
@@ -46,6 +47,40 @@ pub struct FfiEnvironmentVariable {
     pub key: String,
     pub value: String,
     pub enabled: bool,
+}
+
+/// Privacy-safe execution metadata. It intentionally has no URL, request or
+/// response body, headers, cookies, credentials or raw error text.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FfiExecutionHistoryRecord {
+    pub execution_id: String,
+    pub request_id: String,
+    pub executed_at_unix_ms: i64,
+    pub status_code: Option<u16>,
+    pub duration_ms: u64,
+    pub response_size_bytes: u64,
+    pub result_kind: FfiExecutionHistoryResultKind,
+    pub error_category: Option<FfiExecutionHistoryErrorCategory>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FfiExecutionHistoryResultKind {
+    Response,
+    Error,
+    Cancelled,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FfiExecutionHistoryErrorCategory {
+    Timeout,
+    Dns,
+    Connection,
+    Tls,
+    Proxy,
+    Redirect,
+    RequestBody,
+    ResponseBody,
+    Other,
 }
 
 /// A complete saved request. Keeping the collection association alongside the
@@ -196,6 +231,39 @@ pub fn delete_request(id: String) -> Result<(), String> {
             .delete_request(&id)
             .map_err(|error| error.to_string())
     })
+}
+
+/// Records only sanitized execution metadata for a saved request. Drafts are
+/// intentionally never accepted by storage because they have no persisted ID.
+pub fn save_execution_history(record: FfiExecutionHistoryRecord) -> Result<(), String> {
+    let record = ExecutionHistoryRecord::try_from(record).map_err(|error| error.message)?;
+    with_storage(|storage| {
+        storage
+            .append_execution_history(record)
+            .map_err(|error| error.to_string())
+    })
+}
+
+/// Returns workspace-wide execution metadata, newest first. The bridge never
+/// returns request content, URL or any authentication material here.
+pub fn list_workspace_execution_history(
+    workspace_id: String,
+) -> Result<Vec<FfiExecutionHistoryRecord>, String> {
+    with_storage(|storage| {
+        storage
+            .list_workspace_execution_history(&workspace_id)
+            .map_err(|error| error.to_string())
+    })
+    .map(|records| records.into_iter().map(Into::into).collect())
+}
+
+pub fn clear_workspace_execution_history(workspace_id: String) -> Result<u64, String> {
+    with_storage(|storage| {
+        storage
+            .clear_workspace_execution_history(&workspace_id)
+            .map_err(|error| error.to_string())
+    })
+    .and_then(|count| u64::try_from(count).map_err(|_| "history count is too large".to_owned()))
 }
 
 /// Creates or updates a request in the selected collection/folder.

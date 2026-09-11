@@ -66,12 +66,20 @@ pub trait Repository {
         &self,
         request_id: &str,
     ) -> Result<Vec<ExecutionHistoryRecord>, StorageError>;
+    fn list_workspace_execution_history(
+        &self,
+        workspace_id: &str,
+    ) -> Result<Vec<ExecutionHistoryRecord>, StorageError>;
     fn delete_execution_history(
         &mut self,
         request_id: &str,
         execution_id: &str,
     ) -> Result<(), StorageError>;
     fn clear_execution_history(&mut self, request_id: &str) -> Result<usize, StorageError>;
+    fn clear_workspace_execution_history(
+        &mut self,
+        workspace_id: &str,
+    ) -> Result<usize, StorageError>;
 }
 
 pub struct SqliteStorage {

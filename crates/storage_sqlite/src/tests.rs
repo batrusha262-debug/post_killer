@@ -418,6 +418,64 @@ fn execution_history_rejects_invalid_result_metadata() {
 }
 
 #[test]
+fn workspace_history_is_isolated_and_can_be_cleared_without_deleting_requests() {
+    let mut storage = storage_with_two_collections();
+    storage
+        .save_request(request("request-1", "collection-1", None))
+        .unwrap();
+    storage
+        .save_request(request("request-2", "collection-2", None))
+        .unwrap();
+    storage
+        .append_execution_history(ExecutionHistoryRecord {
+            execution_id: "execution-1".into(),
+            request_id: "request-1".into(),
+            executed_at_unix_ms: 100,
+            status_code: Some(200),
+            duration_ms: 1,
+            response_size_bytes: 2,
+            result_kind: ExecutionResultKind::Response,
+            error_category: None,
+        })
+        .unwrap();
+    storage
+        .append_execution_history(ExecutionHistoryRecord {
+            execution_id: "execution-2".into(),
+            request_id: "request-2".into(),
+            executed_at_unix_ms: 200,
+            status_code: Some(201),
+            duration_ms: 3,
+            response_size_bytes: 4,
+            result_kind: ExecutionResultKind::Response,
+            error_category: None,
+        })
+        .unwrap();
+
+    assert_eq!(
+        storage
+            .list_workspace_execution_history("workspace-1")
+            .unwrap()
+            .into_iter()
+            .map(|record| record.execution_id)
+            .collect::<Vec<_>>(),
+        vec!["execution-2", "execution-1"]
+    );
+    assert_eq!(
+        storage
+            .clear_workspace_execution_history("workspace-1")
+            .unwrap(),
+        2
+    );
+    assert!(
+        storage
+            .list_workspace_execution_history("workspace-1")
+            .unwrap()
+            .is_empty()
+    );
+    assert!(storage.get_request("request-1").unwrap().is_some());
+}
+
+#[test]
 fn folder_updates_reject_cycles_and_cross_collection_descendants() {
     let mut storage = SqliteStorage::open_in_memory().unwrap();
     storage
