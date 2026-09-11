@@ -40,20 +40,24 @@ class PostmanCollectionImport {
         }
         final request = item['request'];
         if (request is! Map) continue;
-        index += 1;
-        requests.add(
-          _requestFromPostman(
-            request: request.cast<String, dynamic>(),
-            id: 'postman-${DateTime.now().microsecondsSinceEpoch}-$index',
-            name: '$prefix$itemName',
-          ),
+        final imported = _requestFromPostman(
+          request: request.cast<String, dynamic>(),
+          id: 'postman-${DateTime.now().microsecondsSinceEpoch}-${index + 1}',
+          name: '$prefix$itemName',
         );
+        // Postman permits unfinished drafts without a URL. Skip them so one
+        // draft does not prevent the usable requests from being imported.
+        if (imported.url.trim().isEmpty) continue;
+        index += 1;
+        requests.add(imported);
       }
     }
 
     visit(decoded['item'] as List<dynamic>);
     if (requests.isEmpty) {
-      throw const FormatException('В этой коллекции не найдено HTTP-запросов.');
+      throw const FormatException(
+        'В коллекции нет запросов с заполненным URL для импорта.',
+      );
     }
     return PostmanCollectionImport(name: name, requests: requests);
   }

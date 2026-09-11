@@ -30,4 +30,24 @@ void main() {
       throwsFormatException,
     );
   });
+
+  test('skips unfinished Postman drafts without blocking valid requests', () {
+    final collection = PostmanCollectionImport.parse('''
+      {"info":{"name":"FAQ"},"item":[
+        {"name":"New Request","request":{"method":"GET","header":[]}},
+        {"name":"FAQ PDF","request":{"method":"GET","url":{
+          "raw":"http://localhost:3000/home/v1/faq/pdf?rowID=2",
+          "query":[{"key":"rowID","value":"2"}]}}},
+        {"name":"Another draft","request":{"method":"POST"}}
+      ]}
+    ''');
+
+    expect(collection.name, 'FAQ');
+    expect(collection.requests, hasLength(1));
+    expect(
+      collection.requests.single.url,
+      'http://localhost:3000/home/v1/faq/pdf',
+    );
+    expect(collection.requests.single.query.single.value, '2');
+  });
 }
