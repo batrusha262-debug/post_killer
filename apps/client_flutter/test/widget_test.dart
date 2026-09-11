@@ -143,7 +143,7 @@ void main() {
 
     await tester.tap(find.text('Variables').first);
     await tester.pump();
-    expect(find.text('No variables yet'), findsOneWidget);
+    expect(find.text('Create environment'), findsOneWidget);
   });
 
   testWidgets('filters collections without losing the original list', (
@@ -275,11 +275,13 @@ class _ValidationErrorExecutor implements RequestExecutor {
   const _ValidationErrorExecutor();
 
   @override
-  Future<RequestExecutionView> execute(RequestTab request) async =>
-      RequestExecutionView.error(
-        requestId: request.id,
-        error: 'invalid request: request URL must not be empty',
-      );
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  }) async => RequestExecutionView.error(
+    requestId: request.id,
+    error: 'invalid request: request URL must not be empty',
+  );
 }
 
 class _WidgetWorkspaceRepository implements WorkspaceRepository {
@@ -319,6 +321,29 @@ class _WidgetWorkspaceRepository implements WorkspaceRepository {
 
   @override
   Future<void> deleteWorkspace(String id) async {}
+
+  @override
+  Future<List<WorkspaceEnvironment>> listEnvironments(
+    String workspaceId,
+  ) async => const [];
+
+  @override
+  Future<WorkspaceEnvironment> createEnvironment({
+    required String workspaceId,
+    required String name,
+  }) async => WorkspaceEnvironment(id: 'environment', name: name);
+
+  @override
+  Future<void> deleteEnvironment(String id) async {}
+
+  @override
+  Future<RequestKeyValue> saveEnvironmentVariable({
+    required String environmentId,
+    required RequestKeyValue variable,
+  }) async => variable;
+
+  @override
+  Future<void> deleteEnvironmentVariable(String id) async {}
 
   @override
   Future<RequestCollection> createCollection({

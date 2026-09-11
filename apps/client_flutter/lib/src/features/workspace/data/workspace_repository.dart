@@ -12,6 +12,17 @@ abstract interface class WorkspaceRepository {
     required String name,
   });
   Future<void> deleteCollection(String id);
+  Future<List<WorkspaceEnvironment>> listEnvironments(String workspaceId);
+  Future<WorkspaceEnvironment> createEnvironment({
+    required String workspaceId,
+    required String name,
+  });
+  Future<void> deleteEnvironment(String id);
+  Future<RequestKeyValue> saveEnvironmentVariable({
+    required String environmentId,
+    required RequestKeyValue variable,
+  });
+  Future<void> deleteEnvironmentVariable(String id);
   Future<SavedRequest> saveRequest({
     required String collectionId,
     required RequestTab request,
@@ -46,6 +57,32 @@ class GatewayWorkspaceRepository implements WorkspaceRepository {
 
   @override
   Future<void> deleteCollection(String id) => _gateway.deleteCollection(id);
+
+  @override
+  Future<List<WorkspaceEnvironment>> listEnvironments(String workspaceId) =>
+      _gateway.listEnvironments(workspaceId);
+
+  @override
+  Future<WorkspaceEnvironment> createEnvironment({
+    required String workspaceId,
+    required String name,
+  }) => _gateway.createEnvironment(workspaceId: workspaceId, name: name);
+
+  @override
+  Future<void> deleteEnvironment(String id) => _gateway.deleteEnvironment(id);
+
+  @override
+  Future<RequestKeyValue> saveEnvironmentVariable({
+    required String environmentId,
+    required RequestKeyValue variable,
+  }) => _gateway.saveEnvironmentVariable(
+    environmentId: environmentId,
+    variable: variable,
+  );
+
+  @override
+  Future<void> deleteEnvironmentVariable(String id) =>
+      _gateway.deleteEnvironmentVariable(id);
 
   @override
   Future<SavedRequest> saveRequest({

@@ -270,6 +270,43 @@ void main() {
   );
 
   test(
+    'sends the active environment variables only to the execution port',
+    () async {
+      final executor = _VariableCapturingExecutor();
+      final bloc = WorkspaceBloc(
+        const _FakeWorkspaceRepository(request),
+        executor: executor,
+        autoBootstrap: false,
+        initialState: WorkspaceState(
+          workspaces: const [
+            WorkspaceSummary(id: 'workspace', name: 'Workspace'),
+          ],
+          selectedWorkspaceId: 'workspace',
+          collections: const [],
+          tabs: [RequestTab.fromSaved(request)],
+          selectedTabId: request.id,
+          environments: const [
+            WorkspaceEnvironment(
+              id: 'staging',
+              name: 'Staging',
+              variables: [
+                RequestKeyValue(id: 'base', key: 'baseUrl', value: 'api.test'),
+              ],
+            ),
+          ],
+          selectedEnvironmentId: 'staging',
+        ),
+      );
+      final finished = bloc.stream.firstWhere((state) => !state.isExecuting);
+      bloc.add(const WorkspaceRequestSent());
+      await finished;
+      expect(executor.variables.single.key, 'baseUrl');
+      expect(executor.variables.single.value, 'api.test');
+      await bloc.close();
+    },
+  );
+
+  test(
     'executes the selected login request and injects its JSON token',
     () async {
       const login = SavedRequest(
@@ -534,6 +571,29 @@ class _FakeWorkspaceRepository implements WorkspaceRepository {
   Future<void> deleteCollection(String id) async {}
 
   @override
+  Future<List<WorkspaceEnvironment>> listEnvironments(
+    String workspaceId,
+  ) async => const [];
+
+  @override
+  Future<WorkspaceEnvironment> createEnvironment({
+    required String workspaceId,
+    required String name,
+  }) async => WorkspaceEnvironment(id: 'environment', name: name);
+
+  @override
+  Future<void> deleteEnvironment(String id) async {}
+
+  @override
+  Future<RequestKeyValue> saveEnvironmentVariable({
+    required String environmentId,
+    required RequestKeyValue variable,
+  }) async => variable;
+
+  @override
+  Future<void> deleteEnvironmentVariable(String id) async {}
+
+  @override
   Future<SavedRequest> saveRequest({
     required String collectionId,
     required RequestTab request,
@@ -555,28 +615,49 @@ class _FakeRequestExecutor implements RequestExecutor {
   const _FakeRequestExecutor();
 
   @override
-  Future<RequestExecutionView> execute(RequestTab request) async =>
-      RequestExecutionView.response(
-        requestId: request.id,
-        status: 200,
-        durationMillis: 1,
-        headers: const [
-          RequestResponseHeader(
-            name: 'content-type',
-            value: 'application/json',
-          ),
-        ],
-        body: '{"ok":true}',
-      );
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  }) async => RequestExecutionView.response(
+    requestId: request.id,
+    status: 200,
+    durationMillis: 1,
+    headers: const [
+      RequestResponseHeader(name: 'content-type', value: 'application/json'),
+    ],
+    body: '{"ok":true}',
+  );
 }
 
 class _CountingExecutor implements RequestExecutor {
   var calls = 0;
 
   @override
-  Future<RequestExecutionView> execute(RequestTab request) async {
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  }) async {
     calls += 1;
     return RequestExecutionView.error(requestId: request.id, error: 'unused');
+  }
+}
+
+class _VariableCapturingExecutor implements RequestExecutor {
+  var variables = const <RequestKeyValue>[];
+
+  @override
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  }) async {
+    this.variables = variables;
+    return RequestExecutionView.response(
+      requestId: request.id,
+      status: 204,
+      durationMillis: 1,
+      headers: const [],
+      body: '',
+    );
   }
 }
 
@@ -584,15 +665,20 @@ class _ThrowingRequestExecutor implements RequestExecutor {
   const _ThrowingRequestExecutor();
 
   @override
-  Future<RequestExecutionView> execute(RequestTab request) =>
-      Future<RequestExecutionView>.error(StateError('native bridge failed'));
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  }) => Future<RequestExecutionView>.error(StateError('native bridge failed'));
 }
 
 class _DelayedExecutor implements RequestExecutor {
   final started = Completer<void>();
   final result = Completer<RequestExecutionView>();
   @override
-  Future<RequestExecutionView> execute(RequestTab request) {
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  }) {
     started.complete();
     return result.future;
   }
@@ -602,7 +688,10 @@ class _LoginThenTargetExecutor implements RequestExecutor {
   final calls = <RequestTab>[];
 
   @override
-  Future<RequestExecutionView> execute(RequestTab request) async {
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  }) async {
     calls.add(request);
     return request.id == 'login'
         ? RequestExecutionView.response(

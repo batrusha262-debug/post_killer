@@ -5,7 +5,9 @@ use post_killer_domain::{
 use post_killer_http_engine::{
     ExecuteError, ExecutionOptions, RedirectPolicy, ResponsePayload, TransportErrorKind,
 };
-use post_killer_storage_sqlite::{Collection, StoredRequest, Workspace};
+use post_killer_storage_sqlite::{
+    Collection, Environment, EnvironmentVariable, StoredRequest, Workspace,
+};
 use std::time::Duration;
 
 impl TryFrom<FfiRequest> for RequestDefinition {
@@ -171,6 +173,51 @@ impl From<Collection> for FfiCollection {
             workspace_id: value.workspace_id,
             name: value.name,
         }
+    }
+}
+
+impl From<Environment> for FfiEnvironment {
+    fn from(value: Environment) -> Self {
+        Self {
+            id: value.id,
+            workspace_id: value.workspace_id,
+            name: value.name,
+        }
+    }
+}
+
+impl From<EnvironmentVariable> for FfiEnvironmentVariable {
+    fn from(value: EnvironmentVariable) -> Self {
+        Self {
+            id: value.id,
+            environment_id: value.environment_id,
+            key: value.key,
+            value: value.value,
+            enabled: value.enabled,
+        }
+    }
+}
+
+impl TryFrom<FfiEnvironmentVariable> for EnvironmentVariable {
+    type Error = FfiExecutionError;
+
+    fn try_from(value: FfiEnvironmentVariable) -> Result<Self, Self::Error> {
+        if value.id.trim().is_empty() {
+            return Err(invalid_environment_variable_field("id"));
+        }
+        if value.environment_id.trim().is_empty() {
+            return Err(invalid_environment_variable_field("environment_id"));
+        }
+        if value.key.trim().is_empty() {
+            return Err(invalid_environment_variable_field("key"));
+        }
+        Ok(Self {
+            id: value.id,
+            environment_id: value.environment_id,
+            key: value.key,
+            value: value.value,
+            enabled: value.enabled,
+        })
     }
 }
 
@@ -356,5 +403,14 @@ fn validation_field(error: &ValidationError) -> Option<String> {
         ValidationError::EmptyUrl => Some("url".to_owned()),
         ValidationError::EmptyEnabledKey { field_kind } => Some((*field_kind).to_owned()),
         ValidationError::EmptyAuthenticationField { field, .. } => Some(format!("auth.{field}")),
+    }
+}
+
+fn invalid_environment_variable_field(field: &str) -> FfiExecutionError {
+    FfiExecutionError {
+        kind: FfiExecutionErrorKind::InvalidRequest,
+        message: format!("environment variable {field} must not be empty"),
+        field: Some(format!("environment.{field}")),
+        limit_bytes: None,
     }
 }

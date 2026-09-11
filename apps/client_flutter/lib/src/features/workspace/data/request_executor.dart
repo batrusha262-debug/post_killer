@@ -4,26 +4,37 @@ import '../../../rust/api.dart';
 import '../domain/workspace_models.dart';
 
 abstract interface class RequestExecutor {
-  Future<RequestExecutionView> execute(RequestTab request);
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  });
 }
 
 class UnavailableRequestExecutor implements RequestExecutor {
   const UnavailableRequestExecutor();
 
   @override
-  Future<RequestExecutionView> execute(RequestTab request) async =>
-      RequestExecutionView.error(
-        requestId: request.id,
-        error: 'Request engine is unavailable.',
-      );
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  }) async => RequestExecutionView.error(
+    requestId: request.id,
+    error: 'Request engine is unavailable.',
+  );
 }
 
 class FrbRequestExecutor implements RequestExecutor {
   const FrbRequestExecutor();
 
   @override
-  Future<RequestExecutionView> execute(RequestTab request) async {
-    final outcome = await executeRequest(request: _toFfiRequest(request));
+  Future<RequestExecutionView> execute(
+    RequestTab request, {
+    List<RequestKeyValue> variables = const [],
+  }) async {
+    final outcome = await executeRequestWithVariables(
+      request: _toFfiRequest(request),
+      variables: _keyValues(variables),
+    );
     final response = outcome.response;
     if (response != null) {
       return RequestExecutionView.response(

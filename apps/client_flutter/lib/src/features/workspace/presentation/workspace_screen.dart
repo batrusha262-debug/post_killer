@@ -214,7 +214,46 @@ class WorkspaceScreen extends StatelessWidget {
                           WorkspaceSection.history => HistoryPane(
                             entries: workspace.history,
                           ),
-                          WorkspaceSection.variables => const VariablesPane(),
+                          WorkspaceSection.variables => VariablesPane(
+                            environments: workspace.environments,
+                            selectedEnvironmentId:
+                                workspace.selectedEnvironmentId,
+                            onSelected: (id) =>
+                                controller.add(EnvironmentSelected(id)),
+                            onNewEnvironment: () => _showNameDialog(
+                              context,
+                              title: 'New environment',
+                              onSubmit: (name) => controller.add(
+                                EnvironmentCreateRequested(name),
+                              ),
+                            ),
+                            onDeleteEnvironment: (id) =>
+                                controller.add(EnvironmentDeleteRequested(id)),
+                            onSaveVariable: (variable) {
+                              final environmentId =
+                                  workspace.selectedEnvironmentId;
+                              if (environmentId != null) {
+                                controller.add(
+                                  EnvironmentVariableSaveRequested(
+                                    environmentId: environmentId,
+                                    variable: variable,
+                                  ),
+                                );
+                              }
+                            },
+                            onDeleteVariable: (variableId) {
+                              final environmentId =
+                                  workspace.selectedEnvironmentId;
+                              if (environmentId != null) {
+                                controller.add(
+                                  EnvironmentVariableDeleteRequested(
+                                    environmentId: environmentId,
+                                    variableId: variableId,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
                         },
                       ),
                     ),

@@ -47,6 +47,39 @@ final class WorkspacePostmanImportRequested extends WorkspaceStorageEvent {
   final String source;
 }
 
+final class EnvironmentCreateRequested extends WorkspaceStorageEvent {
+  const EnvironmentCreateRequested(this.name);
+  final String name;
+}
+
+final class EnvironmentDeleteRequested extends WorkspaceStorageEvent {
+  const EnvironmentDeleteRequested(this.id);
+  final String id;
+}
+
+final class EnvironmentVariableSaveRequested extends WorkspaceStorageEvent {
+  const EnvironmentVariableSaveRequested({
+    required this.environmentId,
+    required this.variable,
+  });
+  final String environmentId;
+  final RequestKeyValue variable;
+}
+
+final class EnvironmentVariableDeleteRequested extends WorkspaceStorageEvent {
+  const EnvironmentVariableDeleteRequested({
+    required this.environmentId,
+    required this.variableId,
+  });
+  final String environmentId;
+  final String variableId;
+}
+
+final class EnvironmentSelected extends WorkspaceEvent {
+  const EnvironmentSelected(this.id);
+  final String? id;
+}
+
 final class WorkspaceSectionSelected extends WorkspaceEvent {
   const WorkspaceSectionSelected(this.section);
   final WorkspaceSection section;

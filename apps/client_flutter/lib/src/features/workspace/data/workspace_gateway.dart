@@ -13,6 +13,17 @@ abstract interface class WorkspaceGateway {
     required String name,
   });
   Future<void> deleteCollection(String id);
+  Future<List<WorkspaceEnvironment>> listEnvironments(String workspaceId);
+  Future<WorkspaceEnvironment> createEnvironment({
+    required String workspaceId,
+    required String name,
+  });
+  Future<void> deleteEnvironment(String id);
+  Future<RequestKeyValue> saveEnvironmentVariable({
+    required String environmentId,
+    required RequestKeyValue variable,
+  });
+  Future<void> deleteEnvironmentVariable(String id);
   Future<SavedRequest> saveRequest({
     required String collectionId,
     required RequestTab request,
@@ -76,6 +87,75 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
 
   @override
   Future<void> deleteCollection(String id) => rust_api.deleteCollection(id: id);
+
+  @override
+  Future<List<WorkspaceEnvironment>> listEnvironments(
+    String workspaceId,
+  ) async {
+    final environments = await rust_api.listEnvironments(
+      workspaceId: workspaceId,
+    );
+    return [
+      for (final environment in environments)
+        WorkspaceEnvironment(
+          id: environment.id,
+          name: environment.name,
+          variables: [
+            for (final variable in await rust_api.listEnvironmentVariables(
+              environmentId: environment.id,
+            ))
+              RequestKeyValue(
+                id: variable.id,
+                key: variable.key,
+                value: variable.value,
+                enabled: variable.enabled,
+              ),
+          ],
+        ),
+    ];
+  }
+
+  @override
+  Future<WorkspaceEnvironment> createEnvironment({
+    required String workspaceId,
+    required String name,
+  }) async {
+    final environment = await rust_api.createEnvironment(
+      workspaceId: workspaceId,
+      name: name,
+    );
+    return WorkspaceEnvironment(id: environment.id, name: environment.name);
+  }
+
+  @override
+  Future<void> deleteEnvironment(String id) =>
+      rust_api.deleteEnvironment(id: id);
+
+  @override
+  Future<RequestKeyValue> saveEnvironmentVariable({
+    required String environmentId,
+    required RequestKeyValue variable,
+  }) async {
+    final saved = await rust_api.saveEnvironmentVariable(
+      variable: rust_api.FfiEnvironmentVariable(
+        id: variable.id,
+        environmentId: environmentId,
+        key: variable.key,
+        value: variable.value,
+        enabled: variable.enabled,
+      ),
+    );
+    return RequestKeyValue(
+      id: saved.id,
+      key: saved.key,
+      value: saved.value,
+      enabled: saved.enabled,
+    );
+  }
+
+  @override
+  Future<void> deleteEnvironmentVariable(String id) =>
+      rust_api.deleteEnvironmentVariable(id: id);
 
   @override
   Future<SavedRequest> saveRequest({

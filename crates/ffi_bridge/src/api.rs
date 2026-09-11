@@ -7,7 +7,10 @@
 use post_killer_application::RequestExecutionService;
 use post_killer_domain::RequestDefinition;
 use post_killer_http_engine::{ExecutionOptions, ReqwestRequestExecutor};
-use post_killer_storage_sqlite::{Repository, SqliteStorage, StoredRequest};
+use post_killer_storage_sqlite::{
+    Environment, EnvironmentVariable, Repository, SqliteStorage, StoredRequest,
+};
+use std::collections::BTreeMap;
 use std::{
     path::PathBuf,
     sync::{Mutex, OnceLock},
@@ -27,6 +30,22 @@ pub struct FfiCollection {
     pub id: String,
     pub workspace_id: String,
     pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FfiEnvironment {
+    pub id: String,
+    pub workspace_id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FfiEnvironmentVariable {
+    pub id: String,
+    pub environment_id: String,
+    pub key: String,
+    pub value: String,
+    pub enabled: bool,
 }
 
 /// A complete saved request. Keeping the collection association alongside the
@@ -90,6 +109,73 @@ pub fn delete_collection(id: String) -> Result<(), String> {
     with_storage(|storage| {
         storage
             .delete_collection(&id)
+            .map_err(|error| error.to_string())
+    })
+}
+
+/// Lists environment profiles stored locally for one workspace. Values are
+/// returned only to the local Flutter process and never added to history.
+pub fn list_environments(workspace_id: String) -> Result<Vec<FfiEnvironment>, String> {
+    with_storage(|storage| {
+        storage
+            .list_environments(&workspace_id)
+            .map_err(|error| error.to_string())
+    })
+    .map(|environments| environments.into_iter().map(Into::into).collect())
+}
+
+pub fn create_environment(workspace_id: String, name: String) -> Result<FfiEnvironment, String> {
+    let name = name.trim().to_owned();
+    with_storage(|storage| {
+        let environment = Environment {
+            id: next_id("environment"),
+            workspace_id,
+            name,
+        };
+        storage
+            .save_environment(environment.clone())
+            .map_err(|error| error.to_string())?;
+        Ok(environment)
+    })
+    .map(Into::into)
+}
+
+pub fn delete_environment(id: String) -> Result<(), String> {
+    with_storage(|storage| {
+        storage
+            .delete_environment(&id)
+            .map_err(|error| error.to_string())
+    })
+}
+
+pub fn list_environment_variables(
+    environment_id: String,
+) -> Result<Vec<FfiEnvironmentVariable>, String> {
+    with_storage(|storage| {
+        storage
+            .list_environment_variables(&environment_id)
+            .map_err(|error| error.to_string())
+    })
+    .map(|variables| variables.into_iter().map(Into::into).collect())
+}
+
+pub fn save_environment_variable(
+    variable: FfiEnvironmentVariable,
+) -> Result<FfiEnvironmentVariable, String> {
+    let variable = EnvironmentVariable::try_from(variable).map_err(|error| error.message)?;
+    with_storage(|storage| {
+        storage
+            .save_environment_variable(variable.clone())
+            .map_err(|error| error.to_string())?;
+        Ok(variable)
+    })
+    .map(Into::into)
+}
+
+pub fn delete_environment_variable(id: String) -> Result<(), String> {
+    with_storage(|storage| {
+        storage
+            .delete_environment_variable(&id)
             .map_err(|error| error.to_string())
     })
 }
@@ -339,6 +425,43 @@ impl FfiExecutionOutcome {
 /// `async fn` to a Dart `Future<FfiExecutionOutcome>`.
 pub async fn execute_request(request: FfiRequest) -> FfiExecutionOutcome {
     execute_request_with_options(request, FfiExecutionOptions::default()).await
+}
+
+/// Executes a request after resolving enabled variables from the selected local
+/// environment. Resolution is pure: neither the stored request nor the
+/// environment values are written into execution history or diagnostic output.
+pub async fn execute_request_with_variables(
+    request: FfiRequest,
+    variables: Vec<FfiKeyValue>,
+) -> FfiExecutionOutcome {
+    let request = match RequestDefinition::try_from(request) {
+        Ok(request) => request,
+        Err(error) => return FfiExecutionOutcome::error(error),
+    };
+    let variables = variables
+        .into_iter()
+        .filter(|variable| variable.enabled)
+        .map(|variable| (variable.key, variable.value))
+        .collect::<BTreeMap<_, _>>();
+    let request = match request.resolve_variables(&variables) {
+        Ok(request) => request,
+        Err(error) => {
+            return FfiExecutionOutcome::error(FfiExecutionError {
+                kind: FfiExecutionErrorKind::InvalidRequest,
+                message: format!("request variables are invalid: {error}"),
+                field: None,
+                limit_bytes: None,
+            });
+        }
+    };
+
+    match RequestExecutionService::new(ReqwestRequestExecutor)
+        .execute(request, ExecutionOptions::default())
+        .await
+    {
+        Ok(response) => FfiExecutionOutcome::success(response.into()),
+        Err(error) => FfiExecutionOutcome::error(error.into()),
+    }
 }
 
 /// Executes with caller-controlled limits while retaining typed outcomes for

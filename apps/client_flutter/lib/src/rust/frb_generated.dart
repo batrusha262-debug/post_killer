@@ -73,7 +73,7 @@ class PostKillerRustLib
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 555886219;
+  int get rustContentHash => 2126520274;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -90,9 +90,18 @@ abstract class PostKillerRustLibApi extends BaseApi {
     required String name,
   });
 
+  Future<FfiEnvironment> crateApiCreateEnvironment({
+    required String workspaceId,
+    required String name,
+  });
+
   Future<FfiWorkspace> crateApiCreateWorkspace({required String name});
 
   Future<void> crateApiDeleteCollection({required String id});
+
+  Future<void> crateApiDeleteEnvironment({required String id});
+
+  Future<void> crateApiDeleteEnvironmentVariable({required String id});
 
   Future<void> crateApiDeleteRequest({required String id});
 
@@ -107,9 +116,22 @@ abstract class PostKillerRustLibApi extends BaseApi {
     required FfiExecutionOptions options,
   });
 
+  Future<FfiExecutionOutcome> crateApiExecuteRequestWithVariables({
+    required FfiRequest request,
+    required List<FfiKeyValue> variables,
+  });
+
   Future<FfiExecutionOptions> crateApiFfiExecutionOptionsDefault();
 
   Future<List<FfiCollection>> crateApiListCollections({
+    required String workspaceId,
+  });
+
+  Future<List<FfiEnvironmentVariable>> crateApiListEnvironmentVariables({
+    required String environmentId,
+  });
+
+  Future<List<FfiEnvironment>> crateApiListEnvironments({
     required String workspaceId,
   });
 
@@ -118,6 +140,10 @@ abstract class PostKillerRustLibApi extends BaseApi {
   });
 
   Future<List<FfiWorkspace>> crateApiListWorkspaces();
+
+  Future<FfiEnvironmentVariable> crateApiSaveEnvironmentVariable({
+    required FfiEnvironmentVariable variable,
+  });
 
   Future<FfiStoredRequest> crateApiSaveRequest({
     required String collectionId,
@@ -170,6 +196,40 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   );
 
   @override
+  Future<FfiEnvironment> crateApiCreateEnvironment({
+    required String workspaceId,
+    required String name,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(workspaceId, serializer);
+          sse_encode_String(name, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_ffi_environment,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiCreateEnvironmentConstMeta,
+        argValues: [workspaceId, name],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCreateEnvironmentConstMeta => const TaskConstMeta(
+    debugName: "create_environment",
+    argNames: ["workspaceId", "name"],
+  );
+
+  @override
   Future<FfiWorkspace> crateApiCreateWorkspace({required String name}) {
     return handler.executeNormal(
       NormalTask(
@@ -179,7 +239,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 2,
+            funcId: 3,
             port: port_,
           );
         },
@@ -207,7 +267,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 4,
             port: port_,
           );
         },
@@ -226,6 +286,65 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
       const TaskConstMeta(debugName: "delete_collection", argNames: ["id"]);
 
   @override
+  Future<void> crateApiDeleteEnvironment({required String id}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDeleteEnvironmentConstMeta,
+        argValues: [id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeleteEnvironmentConstMeta =>
+      const TaskConstMeta(debugName: "delete_environment", argNames: ["id"]);
+
+  @override
+  Future<void> crateApiDeleteEnvironmentVariable({required String id}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDeleteEnvironmentVariableConstMeta,
+        argValues: [id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeleteEnvironmentVariableConstMeta =>
+      const TaskConstMeta(
+        debugName: "delete_environment_variable",
+        argNames: ["id"],
+      );
+
+  @override
   Future<void> crateApiDeleteRequest({required String id}) {
     return handler.executeNormal(
       NormalTask(
@@ -235,7 +354,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 7,
             port: port_,
           );
         },
@@ -263,7 +382,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 8,
             port: port_,
           );
         },
@@ -293,7 +412,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 9,
             port: port_,
           );
         },
@@ -325,7 +444,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 10,
             port: port_,
           );
         },
@@ -347,6 +466,41 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
       );
 
   @override
+  Future<FfiExecutionOutcome> crateApiExecuteRequestWithVariables({
+    required FfiRequest request,
+    required List<FfiKeyValue> variables,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_ffi_request(request, serializer);
+          sse_encode_list_ffi_key_value(variables, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_ffi_execution_outcome,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiExecuteRequestWithVariablesConstMeta,
+        argValues: [request, variables],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiExecuteRequestWithVariablesConstMeta =>
+      const TaskConstMeta(
+        debugName: "execute_request_with_variables",
+        argNames: ["request", "variables"],
+      );
+
+  @override
   Future<FfiExecutionOptions> crateApiFfiExecutionOptionsDefault() {
     return handler.executeNormal(
       NormalTask(
@@ -355,7 +509,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 12,
             port: port_,
           );
         },
@@ -388,7 +542,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 13,
             port: port_,
           );
         },
@@ -409,6 +563,71 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   );
 
   @override
+  Future<List<FfiEnvironmentVariable>> crateApiListEnvironmentVariables({
+    required String environmentId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(environmentId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_ffi_environment_variable,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiListEnvironmentVariablesConstMeta,
+        argValues: [environmentId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiListEnvironmentVariablesConstMeta =>
+      const TaskConstMeta(
+        debugName: "list_environment_variables",
+        argNames: ["environmentId"],
+      );
+
+  @override
+  Future<List<FfiEnvironment>> crateApiListEnvironments({
+    required String workspaceId,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(workspaceId, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 15,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_ffi_environment,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiListEnvironmentsConstMeta,
+        argValues: [workspaceId],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiListEnvironmentsConstMeta => const TaskConstMeta(
+    debugName: "list_environments",
+    argNames: ["workspaceId"],
+  );
+
+  @override
   Future<List<FfiStoredRequest>> crateApiListRequests({
     required String collectionId,
   }) {
@@ -420,7 +639,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 16,
             port: port_,
           );
         },
@@ -449,7 +668,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 17,
             port: port_,
           );
         },
@@ -468,6 +687,39 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
       const TaskConstMeta(debugName: "list_workspaces", argNames: []);
 
   @override
+  Future<FfiEnvironmentVariable> crateApiSaveEnvironmentVariable({
+    required FfiEnvironmentVariable variable,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_ffi_environment_variable(variable, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 18,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_ffi_environment_variable,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiSaveEnvironmentVariableConstMeta,
+        argValues: [variable],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiSaveEnvironmentVariableConstMeta =>
+      const TaskConstMeta(
+        debugName: "save_environment_variable",
+        argNames: ["variable"],
+      );
+
+  @override
   Future<FfiStoredRequest> crateApiSaveRequest({
     required String collectionId,
     String? folderId,
@@ -483,7 +735,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 19,
             port: port_,
           );
         },
@@ -521,6 +773,14 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   bool dco_decode_bool(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as bool;
+  }
+
+  @protected
+  FfiEnvironmentVariable dco_decode_box_autoadd_ffi_environment_variable(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dco_decode_ffi_environment_variable(raw);
   }
 
   @protected
@@ -573,6 +833,34 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
       id: dco_decode_String(arr[0]),
       workspaceId: dco_decode_String(arr[1]),
       name: dco_decode_String(arr[2]),
+    );
+  }
+
+  @protected
+  FfiEnvironment dco_decode_ffi_environment(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return FfiEnvironment(
+      id: dco_decode_String(arr[0]),
+      workspaceId: dco_decode_String(arr[1]),
+      name: dco_decode_String(arr[2]),
+    );
+  }
+
+  @protected
+  FfiEnvironmentVariable dco_decode_ffi_environment_variable(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return FfiEnvironmentVariable(
+      id: dco_decode_String(arr[0]),
+      environmentId: dco_decode_String(arr[1]),
+      key: dco_decode_String(arr[2]),
+      value: dco_decode_String(arr[3]),
+      enabled: dco_decode_bool(arr[4]),
     );
   }
 
@@ -767,6 +1055,22 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  List<FfiEnvironment> dco_decode_list_ffi_environment(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_environment).toList();
+  }
+
+  @protected
+  List<FfiEnvironmentVariable> dco_decode_list_ffi_environment_variable(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_ffi_environment_variable)
+        .toList();
+  }
+
+  @protected
   List<FfiKeyValue> dco_decode_list_ffi_key_value(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_ffi_key_value).toList();
@@ -883,6 +1187,14 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  FfiEnvironmentVariable sse_decode_box_autoadd_ffi_environment_variable(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return (sse_decode_ffi_environment_variable(deserializer));
+  }
+
+  @protected
   FfiExecutionError sse_decode_box_autoadd_ffi_execution_error(
     SseDeserializer deserializer,
   ) {
@@ -937,6 +1249,38 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
       id: var_id,
       workspaceId: var_workspaceId,
       name: var_name,
+    );
+  }
+
+  @protected
+  FfiEnvironment sse_decode_ffi_environment(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_workspaceId = sse_decode_String(deserializer);
+    var var_name = sse_decode_String(deserializer);
+    return FfiEnvironment(
+      id: var_id,
+      workspaceId: var_workspaceId,
+      name: var_name,
+    );
+  }
+
+  @protected
+  FfiEnvironmentVariable sse_decode_ffi_environment_variable(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_id = sse_decode_String(deserializer);
+    var var_environmentId = sse_decode_String(deserializer);
+    var var_key = sse_decode_String(deserializer);
+    var var_value = sse_decode_String(deserializer);
+    var var_enabled = sse_decode_bool(deserializer);
+    return FfiEnvironmentVariable(
+      id: var_id,
+      environmentId: var_environmentId,
+      key: var_key,
+      value: var_value,
+      enabled: var_enabled,
     );
   }
 
@@ -1161,6 +1505,34 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  List<FfiEnvironment> sse_decode_list_ffi_environment(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FfiEnvironment>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_environment(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FfiEnvironmentVariable> sse_decode_list_ffi_environment_variable(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FfiEnvironmentVariable>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_environment_variable(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<FfiKeyValue> sse_decode_list_ffi_key_value(
     SseDeserializer deserializer,
   ) {
@@ -1330,6 +1702,15 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  void sse_encode_box_autoadd_ffi_environment_variable(
+    FfiEnvironmentVariable self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_ffi_environment_variable(self, serializer);
+  }
+
+  @protected
   void sse_encode_box_autoadd_ffi_execution_error(
     FfiExecutionError self,
     SseSerializer serializer,
@@ -1386,6 +1767,30 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.workspaceId, serializer);
     sse_encode_String(self.name, serializer);
+  }
+
+  @protected
+  void sse_encode_ffi_environment(
+    FfiEnvironment self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.workspaceId, serializer);
+    sse_encode_String(self.name, serializer);
+  }
+
+  @protected
+  void sse_encode_ffi_environment_variable(
+    FfiEnvironmentVariable self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.id, serializer);
+    sse_encode_String(self.environmentId, serializer);
+    sse_encode_String(self.key, serializer);
+    sse_encode_String(self.value, serializer);
+    sse_encode_bool(self.enabled, serializer);
   }
 
   @protected
@@ -1565,6 +1970,30 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_ffi_collection(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ffi_environment(
+    List<FfiEnvironment> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_environment(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ffi_environment_variable(
+    List<FfiEnvironmentVariable> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_environment_variable(item, serializer);
     }
   }
 

@@ -248,6 +248,29 @@ class RequestKeyValue {
       );
 }
 
+/// A named local variable set. Secret storage will be introduced behind this
+/// model later; values are never copied to request history.
+class WorkspaceEnvironment {
+  const WorkspaceEnvironment({
+    required this.id,
+    required this.name,
+    this.variables = const [],
+  });
+
+  final String id;
+  final String name;
+  final List<RequestKeyValue> variables;
+
+  WorkspaceEnvironment copyWith({
+    String? name,
+    List<RequestKeyValue>? variables,
+  }) => WorkspaceEnvironment(
+    id: id,
+    name: name ?? this.name,
+    variables: variables ?? this.variables,
+  );
+}
+
 class RequestExecutionView {
   const RequestExecutionView._({
     required this.requestId,
@@ -314,6 +337,8 @@ class WorkspaceState {
     this.isLoading = false,
     this.storageError,
     this.history = const [],
+    this.environments = const [],
+    this.selectedEnvironmentId,
   });
 
   final List<WorkspaceSummary> workspaces;
@@ -328,6 +353,15 @@ class WorkspaceState {
   final bool isLoading;
   final String? storageError;
   final List<RequestHistoryEntry> history;
+  final List<WorkspaceEnvironment> environments;
+  final String? selectedEnvironmentId;
+
+  WorkspaceEnvironment? get selectedEnvironment {
+    for (final environment in environments) {
+      if (environment.id == selectedEnvironmentId) return environment;
+    }
+    return null;
+  }
 
   /// A derived view so searching never replaces the repository-backed source.
   List<RequestCollection> get filteredCollections {
@@ -380,6 +414,8 @@ class WorkspaceState {
     bool? isLoading,
     Object? storageError = _unchanged,
     List<RequestHistoryEntry>? history,
+    List<WorkspaceEnvironment>? environments,
+    Object? selectedEnvironmentId = _unchanged,
   }) => WorkspaceState(
     workspaces: workspaces ?? this.workspaces,
     selectedWorkspaceId: identical(selectedWorkspaceId, _unchanged)
@@ -401,5 +437,9 @@ class WorkspaceState {
         ? this.storageError
         : storageError as String?,
     history: history ?? this.history,
+    environments: environments ?? this.environments,
+    selectedEnvironmentId: identical(selectedEnvironmentId, _unchanged)
+        ? this.selectedEnvironmentId
+        : selectedEnvironmentId as String?,
   );
 }

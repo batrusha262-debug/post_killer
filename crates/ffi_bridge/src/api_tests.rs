@@ -79,3 +79,39 @@ async fn rejects_malformed_json_as_a_typed_boundary_error() {
     assert_eq!(error.kind, FfiExecutionErrorKind::InvalidJsonBody);
     assert_eq!(error.field.as_deref(), Some("body"));
 }
+
+#[tokio::test]
+async fn resolves_enabled_variables_before_sending_without_mutating_input() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = "http://{{host}}/health".to_owned();
+    let expected_host = listener.local_addr().unwrap().to_string();
+    let server = tokio::spawn(async move {
+        let (mut socket, _) = listener.accept().await.unwrap();
+        let mut received = [0_u8; 1024];
+        let count = socket.read(&mut received).await.unwrap();
+        socket
+            .write_all(b"HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+            .await
+            .unwrap();
+        String::from_utf8_lossy(&received[..count]).into_owned()
+    });
+
+    let outcome = execute_request_with_variables(
+        request(url.clone()),
+        vec![FfiKeyValue {
+            key: "host".to_owned(),
+            value: expected_host,
+            enabled: true,
+        }],
+    )
+    .await;
+
+    assert_eq!(outcome.response.expect("response").status, 204);
+    assert_eq!(url, "http://{{host}}/health");
+    assert!(
+        server
+            .await
+            .unwrap()
+            .starts_with("GET /health HTTP/1.1\r\n")
+    );
+}

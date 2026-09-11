@@ -12,6 +12,7 @@
 
 ## Активный план
 
+- [ ] API-WORKBENCH-3: подключить уже существующую SQLite privacy-safe execution history к typed FFI и Flutter BLoC; дать пользователю просматривать, фильтровать, повторять и очищать локальную историю без сохранения payloads, URLs или credentials.
 - [ ] AUDIT-RELEASE: проверить публикацию v0.2.5 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
 
 ### Foundation
@@ -100,6 +101,8 @@
   пользователя через Vercel.
 
 ## Готово
+
+- API-WORKBENCH-2 (2026-09-11): SQLite environments подключены через generated Flutter Rust Bridge к repository/BLoC и полноценному Variables screen. Пользователь создаёт, выбирает и удаляет local environment и переменные; включённые значения подставляются Rust domain resolver в копию запроса только перед отправкой. Переменные не мутируют draft и не попадают в response/history. Flutter analyze и 66 tests, Rust fmt/test (40 passed, 1 ignored)/Clippy, `git diff --check` проходят.
 
 - API-WORKBENCH-1 (2026-09-11): request model, Flutter editor и typed FFI mapping расширены до HEAD/OPTIONS, `application/x-www-form-urlencoded` и text multipart fields. Поля формы редактируются как immutable BLoC draft, сохраняются и исполняются через уже существующий Rust transport; базовый Postman v2 import теперь сохраняет `urlencoded` fields и HEAD. Flutter analyze и 65 tests, Rust fmt/test (39 passed, 1 ignored)/Clippy, `git diff --check` проходят.
 

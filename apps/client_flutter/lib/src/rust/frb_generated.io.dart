@@ -32,6 +32,11 @@ abstract class PostKillerRustLibApiImplPlatform
   bool dco_decode_bool(dynamic raw);
 
   @protected
+  FfiEnvironmentVariable dco_decode_box_autoadd_ffi_environment_variable(
+    dynamic raw,
+  );
+
+  @protected
   FfiExecutionError dco_decode_box_autoadd_ffi_execution_error(dynamic raw);
 
   @protected
@@ -53,6 +58,12 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   FfiCollection dco_decode_ffi_collection(dynamic raw);
+
+  @protected
+  FfiEnvironment dco_decode_ffi_environment(dynamic raw);
+
+  @protected
+  FfiEnvironmentVariable dco_decode_ffi_environment_variable(dynamic raw);
 
   @protected
   FfiExecutionError dco_decode_ffi_execution_error(dynamic raw);
@@ -104,6 +115,14 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   List<FfiCollection> dco_decode_list_ffi_collection(dynamic raw);
+
+  @protected
+  List<FfiEnvironment> dco_decode_list_ffi_environment(dynamic raw);
+
+  @protected
+  List<FfiEnvironmentVariable> dco_decode_list_ffi_environment_variable(
+    dynamic raw,
+  );
 
   @protected
   List<FfiKeyValue> dco_decode_list_ffi_key_value(dynamic raw);
@@ -164,6 +183,11 @@ abstract class PostKillerRustLibApiImplPlatform
   bool sse_decode_bool(SseDeserializer deserializer);
 
   @protected
+  FfiEnvironmentVariable sse_decode_box_autoadd_ffi_environment_variable(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   FfiExecutionError sse_decode_box_autoadd_ffi_execution_error(
     SseDeserializer deserializer,
   );
@@ -191,6 +215,14 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   FfiCollection sse_decode_ffi_collection(SseDeserializer deserializer);
+
+  @protected
+  FfiEnvironment sse_decode_ffi_environment(SseDeserializer deserializer);
+
+  @protected
+  FfiEnvironmentVariable sse_decode_ffi_environment_variable(
+    SseDeserializer deserializer,
+  );
 
   @protected
   FfiExecutionError sse_decode_ffi_execution_error(
@@ -262,6 +294,16 @@ abstract class PostKillerRustLibApiImplPlatform
   );
 
   @protected
+  List<FfiEnvironment> sse_decode_list_ffi_environment(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<FfiEnvironmentVariable> sse_decode_list_ffi_environment_variable(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<FfiKeyValue> sse_decode_list_ffi_key_value(SseDeserializer deserializer);
 
   @protected
@@ -326,6 +368,12 @@ abstract class PostKillerRustLibApiImplPlatform
   void sse_encode_bool(bool self, SseSerializer serializer);
 
   @protected
+  void sse_encode_box_autoadd_ffi_environment_variable(
+    FfiEnvironmentVariable self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_box_autoadd_ffi_execution_error(
     FfiExecutionError self,
     SseSerializer serializer,
@@ -360,6 +408,18 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   void sse_encode_ffi_collection(FfiCollection self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_ffi_environment(
+    FfiEnvironment self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_ffi_environment_variable(
+    FfiEnvironmentVariable self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_ffi_execution_error(
@@ -448,6 +508,18 @@ abstract class PostKillerRustLibApiImplPlatform
   @protected
   void sse_encode_list_ffi_collection(
     List<FfiCollection> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ffi_environment(
+    List<FfiEnvironment> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ffi_environment_variable(
+    List<FfiEnvironmentVariable> self,
     SseSerializer serializer,
   );
 

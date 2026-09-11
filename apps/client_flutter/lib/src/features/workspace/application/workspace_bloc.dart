@@ -42,6 +42,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     on<WorkspaceSectionSelected>(
       (event, emit) => emit(state.copyWith(selectedSection: event.section)),
     );
+    on<EnvironmentSelected>(_selectEnvironment);
     on<WorkspaceCollectionSearchChanged>(
       (event, emit) => emit(state.copyWith(collectionSearchQuery: event.query)),
     );
@@ -156,6 +157,160 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         await _saveRequest(event, emit);
       case WorkspaceSavedRequestDeleteRequested():
         await _deleteSavedRequest(event, emit);
+      case EnvironmentCreateRequested():
+        await _createEnvironment(event, emit);
+      case EnvironmentDeleteRequested():
+        await _deleteEnvironment(event, emit);
+      case EnvironmentVariableSaveRequested():
+        await _saveEnvironmentVariable(event, emit);
+      case EnvironmentVariableDeleteRequested():
+        await _deleteEnvironmentVariable(event, emit);
+    }
+  }
+
+  void _selectEnvironment(
+    EnvironmentSelected event,
+    Emitter<WorkspaceState> emit,
+  ) {
+    if (event.id != null &&
+        !state.environments.any((item) => item.id == event.id)) {
+      return;
+    }
+    emit(state.copyWith(selectedEnvironmentId: event.id));
+  }
+
+  Future<void> _createEnvironment(
+    EnvironmentCreateRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    final workspaceId = state.selectedWorkspaceId;
+    if (workspaceId == null || event.name.trim().isEmpty) return;
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      final environment = await _repository.createEnvironment(
+        workspaceId: workspaceId,
+        name: event.name,
+      );
+      emit(
+        state.copyWith(
+          environments: [...state.environments, environment],
+          selectedEnvironmentId: environment.id,
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось создать environment.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteEnvironment(
+    EnvironmentDeleteRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    if (!state.environments.any((item) => item.id == event.id)) return;
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      await _repository.deleteEnvironment(event.id);
+      final environments = [
+        for (final environment in state.environments)
+          if (environment.id != event.id) environment,
+      ];
+      emit(
+        state.copyWith(
+          environments: environments,
+          selectedEnvironmentId: state.selectedEnvironmentId == event.id
+              ? (environments.isEmpty ? null : environments.first.id)
+              : state.selectedEnvironmentId,
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось удалить environment.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveEnvironmentVariable(
+    EnvironmentVariableSaveRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    if (!state.environments.any((item) => item.id == event.environmentId)) {
+      return;
+    }
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      final variable = await _repository.saveEnvironmentVariable(
+        environmentId: event.environmentId,
+        variable: event.variable,
+      );
+      emit(
+        state.copyWith(
+          environments: [
+            for (final environment in state.environments)
+              if (environment.id == event.environmentId)
+                environment.copyWith(
+                  variables: [
+                    for (final existing in environment.variables)
+                      if (existing.id != variable.id) existing,
+                    variable,
+                  ],
+                )
+              else
+                environment,
+          ],
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось сохранить переменную.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteEnvironmentVariable(
+    EnvironmentVariableDeleteRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      await _repository.deleteEnvironmentVariable(event.variableId);
+      emit(
+        state.copyWith(
+          environments: [
+            for (final environment in state.environments)
+              if (environment.id == event.environmentId)
+                environment.copyWith(
+                  variables: [
+                    for (final variable in environment.variables)
+                      if (variable.id != event.variableId) variable,
+                  ],
+                )
+              else
+                environment,
+          ],
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось удалить переменную.',
+        ),
+      );
     }
   }
 
@@ -224,6 +379,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
       }
       final selected = workspaces.first;
       final collections = await _repository.listCollections(selected.id);
+      final environments = await _repository.listEnvironments(selected.id);
       final tabs = [
         for (final collection in collections)
           for (final request in collection.requests)
@@ -234,6 +390,10 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           workspaces: workspaces,
           selectedWorkspaceId: selected.id,
           collections: collections,
+          environments: environments,
+          selectedEnvironmentId: environments.isEmpty
+              ? null
+              : environments.first.id,
           tabs: tabs,
           selectedTabId: tabs.isEmpty ? null : tabs.first.id,
           isLoading: false,
@@ -257,10 +417,15 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     emit(state.copyWith(isLoading: true, storageError: null));
     try {
       final collections = await _repository.listCollections(event.id);
+      final environments = await _repository.listEnvironments(event.id);
       emit(
         state.copyWith(
           selectedWorkspaceId: event.id,
           collections: collections,
+          environments: environments,
+          selectedEnvironmentId: environments.isEmpty
+              ? null
+              : environments.first.id,
           isLoading: false,
         ),
       );
@@ -287,6 +452,8 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           workspaces: [...state.workspaces, workspace],
           selectedWorkspaceId: workspace.id,
           collections: const [],
+          environments: const [],
+          selectedEnvironmentId: null,
           isLoading: false,
         ),
       );
@@ -327,6 +494,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
       }
       final selected = workspaces.first;
       final collections = await _repository.listCollections(selected.id);
+      final environments = await _repository.listEnvironments(selected.id);
       final tabs = [
         for (final collection in collections)
           for (final request in collection.requests)
@@ -337,6 +505,10 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           workspaces: workspaces,
           selectedWorkspaceId: selected.id,
           collections: collections,
+          environments: environments,
+          selectedEnvironmentId: environments.isEmpty
+              ? null
+              : environments.first.id,
           tabs: tabs,
           selectedTabId: tabs.isEmpty ? null : tabs.first.id,
           isLoading: false,
@@ -775,7 +947,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     try {
       // The Rust transport has its own timeout, but this outer deadline also
       // protects the UI from a stalled native bridge or DNS resolver.
-      return await _executor.execute(tab).timeout(executionTimeout);
+      return await _executor
+          .execute(
+            tab,
+            variables: state.selectedEnvironment?.variables ?? const [],
+          )
+          .timeout(executionTimeout);
     } on TimeoutException {
       return RequestExecutionView.error(
         requestId: tab.id,

@@ -8,7 +8,7 @@ import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `app_data_directory`, `error`, `next_id`, `success`, `with_storage`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Lists persisted local workspaces. The database is owned exclusively by the
 /// Rust storage adapter; Flutter only receives owned DTOs through FRB.
@@ -40,6 +40,39 @@ Future<FfiCollection> createCollection({
 Future<void> deleteCollection({required String id}) =>
     PostKillerRustLib.instance.api.crateApiDeleteCollection(id: id);
 
+/// Lists environment profiles stored locally for one workspace. Values are
+/// returned only to the local Flutter process and never added to history.
+Future<List<FfiEnvironment>> listEnvironments({required String workspaceId}) =>
+    PostKillerRustLib.instance.api.crateApiListEnvironments(
+      workspaceId: workspaceId,
+    );
+
+Future<FfiEnvironment> createEnvironment({
+  required String workspaceId,
+  required String name,
+}) => PostKillerRustLib.instance.api.crateApiCreateEnvironment(
+  workspaceId: workspaceId,
+  name: name,
+);
+
+Future<void> deleteEnvironment({required String id}) =>
+    PostKillerRustLib.instance.api.crateApiDeleteEnvironment(id: id);
+
+Future<List<FfiEnvironmentVariable>> listEnvironmentVariables({
+  required String environmentId,
+}) => PostKillerRustLib.instance.api.crateApiListEnvironmentVariables(
+  environmentId: environmentId,
+);
+
+Future<FfiEnvironmentVariable> saveEnvironmentVariable({
+  required FfiEnvironmentVariable variable,
+}) => PostKillerRustLib.instance.api.crateApiSaveEnvironmentVariable(
+  variable: variable,
+);
+
+Future<void> deleteEnvironmentVariable({required String id}) =>
+    PostKillerRustLib.instance.api.crateApiDeleteEnvironmentVariable(id: id);
+
 Future<List<FfiStoredRequest>> listRequests({required String collectionId}) =>
     PostKillerRustLib.instance.api.crateApiListRequests(
       collectionId: collectionId,
@@ -64,6 +97,17 @@ Future<FfiStoredRequest> saveRequest({
 /// `async fn` to a Dart `Future<FfiExecutionOutcome>`.
 Future<FfiExecutionOutcome> executeRequest({required FfiRequest request}) =>
     PostKillerRustLib.instance.api.crateApiExecuteRequest(request: request);
+
+/// Executes a request after resolving enabled variables from the selected local
+/// environment. Resolution is pure: neither the stored request nor the
+/// environment values are written into execution history or diagnostic output.
+Future<FfiExecutionOutcome> executeRequestWithVariables({
+  required FfiRequest request,
+  required List<FfiKeyValue> variables,
+}) => PostKillerRustLib.instance.api.crateApiExecuteRequestWithVariables(
+  request: request,
+  variables: variables,
+);
 
 /// Executes with caller-controlled limits while retaining typed outcomes for
 /// expected validation and transport failures.
@@ -99,6 +143,65 @@ class FfiCollection {
           id == other.id &&
           workspaceId == other.workspaceId &&
           name == other.name;
+}
+
+class FfiEnvironment {
+  final String id;
+  final String workspaceId;
+  final String name;
+
+  const FfiEnvironment({
+    required this.id,
+    required this.workspaceId,
+    required this.name,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ workspaceId.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiEnvironment &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          workspaceId == other.workspaceId &&
+          name == other.name;
+}
+
+class FfiEnvironmentVariable {
+  final String id;
+  final String environmentId;
+  final String key;
+  final String value;
+  final bool enabled;
+
+  const FfiEnvironmentVariable({
+    required this.id,
+    required this.environmentId,
+    required this.key,
+    required this.value,
+    required this.enabled,
+  });
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      environmentId.hashCode ^
+      key.hashCode ^
+      value.hashCode ^
+      enabled.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiEnvironmentVariable &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          environmentId == other.environmentId &&
+          key == other.key &&
+          value == other.value &&
+          enabled == other.enabled;
 }
 
 class FfiExecutionError {
