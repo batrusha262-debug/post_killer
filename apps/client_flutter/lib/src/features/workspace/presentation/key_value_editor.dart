@@ -25,19 +25,23 @@ class KeyValueEditor extends StatelessWidget {
   final ValueChanged<String>? onDelete;
   @override
   Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(16),
+    padding: EdgeInsets.zero,
     children: [
       if (isHeader && onHeaderPreset != null)
-        HeaderPresets(onSelected: onHeaderPreset!),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          child: HeaderPresets(onSelected: onHeaderPreset!),
+        ),
+      const _TableHeader(),
       for (final entry in values)
         Container(
           key: ValueKey(entry.id),
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest
-                .withValues(alpha: .35),
-            borderRadius: BorderRadius.circular(12),
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
           ),
           child: Row(
             children: [
@@ -52,6 +56,12 @@ class KeyValueEditor extends StatelessWidget {
                   decoration: const InputDecoration(
                     isDense: true,
                     hintText: 'Key',
+                    border: InputBorder.none,
+                    filled: false,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 10,
+                    ),
                   ),
                   onChanged: (value) => onChanged(entry.id, key: value),
                 ),
@@ -63,6 +73,12 @@ class KeyValueEditor extends StatelessWidget {
                   decoration: const InputDecoration(
                     isDense: true,
                     hintText: 'Value',
+                    border: InputBorder.none,
+                    filled: false,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 10,
+                    ),
                   ),
                   onChanged: (value) => onChanged(entry.id, value: value),
                 ),
@@ -79,7 +95,7 @@ class KeyValueEditor extends StatelessWidget {
         ),
       if (values.isEmpty)
         Padding(
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.all(18),
           child: Column(
             children: [
               Icon(
@@ -93,7 +109,7 @@ class KeyValueEditor extends StatelessWidget {
         ),
       Align(
         alignment: Alignment.centerLeft,
-        child: OutlinedButton.icon(
+        child: TextButton.icon(
           onPressed: onAdd,
           icon: const Icon(Icons.add_rounded),
           label: const Text('Add row'),
@@ -101,4 +117,30 @@ class KeyValueEditor extends StatelessWidget {
       ),
     ],
   );
+}
+
+class _TableHeader extends StatelessWidget {
+  const _TableHeader();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.fromLTRB(16, 7, 16, 7),
+    decoration: BoxDecoration(
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      border: Border(
+        top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+        bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+    ),
+    child: const Row(
+      children: [
+        SizedBox(width: 32),
+        Expanded(child: Text('KEY', style: _TableHeader.style)),
+        Expanded(child: Text('VALUE', style: _TableHeader.style)),
+        SizedBox(width: 44),
+      ],
+    ),
+  );
+
+  static const style = TextStyle(fontSize: 10, fontWeight: FontWeight.w800);
 }

@@ -5,22 +5,16 @@ class EmptyWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-    child: Container(
+    child: SizedBox(
       width: 360,
-      padding: const EdgeInsets.all(28),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest
-            .withValues(alpha: .48),
-        borderRadius: BorderRadius.circular(18),
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
               Icons.rocket_launch_outlined,

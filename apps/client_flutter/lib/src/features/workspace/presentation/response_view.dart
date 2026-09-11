@@ -93,13 +93,12 @@ class _ResponseViewState extends State<ResponseView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            margin: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            margin: EdgeInsets.zero,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: response.status! < 400
                   ? colors.secondaryContainer.withValues(alpha: .55)
                   : colors.errorContainer.withValues(alpha: .55),
-              borderRadius: BorderRadius.circular(12),
             ),
             child: Wrap(
               spacing: 16,

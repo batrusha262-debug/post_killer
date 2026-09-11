@@ -62,16 +62,18 @@ class RequestEditor extends StatelessWidget {
         (tab.bodyFormat == RequestBodyFormat.text || isValidJson(tab.body)) &&
         tab.auth.isValid;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest
-                  .withValues(alpha: .48),
-              borderRadius: BorderRadius.circular(14),
+              border: Border(
+                bottom: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
             ),
             child: LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
@@ -83,7 +85,7 @@ class RequestEditor extends StatelessWidget {
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 174,
+                        width: 150,
                         child: TextFormField(
                           key: const Key('request-name-field'),
                           initialValue: tab.title,
@@ -91,16 +93,12 @@ class RequestEditor extends StatelessWidget {
                           decoration: const InputDecoration(
                             isDense: true,
                             hintText: 'Request name',
-                            prefixIcon: Icon(
-                              Icons.edit_note_outlined,
-                              size: 19,
-                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       SizedBox(
-                        width: 108,
+                        width: 96,
                         child: DropdownButtonFormField<HttpMethod>(
                           key: const Key('method-picker'),
                           initialValue: tab.method,
@@ -127,7 +125,6 @@ class RequestEditor extends StatelessWidget {
                           decoration: const InputDecoration(
                             isDense: true,
                             hintText: 'https://api.example.com/resource',
-                            prefixIcon: Icon(Icons.link_rounded, size: 19),
                           ),
                         ),
                       ),
@@ -145,7 +142,7 @@ class RequestEditor extends StatelessWidget {
                             ),
                         ],
                         child: Padding(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(6),
                           child: Icon(
                             Icons.bookmark_add_outlined,
                             size: 19,
@@ -189,7 +186,7 @@ class RequestEditor extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
           Expanded(
             child: DefaultTabController(
               length: 5,

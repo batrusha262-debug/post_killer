@@ -45,44 +45,41 @@ class CollectionsPane extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 10, 8),
+        padding: const EdgeInsets.fromLTRB(12, 10, 6, 6),
         child: Row(
           children: [
             const Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Collections',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  SizedBox(height: 2),
-                  Text('Requests & folders', style: TextStyle(fontSize: 11)),
-                ],
+              child: Text(
+                'Collections',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
               ),
             ),
             IconButton(
               key: const Key('new-workspace-button'),
               tooltip: 'New workspace',
               onPressed: onNewWorkspace,
+              visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.workspaces_outlined, size: 20),
             ),
             IconButton(
               key: const Key('new-collection-button'),
               tooltip: 'New collection',
               onPressed: selectedWorkspaceId == null ? null : onNewCollection,
+              visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.create_new_folder_outlined, size: 20),
             ),
             IconButton(
               key: const Key('import-postman-button'),
               tooltip: 'Import Postman collection',
               onPressed: selectedWorkspaceId == null ? null : onImportPostman,
+              visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.file_upload_outlined, size: 20),
             ),
             IconButton(
               key: const Key('new-request-button'),
               tooltip: 'New request',
               onPressed: onNewRequest,
+              visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.add_rounded),
             ),
           ],
@@ -90,12 +87,12 @@ class CollectionsPane extends StatelessWidget {
       ),
       if (workspaces.isNotEmpty)
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Container(
             padding: const EdgeInsets.only(left: 10, right: 3),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(6),
             ),
             child: Row(
               children: [
@@ -151,11 +148,11 @@ class CollectionsPane extends StatelessWidget {
             ),
           ),
         ),
-      const SizedBox(height: 14),
+      const SizedBox(height: 8),
       if (error case final message?)
         Padding(padding: const EdgeInsets.all(12), child: Text(message)),
       Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: TextField(
           key: const Key('collection-search-field'),
           onChanged: onSearchChanged,
@@ -166,30 +163,30 @@ class CollectionsPane extends StatelessWidget {
           ),
         ),
       ),
-      const SizedBox(height: 10),
+      const SizedBox(height: 6),
       Expanded(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : workspaces.isEmpty
             ? const _NoWorkspace()
             : ListView(
-                padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
                 children: [
                   for (final collection in collections)
                     Container(
-                      margin: const EdgeInsets.only(bottom: 4),
+                      margin: EdgeInsets.zero,
                       decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest
-                            .withValues(alpha: .45),
-                        borderRadius: BorderRadius.circular(12),
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
                       ),
                       child: ExpansionTile(
                         shape: const RoundedRectangleBorder(),
                         collapsedShape: const RoundedRectangleBorder(),
-                        tilePadding: const EdgeInsets.only(left: 10, right: 2),
-                        childrenPadding: const EdgeInsets.only(bottom: 4),
+                        tilePadding: const EdgeInsets.only(left: 8, right: 0),
+                        childrenPadding: EdgeInsets.zero,
                         dense: true,
                         initiallyExpanded: true,
                         leading: const Icon(Icons.folder_outlined, size: 19),
@@ -209,8 +206,8 @@ class CollectionsPane extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: Theme.of(context)
                                     .colorScheme
-                                    .primaryContainer,
-                                borderRadius: BorderRadius.circular(99),
+                                    .surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 '${collection.requests.length}',
@@ -229,9 +226,6 @@ class CollectionsPane extends StatelessWidget {
                         children: [
                           for (final request in collection.requests)
                             ListTile(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
                               dense: true,
                               key: Key('saved-request-${request.id}'),
                               leading: SizedBox(

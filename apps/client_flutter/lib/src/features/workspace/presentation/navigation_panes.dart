@@ -14,23 +14,23 @@ class PrimaryNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => NavigationRail(
-    minWidth: 70,
-    minExtendedWidth: 70,
-    groupAlignment: -0.78,
+    minWidth: 64,
+    minExtendedWidth: 64,
+    groupAlignment: -0.86,
     selectedIndex: selectedSection.index,
     onDestinationSelected: (index) =>
         onSelected(WorkspaceSection.values[index]),
     labelType: NavigationRailLabelType.all,
     leading: Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 12, top: 4),
       child: Tooltip(
         message: 'Ваше API-пространство',
         child: Container(
-          width: 36,
-          height: 36,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Icon(
             Icons.hub_outlined,

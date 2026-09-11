@@ -204,7 +204,7 @@ void main() {
       final material = tester.widget<MaterialApp>(find.byType(MaterialApp));
       expect(
         material.themeMode,
-        theme == 'dark'
+        theme == 'dark' || theme == 'slay'
             ? ThemeMode.dark
             : theme == 'system'
             ? ThemeMode.system

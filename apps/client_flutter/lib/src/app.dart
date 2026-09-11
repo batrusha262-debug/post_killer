@@ -53,8 +53,8 @@ class _PostKillerAppState extends State<PostKillerApp> {
         darkTheme: buildAppTheme(settings, Brightness.dark),
         themeMode: switch (settings.appearance) {
           AppAppearance.system => ThemeMode.system,
-          AppAppearance.dark => ThemeMode.dark,
-          AppAppearance.light || AppAppearance.slay => ThemeMode.light,
+          AppAppearance.dark || AppAppearance.slay => ThemeMode.dark,
+          AppAppearance.light => ThemeMode.light,
         },
         themeAnimationDuration: settings.reduceMotion
             ? Duration.zero
@@ -83,7 +83,7 @@ class _PostKillerAppState extends State<PostKillerApp> {
                       gateway: HttpGitHubReleaseGateway(http.Client()),
                       currentVersion: const String.fromEnvironment(
                         'APP_VERSION',
-                        defaultValue: '0.2.18',
+                        defaultValue: '0.2.19',
                       ),
                     ),
               ),

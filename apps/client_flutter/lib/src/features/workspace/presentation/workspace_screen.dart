@@ -35,45 +35,21 @@ class WorkspaceScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(9),
+              padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
                 color: colors.primary,
-                borderRadius: BorderRadius.circular(13),
-                boxShadow: [
-                  BoxShadow(
-                    color: colors.primary.withValues(alpha: .24),
-                    blurRadius: 14,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+                borderRadius: BorderRadius.circular(6),
               ),
               child: Icon(
                 settings.appearance == AppAppearance.slay
                     ? Icons.auto_awesome
                     : Icons.bolt_rounded,
                 color: colors.onPrimary,
-                size: 22,
+                size: 19,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             const Text('Post Killer'),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: colors.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(99),
-              ),
-              child: Text(
-                'API WORKSPACE',
-                style: TextStyle(
-                  color: colors.onSurfaceVariant,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: .8,
-                ),
-              ),
-            ),
             AnimatedSwitcher(
               duration: motionDuration,
               child: workspace.isExecuting
@@ -119,134 +95,127 @@ class WorkspaceScreen extends StatelessWidget {
             ),
             icon: const Icon(Icons.settings_outlined),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
         ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) => SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SizedBox(
-            width: constraints.maxWidth < 1100 ? 1100 : constraints.maxWidth,
+            width: constraints.maxWidth < 1000 ? 1000 : constraints.maxWidth,
             height: constraints.maxHeight,
             child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 12, 0, 12),
-                  child: PrimaryNavigation(
-                    selectedSection: workspace.selectedSection,
-                    onSelected: (section) =>
-                        controller.add(WorkspaceSectionSelected(section)),
-                  ),
+                PrimaryNavigation(
+                  selectedSection: workspace.selectedSection,
+                  onSelected: (section) =>
+                      controller.add(WorkspaceSectionSelected(section)),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: SizedBox(
-                    width: 268,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: colors.outlineVariant),
+                SizedBox(
+                  width: 260,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      border: Border(
+                        left: BorderSide(color: colors.outlineVariant),
+                        right: BorderSide(color: colors.outlineVariant),
                       ),
-                      child: AnimatedSwitcher(
-                        duration: motionDuration,
-                        switchInCurve: Curves.easeOutCubic,
-                        switchOutCurve: Curves.easeInCubic,
-                        layoutBuilder: (currentChild, previousChildren) =>
-                            currentChild ?? const SizedBox.shrink(),
-                        transitionBuilder: (child, animation) => FadeTransition(
-                          opacity: animation,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0.025, 0),
-                              end: Offset.zero,
-                            ).animate(animation),
-                            child: child,
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: motionDuration,
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      layoutBuilder: (currentChild, previousChildren) =>
+                          currentChild ?? const SizedBox.shrink(),
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.025, 0),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      ),
+                      child: KeyedSubtree(
+                        key: ValueKey(workspace.selectedSection),
+                        child: switch (workspace.selectedSection) {
+                          WorkspaceSection.collections => CollectionsPane(
+                            workspaces: workspace.workspaces,
+                            selectedWorkspaceId: workspace.selectedWorkspaceId,
+                            collections: workspace.filteredCollections,
+                            isLoading: workspace.isLoading,
+                            error: workspace.storageError,
+                            onWorkspaceSelected: (id) =>
+                                controller.add(WorkspaceSelected(id)),
+                            onNewWorkspace: () => _showNameDialog(
+                              context,
+                              title: 'Новая workspace',
+                              onSubmit: (name) => controller.add(
+                                WorkspaceCreateRequested(name),
+                              ),
+                            ),
+                            onDeleteWorkspace: (workspace) async {
+                              if (await _confirmDelete(
+                                context,
+                                title: 'Удалить workspace?',
+                                message: 'Будут удалены все его папки, запросы и переменные. Это действие нельзя отменить.',
+                                confirmLabel: 'Удалить workspace',
+                              )) {
+                                controller.add(
+                                  WorkspaceDeleteRequested(workspace.id),
+                                );
+                              }
+                            },
+                            onNewCollection: () => _showNameDialog(
+                              context,
+                              title: 'Новая collection',
+                              onSubmit: (name) => controller.add(
+                                CollectionCreateRequested(name),
+                              ),
+                            ),
+                            onDeleteCollection: (collection) async {
+                              if (await _confirmDelete(
+                                context,
+                                title: 'Удалить папку «${collection.name}»?',
+                                message: 'Все запросы в этой папке будут удалены. Это действие нельзя отменить.',
+                                confirmLabel: 'Удалить папку',
+                              )) {
+                                controller.add(
+                                  CollectionDeleteRequested(collection.id),
+                                );
+                              }
+                            },
+                            onImportPostman: () =>
+                                _importPostmanCollection(context, controller),
+                            onSearchChanged: (query) => controller.add(
+                              WorkspaceCollectionSearchChanged(query),
+                            ),
+                            onOpenRequest: (request) =>
+                                controller.add(WorkspaceRequestOpened(request)),
+                            onDeleteRequest: (collection, request) async {
+                              if (await _confirmDelete(
+                                context,
+                                title: 'Удалить запрос «${request.name}»?',
+                                message: 'История этого запроса также будет удалена.',
+                                confirmLabel: 'Удалить запрос',
+                              )) {
+                                controller.add(
+                                  WorkspaceSavedRequestDeleteRequested(
+                                    collectionId: collection.id,
+                                    requestId: request.id,
+                                  ),
+                                );
+                              }
+                            },
+                            onNewRequest: () =>
+                                controller.add(const WorkspaceRequestCreated()),
                           ),
-                        ),
-                        child: KeyedSubtree(
-                          key: ValueKey(workspace.selectedSection),
-                          child: switch (workspace.selectedSection) {
-                            WorkspaceSection.collections => CollectionsPane(
-                              workspaces: workspace.workspaces,
-                              selectedWorkspaceId:
-                                  workspace.selectedWorkspaceId,
-                              collections: workspace.filteredCollections,
-                              isLoading: workspace.isLoading,
-                              error: workspace.storageError,
-                              onWorkspaceSelected: (id) =>
-                                  controller.add(WorkspaceSelected(id)),
-                              onNewWorkspace: () => _showNameDialog(
-                                context,
-                                title: 'Новая workspace',
-                                onSubmit: (name) => controller.add(
-                                  WorkspaceCreateRequested(name),
-                                ),
-                              ),
-                              onDeleteWorkspace: (workspace) async {
-                                if (await _confirmDelete(
-                                  context,
-                                  title: 'Удалить workspace?',
-                                  message: 'Будут удалены все его папки, запросы и переменные. Это действие нельзя отменить.',
-                                  confirmLabel: 'Удалить workspace',
-                                )) {
-                                  controller.add(
-                                    WorkspaceDeleteRequested(workspace.id),
-                                  );
-                                }
-                              },
-                              onNewCollection: () => _showNameDialog(
-                                context,
-                                title: 'Новая collection',
-                                onSubmit: (name) => controller.add(
-                                  CollectionCreateRequested(name),
-                                ),
-                              ),
-                              onDeleteCollection: (collection) async {
-                                if (await _confirmDelete(
-                                  context,
-                                  title: 'Удалить папку «${collection.name}»?',
-                                  message: 'Все запросы в этой папке будут удалены. Это действие нельзя отменить.',
-                                  confirmLabel: 'Удалить папку',
-                                )) {
-                                  controller.add(
-                                    CollectionDeleteRequested(collection.id),
-                                  );
-                                }
-                              },
-                              onImportPostman: () =>
-                                  _importPostmanCollection(context, controller),
-                              onSearchChanged: (query) => controller.add(
-                                WorkspaceCollectionSearchChanged(query),
-                              ),
-                              onOpenRequest: (request) => controller.add(
-                                WorkspaceRequestOpened(request),
-                              ),
-                              onDeleteRequest: (collection, request) async {
-                                if (await _confirmDelete(
-                                  context,
-                                  title: 'Удалить запрос «${request.name}»?',
-                                  message: 'История этого запроса также будет удалена.',
-                                  confirmLabel: 'Удалить запрос',
-                                )) {
-                                  controller.add(
-                                    WorkspaceSavedRequestDeleteRequested(
-                                      collectionId: collection.id,
-                                      requestId: request.id,
-                                    ),
-                                  );
-                                }
-                              },
-                              onNewRequest: () => controller.add(
-                                const WorkspaceRequestCreated(),
-                              ),
-                            ),
-                            WorkspaceSection.history => HistoryPane(
-                              entries: workspace.history,
-                            ),
-                            WorkspaceSection.variables => const VariablesPane(),
-                          },
-                        ),
+                          WorkspaceSection.history => HistoryPane(
+                            entries: workspace.history,
+                          ),
+                          WorkspaceSection.variables => const VariablesPane(),
+                        },
                       ),
                     ),
                   ),
