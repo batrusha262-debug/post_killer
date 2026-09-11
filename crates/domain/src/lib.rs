@@ -27,6 +27,19 @@ pub struct KeyValue {
     pub enabled: bool,
 }
 
+/// An explicit local attachment reference. File contents are read only by the
+/// native transport at send time; neither SQLite history nor diagnostics own
+/// those bytes.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MultipartFile {
+    pub field_name: String,
+    pub path: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub file_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content_type: Option<String>,
+}
+
 const fn enabled_by_default() -> bool {
     true
 }
@@ -49,6 +62,8 @@ pub enum Body {
     },
     Multipart {
         fields: Vec<KeyValue>,
+        #[serde(default)]
+        files: Vec<MultipartFile>,
     },
 }
 
@@ -125,10 +140,18 @@ impl RequestDefinition {
         validate_keys("header", &self.headers)?;
 
         match &self.body {
-            Body::FormUrlEncoded { fields } | Body::Multipart { fields } => {
+            Body::FormUrlEncoded { fields } | Body::Multipart { fields, .. } => {
                 validate_keys("body field", fields)?;
             }
             Body::Empty | Body::Text { .. } | Body::Json { .. } => {}
+        }
+
+        if let Body::Multipart { files, .. } = &self.body
+            && files
+                .iter()
+                .any(|file| file.field_name.trim().is_empty() || file.path.trim().is_empty())
+        {
+            return Err(ValidationError::EmptyMultipartFileField);
         }
 
         validate_auth(&self.auth)?;
@@ -203,6 +226,7 @@ pub enum ValidationError {
         scheme: &'static str,
         field: &'static str,
     },
+    EmptyMultipartFileField,
 }
 
 impl fmt::Display for ValidationError {
@@ -217,6 +241,9 @@ impl fmt::Display for ValidationError {
                     formatter,
                     "{scheme} authentication {field} must not be empty"
                 )
+            }
+            Self::EmptyMultipartFileField => {
+                formatter.write_str("multipart file field and path must not be empty")
             }
         }
     }

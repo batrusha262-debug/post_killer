@@ -353,6 +353,17 @@ pub struct FfiRequestBody {
     pub content: String,
     pub content_type: Option<String>,
     pub fields: Vec<FfiKeyValue>,
+    /// Local path references are used only at execution time. They are never
+    /// placed in response/history DTOs.
+    pub files: Vec<FfiMultipartFile>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FfiMultipartFile {
+    pub field_name: String,
+    pub path: String,
+    pub file_name: Option<String>,
+    pub content_type: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -446,6 +457,8 @@ pub enum FfiExecutionErrorKind {
     InvalidHeaderName,
     InvalidHeaderValue,
     UnsupportedBody,
+    MultipartFileRead,
+    MultipartFileTooLarge,
     Timeout,
     Cancelled,
     TransportConnect,

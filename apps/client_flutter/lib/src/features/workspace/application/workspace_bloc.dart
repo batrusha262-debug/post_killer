@@ -97,6 +97,8 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     on<WorkspaceBodyFieldAdded>(_addBodyField);
     on<WorkspaceBodyFieldChanged>(_updateBodyField);
     on<WorkspaceBodyFieldDeleted>(_deleteBodyField);
+    on<WorkspaceBodyFileAdded>(_addBodyFile);
+    on<WorkspaceBodyFileDeleted>(_deleteBodyFile);
     on<WorkspaceAuthChanged>(
       (event, emit) => _updateSelected(
         emit,
@@ -835,6 +837,29 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
       bodyFields: [
         for (final field in tab.bodyFields)
           if (field.id != event.id) field,
+      ],
+      isDirty: true,
+    ),
+  );
+
+  void _addBodyFile(
+    WorkspaceBodyFileAdded event,
+    Emitter<WorkspaceState> emit,
+  ) => _updateSelected(
+    emit,
+    (tab) =>
+        tab.copyWith(bodyFiles: [...tab.bodyFiles, event.file], isDirty: true),
+  );
+
+  void _deleteBodyFile(
+    WorkspaceBodyFileDeleted event,
+    Emitter<WorkspaceState> emit,
+  ) => _updateSelected(
+    emit,
+    (tab) => tab.copyWith(
+      bodyFiles: [
+        for (final file in tab.bodyFiles)
+          if (file.path != event.path) file,
       ],
       isDirty: true,
     ),

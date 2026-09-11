@@ -185,6 +185,16 @@ final class WorkspaceBodyFieldDeleted extends WorkspaceEvent {
   final String id;
 }
 
+final class WorkspaceBodyFileAdded extends WorkspaceEvent {
+  const WorkspaceBodyFileAdded(this.file);
+  final MultipartFileReference file;
+}
+
+final class WorkspaceBodyFileDeleted extends WorkspaceEvent {
+  const WorkspaceBodyFileDeleted(this.path);
+  final String path;
+}
+
 final class WorkspaceAuthChanged extends WorkspaceEvent {
   const WorkspaceAuthChanged(this.auth);
   final RequestAuth auth;

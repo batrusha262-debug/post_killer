@@ -83,6 +83,15 @@ class FrbRequestExecutor implements RequestExecutor {
       },
       content: request.body,
       fields: _keyValues(request.bodyFields),
+      files: [
+        for (final file in request.bodyFiles)
+          FfiMultipartFile(
+            fieldName: file.fieldName,
+            path: file.path,
+            fileName: file.fileName,
+            contentType: file.contentType,
+          ),
+      ],
     ),
     auth: FfiRequestAuth(
       kind: switch (request.auth.kind) {

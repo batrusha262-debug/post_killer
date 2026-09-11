@@ -20,6 +20,8 @@ class RequestEditor extends StatelessWidget {
     required this.onAddBodyField,
     required this.onBodyFieldChanged,
     required this.onDeleteBodyField,
+    required this.onPickBodyFile,
+    required this.onDeleteBodyFile,
     required this.onAuthChanged,
     required this.onAddQuery,
     required this.onAddHeader,
@@ -46,6 +48,8 @@ class RequestEditor extends StatelessWidget {
   final void Function(String, {String? key, String? value, bool? enabled})
   onBodyFieldChanged;
   final ValueChanged<String> onDeleteBodyField;
+  final VoidCallback onPickBodyFile;
+  final ValueChanged<String> onDeleteBodyFile;
   final ValueChanged<RequestAuth> onAuthChanged;
   final VoidCallback onAddQuery;
   final VoidCallback onAddHeader;
@@ -274,6 +278,8 @@ class RequestEditor extends StatelessWidget {
                                 onAddBodyField: onAddBodyField,
                                 onBodyFieldChanged: onBodyFieldChanged,
                                 onDeleteBodyField: onDeleteBodyField,
+                                onPickBodyFile: onPickBodyFile,
+                                onDeleteBodyFile: onDeleteBodyFile,
                               ),
                             ),
                           ],
@@ -299,6 +305,8 @@ class _BodyEditor extends StatelessWidget {
     required this.onAddBodyField,
     required this.onBodyFieldChanged,
     required this.onDeleteBodyField,
+    required this.onPickBodyFile,
+    required this.onDeleteBodyFile,
   });
 
   final RequestTab tab;
@@ -307,6 +315,8 @@ class _BodyEditor extends StatelessWidget {
   final void Function(String, {String? key, String? value, bool? enabled})
   onBodyFieldChanged;
   final ValueChanged<String> onDeleteBodyField;
+  final VoidCallback onPickBodyFile;
+  final ValueChanged<String> onDeleteBodyFile;
 
   @override
   Widget build(BuildContext context) => switch (tab.bodyFormat) {
@@ -318,17 +328,47 @@ class _BodyEditor extends StatelessWidget {
       value: tab.body,
       onChanged: onBodyChanged,
     ),
-    RequestBodyFormat.formUrlEncoded ||
-    RequestBodyFormat.multipart => KeyValueEditor(
+    RequestBodyFormat.formUrlEncoded => KeyValueEditor(
       values: tab.bodyFields,
       keyLabel: 'FIELD',
       valueLabel: 'VALUE',
-      emptyLabel: tab.bodyFormat == RequestBodyFormat.multipart
-          ? 'No multipart fields yet'
-          : 'No form fields yet',
+      emptyLabel: 'No form fields yet',
       onAdd: onAddBodyField,
       onChanged: onBodyFieldChanged,
       onDelete: onDeleteBodyField,
+    ),
+    RequestBodyFormat.multipart => ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        KeyValueEditor(
+          values: tab.bodyFields,
+          keyLabel: 'FIELD',
+          valueLabel: 'VALUE',
+          emptyLabel: 'No multipart fields yet',
+          onAdd: onAddBodyField,
+          onChanged: onBodyFieldChanged,
+          onDelete: onDeleteBodyField,
+        ),
+        const SizedBox(height: 12),
+        Text('Files', style: Theme.of(context).textTheme.titleSmall),
+        for (final file in tab.bodyFiles)
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.attach_file_outlined),
+            title: Text(file.fileName ?? file.path),
+            subtitle: Text('${file.fieldName} · ${file.path}'),
+            trailing: IconButton(
+              tooltip: 'Remove file',
+              onPressed: () => onDeleteBodyFile(file.path),
+              icon: const Icon(Icons.close_rounded),
+            ),
+          ),
+        OutlinedButton.icon(
+          onPressed: onPickBodyFile,
+          icon: const Icon(Icons.upload_file_outlined),
+          label: const Text('Attach file'),
+        ),
+      ],
     ),
   };
 }

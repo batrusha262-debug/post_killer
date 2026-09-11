@@ -1,6 +1,7 @@
 use super::api::*;
 use post_killer_domain::{
-    ApiKeyPlacement, Body, KeyValue, RequestAuth, RequestDefinition, RequestMethod, ValidationError,
+    ApiKeyPlacement, Body, KeyValue, MultipartFile, RequestAuth, RequestDefinition, RequestMethod,
+    ValidationError,
 };
 use post_killer_http_engine::{
     ExecuteError, ExecutionOptions, RedirectPolicy, ResponsePayload, TransportErrorKind,
@@ -36,6 +37,7 @@ impl TryFrom<FfiRequest> for RequestDefinition {
             },
             FfiRequestBodyKind::Multipart => Body::Multipart {
                 fields: value.body.fields.into_iter().map(Into::into).collect(),
+                files: value.body.files.into_iter().map(Into::into).collect(),
             },
         };
         let auth = match value.auth.kind {
@@ -136,6 +138,28 @@ impl From<KeyValue> for FfiKeyValue {
             key: value.key,
             value: value.value,
             enabled: value.enabled,
+        }
+    }
+}
+
+impl From<FfiMultipartFile> for MultipartFile {
+    fn from(value: FfiMultipartFile) -> Self {
+        Self {
+            field_name: value.field_name,
+            path: value.path,
+            file_name: value.file_name,
+            content_type: value.content_type,
+        }
+    }
+}
+
+impl From<MultipartFile> for FfiMultipartFile {
+    fn from(value: MultipartFile) -> Self {
+        Self {
+            field_name: value.field_name,
+            path: value.path,
+            file_name: value.file_name,
+            content_type: value.content_type,
         }
     }
 }
@@ -330,6 +354,7 @@ impl From<RequestDefinition> for FfiRequest {
                 content: String::new(),
                 content_type: None,
                 fields: vec![],
+                files: vec![],
             },
             Body::Text {
                 content,
@@ -339,24 +364,28 @@ impl From<RequestDefinition> for FfiRequest {
                 content,
                 content_type,
                 fields: vec![],
+                files: vec![],
             },
             Body::Json { content } => FfiRequestBody {
                 kind: FfiRequestBodyKind::Json,
                 content: content.to_string(),
                 content_type: None,
                 fields: vec![],
+                files: vec![],
             },
             Body::FormUrlEncoded { fields } => FfiRequestBody {
                 kind: FfiRequestBodyKind::FormUrlEncoded,
                 content: String::new(),
                 content_type: None,
                 fields: fields.into_iter().map(Into::into).collect(),
+                files: vec![],
             },
-            Body::Multipart { fields } => FfiRequestBody {
+            Body::Multipart { fields, files } => FfiRequestBody {
                 kind: FfiRequestBodyKind::Multipart,
                 content: String::new(),
                 content_type: None,
                 fields: fields.into_iter().map(Into::into).collect(),
+                files: files.into_iter().map(Into::into).collect(),
             },
         };
         Self {
@@ -462,6 +491,16 @@ impl From<ExecuteError> for FfiExecutionError {
                 Some("body".to_owned()),
                 None,
             ),
+            ExecuteError::MultipartFileRead => (
+                FfiExecutionErrorKind::MultipartFileRead,
+                Some("body.file".to_owned()),
+                None,
+            ),
+            ExecuteError::MultipartFileTooLarge { limit } => (
+                FfiExecutionErrorKind::MultipartFileTooLarge,
+                Some("body.file".to_owned()),
+                Some(limit as u64),
+            ),
             ExecuteError::Timeout => (FfiExecutionErrorKind::Timeout, None, None),
             ExecuteError::Cancelled => (FfiExecutionErrorKind::Cancelled, None, None),
             ExecuteError::EventReceiverDropped => (FfiExecutionErrorKind::Internal, None, None),
@@ -494,6 +533,7 @@ fn validation_field(error: &ValidationError) -> Option<String> {
         ValidationError::EmptyUrl => Some("url".to_owned()),
         ValidationError::EmptyEnabledKey { field_kind } => Some((*field_kind).to_owned()),
         ValidationError::EmptyAuthenticationField { field, .. } => Some(format!("auth.{field}")),
+        ValidationError::EmptyMultipartFileField => Some("body.file".to_owned()),
     }
 }
 

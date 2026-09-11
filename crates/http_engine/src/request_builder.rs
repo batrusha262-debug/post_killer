@@ -1,4 +1,14 @@
 use super::*;
+use std::sync::{Arc, OnceLock};
+
+const MAX_MULTIPART_FILE_BYTES: u64 = 50 * 1024 * 1024;
+static SESSION_COOKIE_JAR: OnceLock<Arc<reqwest::cookie::Jar>> = OnceLock::new();
+
+fn session_cookie_jar() -> Arc<reqwest::cookie::Jar> {
+    SESSION_COOKIE_JAR
+        .get_or_init(|| Arc::new(reqwest::cookie::Jar::default()))
+        .clone()
+}
 
 pub(super) fn build_request(
     request: &RequestDefinition,
@@ -11,6 +21,9 @@ pub(super) fn build_request(
     let client = Client::builder()
         .redirect(redirect)
         .timeout(options.timeout)
+        // Kept in native process memory only. Cookies disappear when the app
+        // exits and are never persisted/exported/recorded in history.
+        .cookie_provider(session_cookie_jar())
         .build()
         .map_err(classify_transport)?;
     let url = reqwest::Url::parse(request.url.trim()).map_err(|_| ExecuteError::InvalidUrl)?;
@@ -83,12 +96,35 @@ fn apply_body(
             Ok(builder.body(encoded))
         }
         Body::FormUrlEncoded { fields } => Ok(builder.form(&enabled_pairs(fields))),
-        Body::Multipart { fields } => {
-            let form = enabled_pairs(fields)
+        Body::Multipart { fields, files } => {
+            let mut form = enabled_pairs(fields)
                 .into_iter()
                 .fold(reqwest::multipart::Form::new(), |form, (key, value)| {
                     form.text(key.to_owned(), value.to_owned())
                 });
+            for file in files {
+                let metadata =
+                    std::fs::metadata(&file.path).map_err(|_| ExecuteError::MultipartFileRead)?;
+                if metadata.len() > MAX_MULTIPART_FILE_BYTES {
+                    return Err(ExecuteError::MultipartFileTooLarge {
+                        limit: MAX_MULTIPART_FILE_BYTES as usize,
+                    });
+                }
+                let bytes =
+                    std::fs::read(&file.path).map_err(|_| ExecuteError::MultipartFileRead)?;
+                let mut part = reqwest::multipart::Part::bytes(bytes);
+                if let Some(file_name) = &file.file_name {
+                    part = part.file_name(file_name.clone());
+                }
+                if let Some(content_type) = &file.content_type {
+                    part = part.mime_str(content_type).map_err(|_| {
+                        ExecuteError::InvalidHeaderValue {
+                            name: "multipart content-type".to_owned(),
+                        }
+                    })?;
+                }
+                form = form.part(file.field_name.clone(), part);
+            }
             Ok(builder.multipart(form))
         }
     }

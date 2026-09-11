@@ -113,6 +113,9 @@ abstract class PostKillerRustLibApiImplPlatform
   FfiKeyValue dco_decode_ffi_key_value(dynamic raw);
 
   @protected
+  FfiMultipartFile dco_decode_ffi_multipart_file(dynamic raw);
+
+  @protected
   FfiRequest dco_decode_ffi_request(dynamic raw);
 
   @protected
@@ -163,6 +166,9 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   List<FfiKeyValue> dco_decode_list_ffi_key_value(dynamic raw);
+
+  @protected
+  List<FfiMultipartFile> dco_decode_list_ffi_multipart_file(dynamic raw);
 
   @protected
   List<FfiResponseHeader> dco_decode_list_ffi_response_header(dynamic raw);
@@ -328,6 +334,9 @@ abstract class PostKillerRustLibApiImplPlatform
   FfiKeyValue sse_decode_ffi_key_value(SseDeserializer deserializer);
 
   @protected
+  FfiMultipartFile sse_decode_ffi_multipart_file(SseDeserializer deserializer);
+
+  @protected
   FfiRequest sse_decode_ffi_request(SseDeserializer deserializer);
 
   @protected
@@ -388,6 +397,11 @@ abstract class PostKillerRustLibApiImplPlatform
 
   @protected
   List<FfiKeyValue> sse_decode_list_ffi_key_value(SseDeserializer deserializer);
+
+  @protected
+  List<FfiMultipartFile> sse_decode_list_ffi_multipart_file(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<FfiResponseHeader> sse_decode_list_ffi_response_header(
@@ -583,6 +597,12 @@ abstract class PostKillerRustLibApiImplPlatform
   void sse_encode_ffi_key_value(FfiKeyValue self, SseSerializer serializer);
 
   @protected
+  void sse_encode_ffi_multipart_file(
+    FfiMultipartFile self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_ffi_request(FfiRequest self, SseSerializer serializer);
 
   @protected
@@ -663,6 +683,12 @@ abstract class PostKillerRustLibApiImplPlatform
   @protected
   void sse_encode_list_ffi_key_value(
     List<FfiKeyValue> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_ffi_multipart_file(
+    List<FfiMultipartFile> self,
     SseSerializer serializer,
   );
 

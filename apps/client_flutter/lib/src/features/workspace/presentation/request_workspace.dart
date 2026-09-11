@@ -21,6 +21,8 @@ class RequestWorkspace extends StatelessWidget {
     required this.onAddBodyField,
     required this.onBodyFieldChanged,
     required this.onDeleteBodyField,
+    required this.onPickBodyFile,
+    required this.onDeleteBodyFile,
     required this.onAuthChanged,
     required this.onAddQuery,
     required this.onAddHeader,
@@ -46,6 +48,8 @@ class RequestWorkspace extends StatelessWidget {
   final void Function(String, {String? key, String? value, bool? enabled})
   onBodyFieldChanged;
   final ValueChanged<String> onDeleteBodyField;
+  final VoidCallback onPickBodyFile;
+  final ValueChanged<String> onDeleteBodyFile;
   final ValueChanged<RequestAuth> onAuthChanged;
   final VoidCallback onAddQuery;
   final VoidCallback onAddHeader;
@@ -110,6 +114,8 @@ class RequestWorkspace extends StatelessWidget {
                   onAddBodyField: onAddBodyField,
                   onBodyFieldChanged: onBodyFieldChanged,
                   onDeleteBodyField: onDeleteBodyField,
+                  onPickBodyFile: onPickBodyFile,
+                  onDeleteBodyFile: onDeleteBodyFile,
                   onAuthChanged: onAuthChanged,
                   onAddQuery: onAddQuery,
                   onAddHeader: onAddHeader,

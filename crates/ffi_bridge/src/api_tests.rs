@@ -17,6 +17,7 @@ fn request(url: String) -> FfiRequest {
             content: String::new(),
             content_type: None,
             fields: vec![],
+            files: vec![],
         },
         auth: FfiRequestAuth {
             kind: FfiRequestAuthKind::None,
@@ -72,6 +73,7 @@ async fn rejects_malformed_json_as_a_typed_boundary_error() {
         content: "{".to_owned(),
         content_type: None,
         fields: vec![],
+        files: vec![],
     };
 
     let outcome = execute_request(input).await;

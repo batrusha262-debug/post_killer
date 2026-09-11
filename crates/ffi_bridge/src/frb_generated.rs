@@ -898,14 +898,16 @@ impl SseDecode for crate::api::FfiExecutionErrorKind {
             3 => crate::api::FfiExecutionErrorKind::InvalidHeaderName,
             4 => crate::api::FfiExecutionErrorKind::InvalidHeaderValue,
             5 => crate::api::FfiExecutionErrorKind::UnsupportedBody,
-            6 => crate::api::FfiExecutionErrorKind::Timeout,
-            7 => crate::api::FfiExecutionErrorKind::Cancelled,
-            8 => crate::api::FfiExecutionErrorKind::TransportConnect,
-            9 => crate::api::FfiExecutionErrorKind::TransportRequest,
-            10 => crate::api::FfiExecutionErrorKind::TransportDecode,
-            11 => crate::api::FfiExecutionErrorKind::TransportOther,
-            12 => crate::api::FfiExecutionErrorKind::ResponseTooLarge,
-            13 => crate::api::FfiExecutionErrorKind::Internal,
+            6 => crate::api::FfiExecutionErrorKind::MultipartFileRead,
+            7 => crate::api::FfiExecutionErrorKind::MultipartFileTooLarge,
+            8 => crate::api::FfiExecutionErrorKind::Timeout,
+            9 => crate::api::FfiExecutionErrorKind::Cancelled,
+            10 => crate::api::FfiExecutionErrorKind::TransportConnect,
+            11 => crate::api::FfiExecutionErrorKind::TransportRequest,
+            12 => crate::api::FfiExecutionErrorKind::TransportDecode,
+            13 => crate::api::FfiExecutionErrorKind::TransportOther,
+            14 => crate::api::FfiExecutionErrorKind::ResponseTooLarge,
+            15 => crate::api::FfiExecutionErrorKind::Internal,
             _ => unreachable!("Invalid variant for FfiExecutionErrorKind: {}", inner),
         };
     }
@@ -1035,6 +1037,22 @@ impl SseDecode for crate::api::FfiKeyValue {
     }
 }
 
+impl SseDecode for crate::api::FfiMultipartFile {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_fieldName = <String>::sse_decode(deserializer);
+        let mut var_path = <String>::sse_decode(deserializer);
+        let mut var_fileName = <Option<String>>::sse_decode(deserializer);
+        let mut var_contentType = <Option<String>>::sse_decode(deserializer);
+        return crate::api::FfiMultipartFile {
+            field_name: var_fieldName,
+            path: var_path,
+            file_name: var_fileName,
+            content_type: var_contentType,
+        };
+    }
+}
+
 impl SseDecode for crate::api::FfiRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1102,11 +1120,13 @@ impl SseDecode for crate::api::FfiRequestBody {
         let mut var_content = <String>::sse_decode(deserializer);
         let mut var_contentType = <Option<String>>::sse_decode(deserializer);
         let mut var_fields = <Vec<crate::api::FfiKeyValue>>::sse_decode(deserializer);
+        let mut var_files = <Vec<crate::api::FfiMultipartFile>>::sse_decode(deserializer);
         return crate::api::FfiRequestBody {
             kind: var_kind,
             content: var_content,
             content_type: var_contentType,
             fields: var_fields,
+            files: var_files,
         };
     }
 }
@@ -1254,6 +1274,18 @@ impl SseDecode for Vec<crate::api::FfiKeyValue> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::api::FfiKeyValue>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::api::FfiMultipartFile> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::api::FfiMultipartFile>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -1593,14 +1625,16 @@ impl flutter_rust_bridge::IntoDart for crate::api::FfiExecutionErrorKind {
             Self::InvalidHeaderName => 3.into_dart(),
             Self::InvalidHeaderValue => 4.into_dart(),
             Self::UnsupportedBody => 5.into_dart(),
-            Self::Timeout => 6.into_dart(),
-            Self::Cancelled => 7.into_dart(),
-            Self::TransportConnect => 8.into_dart(),
-            Self::TransportRequest => 9.into_dart(),
-            Self::TransportDecode => 10.into_dart(),
-            Self::TransportOther => 11.into_dart(),
-            Self::ResponseTooLarge => 12.into_dart(),
-            Self::Internal => 13.into_dart(),
+            Self::MultipartFileRead => 6.into_dart(),
+            Self::MultipartFileTooLarge => 7.into_dart(),
+            Self::Timeout => 8.into_dart(),
+            Self::Cancelled => 9.into_dart(),
+            Self::TransportConnect => 10.into_dart(),
+            Self::TransportRequest => 11.into_dart(),
+            Self::TransportDecode => 12.into_dart(),
+            Self::TransportOther => 13.into_dart(),
+            Self::ResponseTooLarge => 14.into_dart(),
+            Self::Internal => 15.into_dart(),
             _ => unreachable!(),
         }
     }
@@ -1779,6 +1813,26 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::FfiKeyValue> for crate::api::
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::FfiMultipartFile {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.field_name.into_into_dart().into_dart(),
+            self.path.into_into_dart().into_dart(),
+            self.file_name.into_into_dart().into_dart(),
+            self.content_type.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::FfiMultipartFile {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::FfiMultipartFile>
+    for crate::api::FfiMultipartFile
+{
+    fn into_into_dart(self) -> crate::api::FfiMultipartFile {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::FfiRequest {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1852,6 +1906,7 @@ impl flutter_rust_bridge::IntoDart for crate::api::FfiRequestBody {
             self.content.into_into_dart().into_dart(),
             self.content_type.into_into_dart().into_dart(),
             self.fields.into_into_dart().into_dart(),
+            self.files.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -2043,14 +2098,16 @@ impl SseEncode for crate::api::FfiExecutionErrorKind {
                 crate::api::FfiExecutionErrorKind::InvalidHeaderName => 3,
                 crate::api::FfiExecutionErrorKind::InvalidHeaderValue => 4,
                 crate::api::FfiExecutionErrorKind::UnsupportedBody => 5,
-                crate::api::FfiExecutionErrorKind::Timeout => 6,
-                crate::api::FfiExecutionErrorKind::Cancelled => 7,
-                crate::api::FfiExecutionErrorKind::TransportConnect => 8,
-                crate::api::FfiExecutionErrorKind::TransportRequest => 9,
-                crate::api::FfiExecutionErrorKind::TransportDecode => 10,
-                crate::api::FfiExecutionErrorKind::TransportOther => 11,
-                crate::api::FfiExecutionErrorKind::ResponseTooLarge => 12,
-                crate::api::FfiExecutionErrorKind::Internal => 13,
+                crate::api::FfiExecutionErrorKind::MultipartFileRead => 6,
+                crate::api::FfiExecutionErrorKind::MultipartFileTooLarge => 7,
+                crate::api::FfiExecutionErrorKind::Timeout => 8,
+                crate::api::FfiExecutionErrorKind::Cancelled => 9,
+                crate::api::FfiExecutionErrorKind::TransportConnect => 10,
+                crate::api::FfiExecutionErrorKind::TransportRequest => 11,
+                crate::api::FfiExecutionErrorKind::TransportDecode => 12,
+                crate::api::FfiExecutionErrorKind::TransportOther => 13,
+                crate::api::FfiExecutionErrorKind::ResponseTooLarge => 14,
+                crate::api::FfiExecutionErrorKind::Internal => 15,
                 _ => {
                     unimplemented!("");
                 }
@@ -2155,6 +2212,16 @@ impl SseEncode for crate::api::FfiKeyValue {
     }
 }
 
+impl SseEncode for crate::api::FfiMultipartFile {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.field_name, serializer);
+        <String>::sse_encode(self.path, serializer);
+        <Option<String>>::sse_encode(self.file_name, serializer);
+        <Option<String>>::sse_encode(self.content_type, serializer);
+    }
+}
+
 impl SseEncode for crate::api::FfiRequest {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -2207,6 +2274,7 @@ impl SseEncode for crate::api::FfiRequestBody {
         <String>::sse_encode(self.content, serializer);
         <Option<String>>::sse_encode(self.content_type, serializer);
         <Vec<crate::api::FfiKeyValue>>::sse_encode(self.fields, serializer);
+        <Vec<crate::api::FfiMultipartFile>>::sse_encode(self.files, serializer);
     }
 }
 
@@ -2335,6 +2403,16 @@ impl SseEncode for Vec<crate::api::FfiKeyValue> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::api::FfiKeyValue>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::api::FfiMultipartFile> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::api::FfiMultipartFile>::sse_encode(item, serializer);
         }
     }
 }

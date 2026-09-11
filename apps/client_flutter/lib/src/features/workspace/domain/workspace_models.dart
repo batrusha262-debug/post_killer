@@ -95,6 +95,7 @@ class SavedRequest {
     this.body = '',
     this.bodyFormat = RequestBodyFormat.json,
     this.bodyFields = const [],
+    this.bodyFiles = const [],
   });
 
   final String id;
@@ -106,6 +107,7 @@ class SavedRequest {
   final String body;
   final RequestBodyFormat bodyFormat;
   final List<RequestKeyValue> bodyFields;
+  final List<MultipartFileReference> bodyFiles;
 }
 
 class WorkspaceSummary {
@@ -144,6 +146,7 @@ class RequestTab {
     this.body = '',
     this.bodyFormat = RequestBodyFormat.json,
     this.bodyFields = const [],
+    this.bodyFiles = const [],
     this.auth = const RequestAuth(),
     this.isDirty = false,
   });
@@ -166,6 +169,7 @@ class RequestTab {
     body: request.body,
     bodyFormat: request.bodyFormat,
     bodyFields: request.bodyFields,
+    bodyFiles: request.bodyFiles,
   );
 
   final String id;
@@ -177,6 +181,7 @@ class RequestTab {
   final String body;
   final RequestBodyFormat bodyFormat;
   final List<RequestKeyValue> bodyFields;
+  final List<MultipartFileReference> bodyFiles;
   final RequestAuth auth;
   final bool isDirty;
 
@@ -189,6 +194,7 @@ class RequestTab {
     String? body,
     RequestBodyFormat? bodyFormat,
     List<RequestKeyValue>? bodyFields,
+    List<MultipartFileReference>? bodyFiles,
     RequestAuth? auth,
     bool? isDirty,
   }) => RequestTab(
@@ -201,6 +207,7 @@ class RequestTab {
     body: body ?? this.body,
     bodyFormat: bodyFormat ?? this.bodyFormat,
     bodyFields: bodyFields ?? this.bodyFields,
+    bodyFiles: bodyFiles ?? this.bodyFiles,
     auth: auth ?? this.auth,
     isDirty: isDirty ?? this.isDirty,
   );
@@ -230,6 +237,22 @@ class RequestHistoryEntry {
   final int durationMillis;
   final int responseSizeBytes;
   final ExecutionHistoryErrorCategory? errorCategory;
+}
+
+/// Explicit local attachment reference used only for multipart execution.
+/// The path is never copied into execution history or collection exports.
+class MultipartFileReference {
+  const MultipartFileReference({
+    required this.fieldName,
+    required this.path,
+    this.fileName,
+    this.contentType,
+  });
+
+  final String fieldName;
+  final String path;
+  final String? fileName;
+  final String? contentType;
 }
 
 enum ExecutionHistoryResult { response, error, cancelled }

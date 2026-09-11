@@ -312,6 +312,15 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
           enabled: request.body.fields[index].enabled,
         ),
     ],
+    bodyFiles: [
+      for (final file in request.body.files)
+        MultipartFileReference(
+          fieldName: file.fieldName,
+          path: file.path,
+          fileName: file.fileName,
+          contentType: file.contentType,
+        ),
+    ],
   );
 
   rust_api.FfiRequest _ffiRequest(RequestTab request) => rust_api.FfiRequest(
@@ -341,6 +350,15 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
       },
       content: request.body,
       fields: _values(request.bodyFields),
+      files: [
+        for (final file in request.bodyFiles)
+          rust_api.FfiMultipartFile(
+            fieldName: file.fieldName,
+            path: file.path,
+            fileName: file.fileName,
+            contentType: file.contentType,
+          ),
+      ],
     ),
     auth: const rust_api.FfiRequestAuth(
       kind: rust_api.FfiRequestAuthKind.none,

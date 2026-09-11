@@ -8,7 +8,7 @@ import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `app_data_directory`, `error`, `next_id`, `success`, `with_storage`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `assert_fields_are_eq`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `clone`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `eq`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
 /// Lists persisted local workspaces. The database is owned exclusively by the
 /// Rust storage adapter; Flutter only receives owned DTOs through FRB.
@@ -263,6 +263,8 @@ enum FfiExecutionErrorKind {
   invalidHeaderName,
   invalidHeaderValue,
   unsupportedBody,
+  multipartFileRead,
+  multipartFileTooLarge,
   timeout,
   cancelled,
   transportConnect,
@@ -450,6 +452,37 @@ class FfiKeyValue {
           enabled == other.enabled;
 }
 
+class FfiMultipartFile {
+  final String fieldName;
+  final String path;
+  final String? fileName;
+  final String? contentType;
+
+  const FfiMultipartFile({
+    required this.fieldName,
+    required this.path,
+    this.fileName,
+    this.contentType,
+  });
+
+  @override
+  int get hashCode =>
+      fieldName.hashCode ^
+      path.hashCode ^
+      fileName.hashCode ^
+      contentType.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FfiMultipartFile &&
+          runtimeType == other.runtimeType &&
+          fieldName == other.fieldName &&
+          path == other.path &&
+          fileName == other.fileName &&
+          contentType == other.contentType;
+}
+
 class FfiRequest {
   final String id;
   final String name;
@@ -552,16 +585,25 @@ class FfiRequestBody {
   final String? contentType;
   final List<FfiKeyValue> fields;
 
+  /// Local path references are used only at execution time. They are never
+  /// placed in response/history DTOs.
+  final List<FfiMultipartFile> files;
+
   const FfiRequestBody({
     required this.kind,
     required this.content,
     this.contentType,
     required this.fields,
+    required this.files,
   });
 
   @override
   int get hashCode =>
-      kind.hashCode ^ content.hashCode ^ contentType.hashCode ^ fields.hashCode;
+      kind.hashCode ^
+      content.hashCode ^
+      contentType.hashCode ^
+      fields.hashCode ^
+      files.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -571,7 +613,8 @@ class FfiRequestBody {
           kind == other.kind &&
           content == other.content &&
           contentType == other.contentType &&
-          fields == other.fields;
+          fields == other.fields &&
+          files == other.files;
 }
 
 enum FfiRequestBodyKind { empty, text, json, formUrlEncoded, multipart }

@@ -47,8 +47,27 @@ pub(super) fn resolve_body(
         Body::FormUrlEncoded { fields } => Ok(Body::FormUrlEncoded {
             fields: resolve_fields(fields, variables)?,
         }),
-        Body::Multipart { fields } => Ok(Body::Multipart {
+        Body::Multipart { fields, files } => Ok(Body::Multipart {
             fields: resolve_fields(fields, variables)?,
+            files: files
+                .iter()
+                .map(|file| {
+                    Ok(MultipartFile {
+                        field_name: resolve_template(&file.field_name, variables)?,
+                        path: resolve_template(&file.path, variables)?,
+                        file_name: file
+                            .file_name
+                            .as_deref()
+                            .map(|value| resolve_template(value, variables))
+                            .transpose()?,
+                        content_type: file
+                            .content_type
+                            .as_deref()
+                            .map(|value| resolve_template(value, variables))
+                            .transpose()?,
+                    })
+                })
+                .collect::<Result<Vec<_>, VariableResolutionError>>()?,
         }),
     }
 }

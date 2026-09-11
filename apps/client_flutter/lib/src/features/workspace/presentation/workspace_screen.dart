@@ -317,6 +317,10 @@ class WorkspaceScreen extends StatelessWidget {
                         ),
                     onDeleteBodyField: (id) =>
                         controller.add(WorkspaceBodyFieldDeleted(id)),
+                    onPickBodyFile: () =>
+                        _pickMultipartFile(context, controller),
+                    onDeleteBodyFile: (path) =>
+                        controller.add(WorkspaceBodyFileDeleted(path)),
                     onAuthChanged: (auth) =>
                         controller.add(WorkspaceAuthChanged(auth)),
                     onAddQuery: () => controller.add(
@@ -443,6 +447,31 @@ class WorkspaceScreen extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Не удалось экспортировать коллекцию.')),
+      );
+    }
+  }
+
+  static Future<void> _pickMultipartFile(
+    BuildContext context,
+    WorkspaceBloc workspace,
+  ) async {
+    try {
+      final file = await openFile();
+      if (file == null || !context.mounted || file.path.isEmpty) return;
+      workspace.add(
+        WorkspaceBodyFileAdded(
+          MultipartFileReference(
+            fieldName: 'file',
+            path: file.path,
+            fileName: file.name,
+            contentType: file.mimeType,
+          ),
+        ),
+      );
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось прикрепить файл.')),
       );
     }
   }

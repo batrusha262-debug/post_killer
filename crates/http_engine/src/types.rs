@@ -97,6 +97,8 @@ pub enum ExecuteError {
     InvalidHeaderName { name: String },
     InvalidHeaderValue { name: String },
     UnsupportedBody { body_kind: &'static str },
+    MultipartFileRead,
+    MultipartFileTooLarge { limit: usize },
     Timeout,
     Cancelled,
     EventReceiverDropped,
@@ -115,6 +117,10 @@ impl fmt::Display for ExecuteError {
             }
             Self::UnsupportedBody { body_kind } => {
                 write!(formatter, "unsupported request body: {body_kind}")
+            }
+            Self::MultipartFileRead => formatter.write_str("multipart file cannot be read"),
+            Self::MultipartFileTooLarge { limit } => {
+                write!(formatter, "multipart file exceeds the {limit}-byte limit")
             }
             Self::Timeout => formatter.write_str("request timed out"),
             Self::Cancelled => formatter.write_str("request was cancelled"),

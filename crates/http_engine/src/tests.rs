@@ -151,6 +151,7 @@ async fn executes_text_multipart_request() {
                 enabled: false,
             },
         ],
+        files: vec![],
     };
 
     let payload = execute(multipart).await.unwrap();
@@ -165,6 +166,42 @@ async fn executes_text_multipart_request() {
     assert!(received.contains("name=\"name\""));
     assert!(received.contains("Ada"));
     assert!(!received.contains("disabled"));
+}
+
+#[tokio::test]
+async fn keeps_cookies_only_for_the_native_app_session() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}", listener.local_addr().unwrap());
+    let server = tokio::spawn(async move {
+        let (mut first, _) = listener.accept().await.unwrap();
+        let mut first_bytes = [0_u8; 1024];
+        let _ = first.read(&mut first_bytes).await.unwrap();
+        first
+            .write_all(
+                b"HTTP/1.1 204 No Content\r\nSet-Cookie: session=local-only; Path=/\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+            )
+            .await
+            .unwrap();
+        let (mut second, _) = listener.accept().await.unwrap();
+        let mut received = Vec::new();
+        let mut buffer = [0_u8; 1024];
+        let read = second.read(&mut buffer).await.unwrap();
+        received.extend_from_slice(&buffer[..read]);
+        second
+            .write_all(b"HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+            .await
+            .unwrap();
+        received
+    });
+
+    execute(request(url.clone())).await.unwrap();
+    execute(request(url)).await.unwrap();
+    let received = String::from_utf8(server.await.unwrap()).unwrap();
+    assert!(
+        received
+            .to_ascii_lowercase()
+            .contains("cookie: session=local-only")
+    );
 }
 
 #[tokio::test]

@@ -1118,6 +1118,20 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  FfiMultipartFile dco_decode_ffi_multipart_file(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return FfiMultipartFile(
+      fieldName: dco_decode_String(arr[0]),
+      path: dco_decode_String(arr[1]),
+      fileName: dco_decode_opt_String(arr[2]),
+      contentType: dco_decode_opt_String(arr[3]),
+    );
+  }
+
+  @protected
   FfiRequest dco_decode_ffi_request(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1162,13 +1176,14 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   FfiRequestBody dco_decode_ffi_request_body(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 4)
-      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return FfiRequestBody(
       kind: dco_decode_ffi_request_body_kind(arr[0]),
       content: dco_decode_String(arr[1]),
       contentType: dco_decode_opt_String(arr[2]),
       fields: dco_decode_list_ffi_key_value(arr[3]),
+      files: dco_decode_list_ffi_multipart_file(arr[4]),
     );
   }
 
@@ -1269,6 +1284,12 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   List<FfiKeyValue> dco_decode_list_ffi_key_value(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_ffi_key_value).toList();
+  }
+
+  @protected
+  List<FfiMultipartFile> dco_decode_list_ffi_multipart_file(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_ffi_multipart_file).toList();
   }
 
   @protected
@@ -1659,6 +1680,21 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  FfiMultipartFile sse_decode_ffi_multipart_file(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_fieldName = sse_decode_String(deserializer);
+    var var_path = sse_decode_String(deserializer);
+    var var_fileName = sse_decode_opt_String(deserializer);
+    var var_contentType = sse_decode_opt_String(deserializer);
+    return FfiMultipartFile(
+      fieldName: var_fieldName,
+      path: var_path,
+      fileName: var_fileName,
+      contentType: var_contentType,
+    );
+  }
+
+  @protected
   FfiRequest sse_decode_ffi_request(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_id = sse_decode_String(deserializer);
@@ -1718,11 +1754,13 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     var var_content = sse_decode_String(deserializer);
     var var_contentType = sse_decode_opt_String(deserializer);
     var var_fields = sse_decode_list_ffi_key_value(deserializer);
+    var var_files = sse_decode_list_ffi_multipart_file(deserializer);
     return FfiRequestBody(
       kind: var_kind,
       content: var_content,
       contentType: var_contentType,
       fields: var_fields,
+      files: var_files,
     );
   }
 
@@ -1851,6 +1889,20 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     var ans_ = <FfiKeyValue>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_ffi_key_value(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<FfiMultipartFile> sse_decode_list_ffi_multipart_file(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <FfiMultipartFile>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_ffi_multipart_file(deserializer));
     }
     return ans_;
   }
@@ -2264,6 +2316,18 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  void sse_encode_ffi_multipart_file(
+    FfiMultipartFile self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.fieldName, serializer);
+    sse_encode_String(self.path, serializer);
+    sse_encode_opt_String(self.fileName, serializer);
+    sse_encode_opt_String(self.contentType, serializer);
+  }
+
+  @protected
   void sse_encode_ffi_request(FfiRequest self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
@@ -2310,6 +2374,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     sse_encode_String(self.content, serializer);
     sse_encode_opt_String(self.contentType, serializer);
     sse_encode_list_ffi_key_value(self.fields, serializer);
+    sse_encode_list_ffi_multipart_file(self.files, serializer);
   }
 
   @protected
@@ -2427,6 +2492,18 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_ffi_key_value(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_ffi_multipart_file(
+    List<FfiMultipartFile> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_ffi_multipart_file(item, serializer);
     }
   }
 
