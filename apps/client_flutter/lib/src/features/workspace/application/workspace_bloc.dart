@@ -141,12 +141,18 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         await _selectWorkspace(event, emit);
       case WorkspaceCreateRequested():
         await _createWorkspace(event, emit);
+      case WorkspaceDeleteRequested():
+        await _deleteWorkspace(event, emit);
       case CollectionCreateRequested():
         await _createCollection(event, emit);
+      case CollectionDeleteRequested():
+        await _deleteCollection(event, emit);
       case WorkspacePostmanImportRequested():
         await _importPostmanCollection(event, emit);
       case WorkspaceRequestSaveRequested():
         await _saveRequest(event, emit);
+      case WorkspaceSavedRequestDeleteRequested():
+        await _deleteSavedRequest(event, emit);
     }
   }
 
@@ -291,6 +297,58 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     }
   }
 
+  Future<void> _deleteWorkspace(
+    WorkspaceDeleteRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    if (!state.workspaces.any((workspace) => workspace.id == event.id)) return;
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      await _repository.deleteWorkspace(event.id);
+      final workspaces = [
+        for (final workspace in state.workspaces)
+          if (workspace.id != event.id) workspace,
+      ];
+      if (workspaces.isEmpty) {
+        emit(
+          state.copyWith(
+            workspaces: const [],
+            selectedWorkspaceId: null,
+            collections: const [],
+            tabs: const [],
+            selectedTabId: null,
+            isLoading: false,
+          ),
+        );
+        return;
+      }
+      final selected = workspaces.first;
+      final collections = await _repository.listCollections(selected.id);
+      final tabs = [
+        for (final collection in collections)
+          for (final request in collection.requests)
+            RequestTab.fromSaved(request),
+      ];
+      emit(
+        state.copyWith(
+          workspaces: workspaces,
+          selectedWorkspaceId: selected.id,
+          collections: collections,
+          tabs: tabs,
+          selectedTabId: tabs.isEmpty ? null : tabs.first.id,
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось удалить workspace.',
+        ),
+      );
+    }
+  }
+
   Future<void> _createCollection(
     CollectionCreateRequested event,
     Emitter<WorkspaceState> emit,
@@ -314,6 +372,45 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         state.copyWith(
           isLoading: false,
           storageError: 'Не удалось создать collection.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteCollection(
+    CollectionDeleteRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    final collection = state.collections.where((item) => item.id == event.id);
+    if (collection.isEmpty) return;
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      await _repository.deleteCollection(event.id);
+      final requestIds = collection.single.requests
+          .map((request) => request.id)
+          .toSet();
+      final tabs = [
+        for (final tab in state.tabs)
+          if (!requestIds.contains(tab.id)) tab,
+      ];
+      emit(
+        state.copyWith(
+          collections: [
+            for (final item in state.collections)
+              if (item.id != event.id) item,
+          ],
+          tabs: tabs,
+          selectedTabId: tabs.any((tab) => tab.id == state.selectedTabId)
+              ? state.selectedTabId
+              : (tabs.isEmpty ? null : tabs.first.id),
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось удалить папку.',
         ),
       );
     }
@@ -361,6 +458,57 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         state.copyWith(
           isLoading: false,
           storageError: 'Не удалось сохранить запрос в папку.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteSavedRequest(
+    WorkspaceSavedRequestDeleteRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    if (!state.collections.any(
+      (item) =>
+          item.id == event.collectionId &&
+          item.requests.any((request) => request.id == event.requestId),
+    )) {
+      return;
+    }
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      await _repository.deleteRequest(event.requestId);
+      final tabs = [
+        for (final tab in state.tabs)
+          if (tab.id != event.requestId) tab,
+      ];
+      emit(
+        state.copyWith(
+          collections: [
+            for (final collection in state.collections)
+              if (collection.id == event.collectionId)
+                RequestCollection(
+                  id: collection.id,
+                  name: collection.name,
+                  requests: [
+                    for (final request in collection.requests)
+                      if (request.id != event.requestId) request,
+                  ],
+                )
+              else
+                collection,
+          ],
+          tabs: tabs,
+          selectedTabId: state.selectedTabId == event.requestId
+              ? (tabs.isEmpty ? null : tabs.first.id)
+              : state.selectedTabId,
+          isLoading: false,
+        ),
+      );
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось удалить запрос.',
         ),
       );
     }

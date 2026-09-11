@@ -56,6 +56,16 @@ pub fn create_workspace(name: String) -> Result<FfiWorkspace, String> {
     .map(Into::into)
 }
 
+/// Deletes a workspace and all of its local collections, requests and
+/// environments through the database's foreign-key cascade.
+pub fn delete_workspace(id: String) -> Result<(), String> {
+    with_storage(|storage| {
+        storage
+            .delete_workspace(&id)
+            .map_err(|error| error.to_string())
+    })
+}
+
 pub fn list_collections(workspace_id: String) -> Result<Vec<FfiCollection>, String> {
     with_storage(|storage| {
         storage
@@ -75,6 +85,15 @@ pub fn create_collection(workspace_id: String, name: String) -> Result<FfiCollec
     .map(Into::into)
 }
 
+/// Deletes a collection and all saved requests in it.
+pub fn delete_collection(id: String) -> Result<(), String> {
+    with_storage(|storage| {
+        storage
+            .delete_collection(&id)
+            .map_err(|error| error.to_string())
+    })
+}
+
 pub fn list_requests(collection_id: String) -> Result<Vec<FfiStoredRequest>, String> {
     with_storage(|storage| {
         storage
@@ -82,6 +101,15 @@ pub fn list_requests(collection_id: String) -> Result<Vec<FfiStoredRequest>, Str
             .map_err(|error| error.to_string())
     })
     .map(|requests| requests.into_iter().map(Into::into).collect())
+}
+
+/// Deletes one saved request. Its local execution history is cascaded too.
+pub fn delete_request(id: String) -> Result<(), String> {
+    with_storage(|storage| {
+        storage
+            .delete_request(&id)
+            .map_err(|error| error.to_string())
+    })
 }
 
 /// Creates or updates a request in the selected collection/folder.

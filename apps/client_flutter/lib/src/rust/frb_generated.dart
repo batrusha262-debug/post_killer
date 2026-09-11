@@ -73,7 +73,7 @@ class PostKillerRustLib
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 628990917;
+  int get rustContentHash => 555886219;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -91,6 +91,12 @@ abstract class PostKillerRustLibApi extends BaseApi {
   });
 
   Future<FfiWorkspace> crateApiCreateWorkspace({required String name});
+
+  Future<void> crateApiDeleteCollection({required String id});
+
+  Future<void> crateApiDeleteRequest({required String id});
+
+  Future<void> crateApiDeleteWorkspace({required String id});
 
   Future<FfiExecutionOutcome> crateApiExecuteRequest({
     required FfiRequest request,
@@ -192,6 +198,90 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
       const TaskConstMeta(debugName: "create_workspace", argNames: ["name"]);
 
   @override
+  Future<void> crateApiDeleteCollection({required String id}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDeleteCollectionConstMeta,
+        argValues: [id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeleteCollectionConstMeta =>
+      const TaskConstMeta(debugName: "delete_collection", argNames: ["id"]);
+
+  @override
+  Future<void> crateApiDeleteRequest({required String id}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDeleteRequestConstMeta,
+        argValues: [id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeleteRequestConstMeta =>
+      const TaskConstMeta(debugName: "delete_request", argNames: ["id"]);
+
+  @override
+  Future<void> crateApiDeleteWorkspace({required String id}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(id, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateApiDeleteWorkspaceConstMeta,
+        argValues: [id],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiDeleteWorkspaceConstMeta =>
+      const TaskConstMeta(debugName: "delete_workspace", argNames: ["id"]);
+
+  @override
   Future<FfiExecutionOutcome> crateApiExecuteRequest({
     required FfiRequest request,
   }) {
@@ -203,7 +293,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 6,
             port: port_,
           );
         },
@@ -235,7 +325,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 7,
             port: port_,
           );
         },
@@ -265,7 +355,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 8,
             port: port_,
           );
         },
@@ -298,7 +388,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 9,
             port: port_,
           );
         },
@@ -330,7 +420,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 10,
             port: port_,
           );
         },
@@ -359,7 +449,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 11,
             port: port_,
           );
         },
@@ -393,7 +483,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 12,
             port: port_,
           );
         },

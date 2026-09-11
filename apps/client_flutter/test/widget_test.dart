@@ -174,6 +174,18 @@ void main() {
     expect(find.text('Health check'), findsNWidgets(3));
   });
 
+  testWidgets('deletes a saved request only after confirmation', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await tester.tap(find.byKey(const Key('delete-request-health-check')));
+    await tester.pumpAndSettle();
+    expect(find.text('Удалить запрос «Health check»?'), findsOneWidget);
+    await tester.tap(find.text('Удалить запрос'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('saved-request-health-check')), findsNothing);
+  });
+
   testWidgets('settings change themes without losing request drafts', (
     tester,
   ) async {
@@ -306,6 +318,9 @@ class _WidgetWorkspaceRepository implements WorkspaceRepository {
       WorkspaceSummary(id: 'new-workspace', name: name);
 
   @override
+  Future<void> deleteWorkspace(String id) async {}
+
+  @override
   Future<RequestCollection> createCollection({
     required String workspaceId,
     required String name,
@@ -325,4 +340,10 @@ class _WidgetWorkspaceRepository implements WorkspaceRepository {
     headers: request.headers,
     body: request.body,
   );
+
+  @override
+  Future<void> deleteCollection(String id) async {}
+
+  @override
+  Future<void> deleteRequest(String id) async {}
 }

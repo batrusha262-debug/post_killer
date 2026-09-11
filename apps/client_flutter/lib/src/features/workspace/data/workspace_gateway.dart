@@ -6,15 +6,18 @@ import '../../../rust/api.dart' as rust_api;
 abstract interface class WorkspaceGateway {
   Future<List<WorkspaceSummary>> listWorkspaces();
   Future<WorkspaceSummary> createWorkspace(String name);
+  Future<void> deleteWorkspace(String id);
   Future<List<RequestCollection>> listCollections(String workspaceId);
   Future<RequestCollection> createCollection({
     required String workspaceId,
     required String name,
   });
+  Future<void> deleteCollection(String id);
   Future<SavedRequest> saveRequest({
     required String collectionId,
     required RequestTab request,
   });
+  Future<void> deleteRequest(String id);
 }
 
 class FrbWorkspaceGateway implements WorkspaceGateway {
@@ -31,6 +34,9 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
     final workspace = await rust_api.createWorkspace(name: name);
     return WorkspaceSummary(id: workspace.id, name: workspace.name);
   }
+
+  @override
+  Future<void> deleteWorkspace(String id) => rust_api.deleteWorkspace(id: id);
 
   @override
   Future<List<RequestCollection>> listCollections(String workspaceId) async {
@@ -69,6 +75,9 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
   }
 
   @override
+  Future<void> deleteCollection(String id) => rust_api.deleteCollection(id: id);
+
+  @override
   Future<SavedRequest> saveRequest({
     required String collectionId,
     required RequestTab request,
@@ -78,6 +87,9 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
       request: _ffiRequest(request),
     )).request,
   );
+
+  @override
+  Future<void> deleteRequest(String id) => rust_api.deleteRequest(id: id);
 
   SavedRequest _savedRequest(rust_api.FfiRequest request) => SavedRequest(
     id: request.id,

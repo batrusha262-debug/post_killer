@@ -149,12 +149,36 @@ class WorkspaceScreen extends StatelessWidget {
                             onSubmit: (name) =>
                                 controller.add(WorkspaceCreateRequested(name)),
                           ),
+                          onDeleteWorkspace: (workspace) async {
+                            if (await _confirmDelete(
+                              context,
+                              title: 'Удалить workspace?',
+                              message: 'Будут удалены все его папки, запросы и переменные. Это действие нельзя отменить.',
+                              confirmLabel: 'Удалить workspace',
+                            )) {
+                              controller.add(
+                                WorkspaceDeleteRequested(workspace.id),
+                              );
+                            }
+                          },
                           onNewCollection: () => _showNameDialog(
                             context,
                             title: 'Новая collection',
                             onSubmit: (name) =>
                                 controller.add(CollectionCreateRequested(name)),
                           ),
+                          onDeleteCollection: (collection) async {
+                            if (await _confirmDelete(
+                              context,
+                              title: 'Удалить папку «${collection.name}»?',
+                              message: 'Все запросы в этой папке будут удалены. Это действие нельзя отменить.',
+                              confirmLabel: 'Удалить папку',
+                            )) {
+                              controller.add(
+                                CollectionDeleteRequested(collection.id),
+                              );
+                            }
+                          },
                           onImportPostman: () =>
                               _importPostmanCollection(context, controller),
                           onSearchChanged: (query) => controller.add(
@@ -162,6 +186,22 @@ class WorkspaceScreen extends StatelessWidget {
                           ),
                           onOpenRequest: (request) =>
                               controller.add(WorkspaceRequestOpened(request)),
+                          onDeleteRequest: (collection, request) async {
+                            if (await _confirmDelete(
+                              context,
+                              title: 'Удалить запрос «${request.name}»?',
+                              message:
+                                  'История этого запроса также будет удалена.',
+                              confirmLabel: 'Удалить запрос',
+                            )) {
+                              controller.add(
+                                WorkspaceSavedRequestDeleteRequested(
+                                  collectionId: collection.id,
+                                  requestId: request.id,
+                                ),
+                              );
+                            }
+                          },
                           onNewRequest: () =>
                               controller.add(const WorkspaceRequestCreated()),
                         ),
@@ -300,4 +340,33 @@ class WorkspaceScreen extends StatelessWidget {
     );
     controller.dispose();
   }
+
+  static Future<bool> _confirmDelete(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String confirmLabel,
+  }) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Отмена'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(confirmLabel),
+            ),
+          ],
+        ),
+      ) ??
+      false;
 }

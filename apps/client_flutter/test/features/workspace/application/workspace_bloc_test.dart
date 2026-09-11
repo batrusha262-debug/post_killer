@@ -376,6 +376,40 @@ void main() {
     ],
   );
 
+  test(
+    'deleting a saved request closes its tab and updates its folder',
+    () async {
+      final bloc = buildBloc();
+      final completed = bloc.stream.firstWhere(
+        (state) =>
+            !state.isLoading && state.collections.single.requests.isEmpty,
+      );
+      bloc.add(
+        const WorkspaceSavedRequestDeleteRequested(
+          collectionId: 'injected',
+          requestId: 'injected-request',
+        ),
+      );
+      await completed;
+      expect(bloc.state.tabs, isEmpty);
+      expect(bloc.state.selectedTabId, isNull);
+      await bloc.close();
+    },
+  );
+
+  test('deleting the last workspace clears its local workspace view', () async {
+    final bloc = buildBloc();
+    final completed = bloc.stream.firstWhere(
+      (state) => !state.isLoading && state.workspaces.isEmpty,
+    );
+    bloc.add(const WorkspaceDeleteRequested('workspace'));
+    await completed;
+    expect(bloc.state.collections, isEmpty);
+    expect(bloc.state.tabs, isEmpty);
+    expect(bloc.state.selectedWorkspaceId, isNull);
+    await bloc.close();
+  });
+
   blocTest<WorkspaceBloc, WorkspaceState>(
     'switches the active workspace section from a typed navigation event',
     build: buildBloc,
@@ -461,6 +495,9 @@ class _FakeWorkspaceRepository implements WorkspaceRepository {
       WorkspaceSummary(id: 'created-workspace', name: name);
 
   @override
+  Future<void> deleteWorkspace(String id) async {}
+
+  @override
   Future<RequestCollection> createCollection({
     required String workspaceId,
     required String name,
@@ -469,6 +506,9 @@ class _FakeWorkspaceRepository implements WorkspaceRepository {
     name: name,
     requests: const [],
   );
+
+  @override
+  Future<void> deleteCollection(String id) async {}
 
   @override
   Future<SavedRequest> saveRequest({
@@ -483,6 +523,9 @@ class _FakeWorkspaceRepository implements WorkspaceRepository {
     headers: request.headers,
     body: request.body,
   );
+
+  @override
+  Future<void> deleteRequest(String id) async {}
 }
 
 class _FakeRequestExecutor implements RequestExecutor {

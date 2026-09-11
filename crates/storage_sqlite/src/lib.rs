@@ -27,6 +27,7 @@ const MIGRATIONS: &[(i64, &str, &str)] = &[
 pub trait Repository {
     fn create_workspace(&mut self, id: String, name: String) -> Result<Workspace, StorageError>;
     fn list_workspaces(&self) -> Result<Vec<Workspace>, StorageError>;
+    fn delete_workspace(&mut self, id: &str) -> Result<(), StorageError>;
     fn create_collection(
         &mut self,
         id: String,
@@ -34,6 +35,7 @@ pub trait Repository {
         name: String,
     ) -> Result<Collection, StorageError>;
     fn list_collections(&self, workspace_id: &str) -> Result<Vec<Collection>, StorageError>;
+    fn delete_collection(&mut self, id: &str) -> Result<(), StorageError>;
     fn save_folder(&mut self, folder: Folder) -> Result<(), StorageError>;
     fn get_folder(&self, id: &str) -> Result<Option<Folder>, StorageError>;
     fn list_folders(&self, collection_id: &str) -> Result<Vec<Folder>, StorageError>;

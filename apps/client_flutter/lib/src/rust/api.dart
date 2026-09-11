@@ -18,6 +18,11 @@ Future<List<FfiWorkspace>> listWorkspaces() =>
 Future<FfiWorkspace> createWorkspace({required String name}) =>
     PostKillerRustLib.instance.api.crateApiCreateWorkspace(name: name);
 
+/// Deletes a workspace and all of its local collections, requests and
+/// environments through the database's foreign-key cascade.
+Future<void> deleteWorkspace({required String id}) =>
+    PostKillerRustLib.instance.api.crateApiDeleteWorkspace(id: id);
+
 Future<List<FfiCollection>> listCollections({required String workspaceId}) =>
     PostKillerRustLib.instance.api.crateApiListCollections(
       workspaceId: workspaceId,
@@ -31,10 +36,18 @@ Future<FfiCollection> createCollection({
   name: name,
 );
 
+/// Deletes a collection and all saved requests in it.
+Future<void> deleteCollection({required String id}) =>
+    PostKillerRustLib.instance.api.crateApiDeleteCollection(id: id);
+
 Future<List<FfiStoredRequest>> listRequests({required String collectionId}) =>
     PostKillerRustLib.instance.api.crateApiListRequests(
       collectionId: collectionId,
     );
+
+/// Deletes one saved request. Its local execution history is cascaded too.
+Future<void> deleteRequest({required String id}) =>
+    PostKillerRustLib.instance.api.crateApiDeleteRequest(id: id);
 
 /// Creates or updates a request in the selected collection/folder.
 Future<FfiStoredRequest> saveRequest({

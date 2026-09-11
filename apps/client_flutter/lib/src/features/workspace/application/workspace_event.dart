@@ -27,9 +27,19 @@ final class WorkspaceCreateRequested extends WorkspaceStorageEvent {
   final String name;
 }
 
+final class WorkspaceDeleteRequested extends WorkspaceStorageEvent {
+  const WorkspaceDeleteRequested(this.id);
+  final String id;
+}
+
 final class CollectionCreateRequested extends WorkspaceStorageEvent {
   const CollectionCreateRequested(this.name);
   final String name;
+}
+
+final class CollectionDeleteRequested extends WorkspaceStorageEvent {
+  const CollectionDeleteRequested(this.id);
+  final String id;
 }
 
 final class WorkspacePostmanImportRequested extends WorkspaceStorageEvent {
@@ -74,6 +84,15 @@ final class WorkspaceRequestTitleChanged extends WorkspaceEvent {
 final class WorkspaceRequestSaveRequested extends WorkspaceStorageEvent {
   const WorkspaceRequestSaveRequested(this.collectionId);
   final String collectionId;
+}
+
+final class WorkspaceSavedRequestDeleteRequested extends WorkspaceStorageEvent {
+  const WorkspaceSavedRequestDeleteRequested({
+    required this.collectionId,
+    required this.requestId,
+  });
+  final String collectionId;
+  final String requestId;
 }
 
 final class WorkspaceUrlChanged extends WorkspaceEvent {

@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 628990917;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 555886219;
 
 // Section: executor
 
@@ -108,6 +108,105 @@ fn wire__crate__api__create_workspace_impl(
             move |context| {
                 transform_result_sse::<_, String>((move || {
                     let output_ok = crate::api::create_workspace(api_name)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__delete_collection_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "delete_collection",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::api::delete_collection(api_id)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__delete_request_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "delete_request",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::api::delete_request(api_id)?;
+                    std::result::Result::Ok(output_ok)
+                })())
+            }
+        },
+    )
+}
+fn wire__crate__api__delete_workspace_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_normal::<flutter_rust_bridge::for_generated::SseCodec, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "delete_workspace",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_id = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| {
+                transform_result_sse::<_, String>((move || {
+                    let output_ok = crate::api::delete_workspace(api_id)?;
                     std::result::Result::Ok(output_ok)
                 })())
             }
@@ -825,15 +924,18 @@ fn pde_ffi_dispatcher_primary_impl(
     match func_id {
         1 => wire__crate__api__create_collection_impl(port, ptr, rust_vec_len, data_len),
         2 => wire__crate__api__create_workspace_impl(port, ptr, rust_vec_len, data_len),
-        3 => wire__crate__api__execute_request_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__execute_request_with_options_impl(port, ptr, rust_vec_len, data_len),
-        5 => {
+        3 => wire__crate__api__delete_collection_impl(port, ptr, rust_vec_len, data_len),
+        4 => wire__crate__api__delete_request_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__delete_workspace_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__execute_request_impl(port, ptr, rust_vec_len, data_len),
+        7 => wire__crate__api__execute_request_with_options_impl(port, ptr, rust_vec_len, data_len),
+        8 => {
             wire__crate__api__ffi_execution_options_default_impl(port, ptr, rust_vec_len, data_len)
         }
-        6 => wire__crate__api__list_collections_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__list_requests_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__list_workspaces_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__save_request_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__list_collections_impl(port, ptr, rust_vec_len, data_len),
+        10 => wire__crate__api__list_requests_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__list_workspaces_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__save_request_impl(port, ptr, rust_vec_len, data_len),
         _ => unreachable!(),
     }
 }

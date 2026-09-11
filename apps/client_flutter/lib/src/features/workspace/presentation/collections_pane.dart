@@ -14,10 +14,13 @@ class CollectionsPane extends StatelessWidget {
     required this.error,
     required this.onWorkspaceSelected,
     required this.onNewWorkspace,
+    required this.onDeleteWorkspace,
     required this.onNewCollection,
+    required this.onDeleteCollection,
     required this.onImportPostman,
     required this.onSearchChanged,
     required this.onOpenRequest,
+    required this.onDeleteRequest,
     required this.onNewRequest,
   });
 
@@ -28,10 +31,13 @@ class CollectionsPane extends StatelessWidget {
   final String? error;
   final ValueChanged<String> onWorkspaceSelected;
   final VoidCallback onNewWorkspace;
+  final ValueChanged<WorkspaceSummary> onDeleteWorkspace;
   final VoidCallback onNewCollection;
+  final ValueChanged<RequestCollection> onDeleteCollection;
   final VoidCallback onImportPostman;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<SavedRequest> onOpenRequest;
+  final void Function(RequestCollection, SavedRequest) onDeleteRequest;
   final VoidCallback onNewRequest;
 
   @override
@@ -39,7 +45,7 @@ class CollectionsPane extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 12, 8),
+        padding: const EdgeInsets.fromLTRB(12, 12, 8, 6),
         child: Row(
           children: [
             Expanded(
@@ -78,27 +84,51 @@ class CollectionsPane extends StatelessWidget {
       if (workspaces.isNotEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: DropdownButtonFormField<String>(
-            initialValue: selectedWorkspaceId,
-            decoration: const InputDecoration(
-              labelText: 'Workspace',
-              isDense: true,
-            ),
-            items: [
-              for (final workspace in workspaces)
-                DropdownMenuItem(
-                  value: workspace.id,
-                  child: Text(workspace.name),
+          child: Row(
+            children: [
+              Expanded(
+                child: Tooltip(
+                  message: 'Workspace',
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: selectedWorkspaceId,
+                      items: [
+                        for (final workspace in workspaces)
+                          DropdownMenuItem(
+                            value: workspace.id,
+                            child: Text(
+                              workspace.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                      onChanged: isLoading
+                          ? null
+                          : (id) {
+                              if (id != null) onWorkspaceSelected(id);
+                            },
+                    ),
+                  ),
                 ),
+              ),
+              IconButton(
+                key: const Key('delete-workspace-button'),
+                tooltip: 'Delete workspace',
+                visualDensity: VisualDensity.compact,
+                onPressed: isLoading || selectedWorkspaceId == null
+                    ? null
+                    : () => onDeleteWorkspace(
+                        workspaces.firstWhere(
+                          (workspace) => workspace.id == selectedWorkspaceId,
+                        ),
+                      ),
+                icon: const Icon(Icons.delete_outline, size: 19),
+              ),
             ],
-            onChanged: isLoading
-                ? null
-                : (id) {
-                    if (id != null) onWorkspaceSelected(id);
-                  },
           ),
         ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 8),
       if (error case final message?)
         Padding(padding: const EdgeInsets.all(12), child: Text(message)),
       Padding(
@@ -113,7 +143,7 @@ class CollectionsPane extends StatelessWidget {
           ),
         ),
       ),
-      const SizedBox(height: 8),
+      const SizedBox(height: 6),
       Expanded(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -123,9 +153,44 @@ class CollectionsPane extends StatelessWidget {
                 children: [
                   for (final collection in collections)
                     ExpansionTile(
+                      tilePadding: const EdgeInsets.only(left: 12, right: 4),
+                      childrenPadding: const EdgeInsets.only(bottom: 2),
+                      dense: true,
                       initiallyExpanded: true,
                       leading: const Icon(Icons.folder_outlined, size: 20),
-                      title: Text(collection.name),
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              collection.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(99),
+                            ),
+                            child: Text(
+                              '${collection.requests.length}',
+                              style: Theme.of(context).textTheme.labelSmall,
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: IconButton(
+                        key: Key('delete-collection-${collection.id}'),
+                        tooltip: 'Delete folder',
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => onDeleteCollection(collection),
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                      ),
                       children: [
                         for (final request in collection.requests)
                           ListTile(
@@ -144,6 +209,14 @@ class CollectionsPane extends StatelessWidget {
                             ),
                             title: Text(request.name),
                             onTap: () => onOpenRequest(request),
+                            trailing: IconButton(
+                              key: Key('delete-request-${request.id}'),
+                              tooltip: 'Delete request',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () =>
+                                  onDeleteRequest(collection, request),
+                              icon: const Icon(Icons.close_rounded, size: 17),
+                            ),
                           ),
                       ],
                     ),

@@ -31,6 +31,26 @@ fn fresh_database_is_migrated_and_supports_workspace_and_collection_crud() {
 }
 
 #[test]
+fn deleting_workspace_and_collection_uses_safe_database_cascades() {
+    let mut storage = SqliteStorage::open_in_memory().unwrap();
+    storage
+        .create_workspace("workspace-1".into(), "Personal".into())
+        .unwrap();
+    storage
+        .create_collection("collection-1".into(), "workspace-1".into(), "One".into())
+        .unwrap();
+    storage.delete_collection("collection-1").unwrap();
+    assert!(storage.list_collections("workspace-1").unwrap().is_empty());
+
+    storage
+        .create_collection("collection-2".into(), "workspace-1".into(), "Two".into())
+        .unwrap();
+    storage.delete_workspace("workspace-1").unwrap();
+    assert!(storage.list_workspaces().unwrap().is_empty());
+    assert!(storage.list_collections("workspace-1").unwrap().is_empty());
+}
+
+#[test]
 fn collection_requires_an_existing_workspace() {
     let mut storage = SqliteStorage::open_in_memory().unwrap();
 

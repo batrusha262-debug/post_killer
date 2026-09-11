@@ -31,6 +31,17 @@ impl Repository for SqliteStorage {
         Ok(workspaces)
     }
 
+    fn delete_workspace(&mut self, id: &str) -> Result<(), StorageError> {
+        validate_non_empty("workspace", "id", id)?;
+        let changed = self
+            .connection
+            .execute("DELETE FROM workspaces WHERE id = ?1", [id])?;
+        if changed == 0 {
+            return Err(StorageError::WorkspaceNotFound { id: id.to_owned() });
+        }
+        Ok(())
+    }
+
     fn create_collection(
         &mut self,
         id: String,
@@ -74,6 +85,17 @@ impl Repository for SqliteStorage {
             })?
             .collect::<Result<Vec<_>, _>>()?;
         Ok(collections)
+    }
+
+    fn delete_collection(&mut self, id: &str) -> Result<(), StorageError> {
+        validate_non_empty("collection", "id", id)?;
+        let changed = self
+            .connection
+            .execute("DELETE FROM collections WHERE id = ?1", [id])?;
+        if changed == 0 {
+            return Err(StorageError::CollectionNotFound { id: id.to_owned() });
+        }
+        Ok(())
     }
 
     fn save_folder(&mut self, folder: Folder) -> Result<(), StorageError> {
