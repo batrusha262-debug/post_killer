@@ -12,7 +12,7 @@
 
 ## Активный план
 
-- [ ] API-WORKBENCH-4: расширить interoperability до надёжного импорта OpenAPI 3.0/3.1 (JSON/YAML) и безопасного экспорта собственной коллекции; импорт не должен выполнять сетевые запросы, а экспорт обязан исключать runtime-ответы, history и credentials.
+- [ ] API-WORKBENCH-5: добавить безопасный multipart file upload с explicit local-file references, per-request cookie jar и настройки proxy/custom CA в Rust transport и Flutter UI, без передачи файлов/credentials в историю или экспорт.
 - [ ] AUDIT-RELEASE: проверить публикацию v0.2.5 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
 
 ### Foundation
@@ -101,6 +101,14 @@
   пользователя через Vercel.
 
 ## Готово
+
+- API-WORKBENCH-4 (2026-09-11): добавлены offline OpenAPI 3.0/3.1 JSON/YAML
+  import и export собственной collection. Import читает только выбранный файл,
+  не загружает remote `$ref` и не исполняет операции; поддерживает servers,
+  path/query/header parameters и JSON/text request examples. Export создаёт
+  versioned JSON только с saved request definitions, без runtime history,
+  environments и draft authentication; известные credential headers/query
+  keys redacted. Flutter analyze и 70 tests проходят.
 
 - API-WORKBENCH-3 (2026-09-11): privacy-safe SQLite execution history
   подключена через generated Flutter Rust Bridge к repository/BLoC. Для

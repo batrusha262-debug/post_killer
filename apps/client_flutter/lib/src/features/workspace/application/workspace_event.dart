@@ -47,6 +47,11 @@ final class WorkspacePostmanImportRequested extends WorkspaceStorageEvent {
   final String source;
 }
 
+final class WorkspaceOpenApiImportRequested extends WorkspaceStorageEvent {
+  const WorkspaceOpenApiImportRequested(this.source);
+  final String source;
+}
+
 final class EnvironmentCreateRequested extends WorkspaceStorageEvent {
   const EnvironmentCreateRequested(this.name);
   final String name;

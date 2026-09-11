@@ -23,6 +23,10 @@ headers и телом. Коллекции и история хранятся л�
 - SQLite: workspace, collection, folder, request, environment и variables.
 - Privacy-safe history: только timestamp, status, duration, response size и
   error category — без bodies, headers, URLs, cookies и credentials.
+- Offline import Postman Collection v2 и OpenAPI 3.0/3.1 JSON/YAML; OpenAPI
+  не загружает remote `$ref` и не выполняет requests во время импорта.
+- Versioned export собственной collection в JSON без history, environments,
+  draft-auth и типовых credential headers/query-параметров.
 - GitHub Actions выпускает unsigned macOS DMG, Windows setup EXE, Linux DEB и
   AppImage artifacts и прикрепляет их к GitHub Releases.
 - Кнопка обновления сверяет последнюю стабильную версию в GitHub Releases и по
@@ -30,8 +34,8 @@ headers и телом. Коллекции и история хранятся л�
 
 ## Что пока не готово
 
-- Нет Postman/OpenAPI import/export, secure storage, file multipart, proxy,
-  custom CA, cookie jar, signing/notarization и auto-update.
+- Нет secure storage, file multipart, proxy, custom CA, cookie jar,
+  signing/notarization и auto-update.
 - Обновление пока не заменяет приложение само: после скачивания нужно выполнить
   обычную установку с заменой текущей версии.
 - Workspace и collection создаются и сохраняются через UI. Сохранение request

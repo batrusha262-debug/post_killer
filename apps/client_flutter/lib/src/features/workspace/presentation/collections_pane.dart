@@ -18,6 +18,8 @@ class CollectionsPane extends StatelessWidget {
     required this.onNewCollection,
     required this.onDeleteCollection,
     required this.onImportPostman,
+    required this.onImportOpenApi,
+    required this.onExportCollection,
     required this.onSearchChanged,
     required this.onOpenRequest,
     required this.onDeleteRequest,
@@ -35,6 +37,8 @@ class CollectionsPane extends StatelessWidget {
   final VoidCallback onNewCollection;
   final ValueChanged<RequestCollection> onDeleteCollection;
   final VoidCallback onImportPostman;
+  final VoidCallback onImportOpenApi;
+  final ValueChanged<RequestCollection> onExportCollection;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<SavedRequest> onOpenRequest;
   final void Function(RequestCollection, SavedRequest) onDeleteRequest;
@@ -74,6 +78,13 @@ class CollectionsPane extends StatelessWidget {
               onPressed: selectedWorkspaceId == null ? null : onImportPostman,
               visualDensity: VisualDensity.compact,
               icon: const Icon(Icons.file_upload_outlined, size: 20),
+            ),
+            IconButton(
+              key: const Key('import-openapi-button'),
+              tooltip: 'Import OpenAPI specification',
+              onPressed: selectedWorkspaceId == null ? null : onImportOpenApi,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.api_outlined, size: 20),
             ),
             IconButton(
               key: const Key('new-request-button'),
@@ -216,12 +227,27 @@ class CollectionsPane extends StatelessWidget {
                             ),
                           ],
                         ),
-                        trailing: IconButton(
-                          key: Key('delete-collection-${collection.id}'),
-                          tooltip: 'Delete folder',
-                          visualDensity: VisualDensity.compact,
-                          onPressed: () => onDeleteCollection(collection),
-                          icon: const Icon(Icons.delete_outline, size: 18),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              key: Key('export-collection-${collection.id}'),
+                              tooltip: 'Export collection',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () => onExportCollection(collection),
+                              icon: const Icon(
+                                Icons.file_download_outlined,
+                                size: 18,
+                              ),
+                            ),
+                            IconButton(
+                              key: Key('delete-collection-${collection.id}'),
+                              tooltip: 'Delete folder',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () => onDeleteCollection(collection),
+                              icon: const Icon(Icons.delete_outline, size: 18),
+                            ),
+                          ],
                         ),
                         children: [
                           for (final request in collection.requests)

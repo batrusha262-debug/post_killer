@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
 
@@ -14,6 +15,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../updates/presentation/update_action.dart';
 import '../application/workspace_bloc.dart';
+import '../data/local_collection_exporter.dart';
 import '../domain/workspace_models.dart';
 
 class WorkspaceScreen extends StatelessWidget {
@@ -188,6 +190,12 @@ class WorkspaceScreen extends StatelessWidget {
                             },
                             onImportPostman: () =>
                                 _importPostmanCollection(context, controller),
+                            onImportOpenApi: () => _importOpenApiSpecification(
+                              context,
+                              controller,
+                            ),
+                            onExportCollection: (collection) =>
+                                _exportCollection(context, collection),
                             onSearchChanged: (query) => controller.add(
                               WorkspaceCollectionSearchChanged(query),
                             ),
@@ -375,6 +383,66 @@ class WorkspaceScreen extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Не удалось открыть файл коллекции.')),
+      );
+    }
+  }
+
+  static Future<void> _importOpenApiSpecification(
+    BuildContext context,
+    WorkspaceBloc workspace,
+  ) async {
+    const typeGroup = XTypeGroup(
+      label: 'OpenAPI specification',
+      extensions: ['json', 'yaml', 'yml'],
+      mimeTypes: ['application/json', 'application/yaml', 'text/yaml'],
+    );
+    try {
+      final file = await openFile(acceptedTypeGroups: [typeGroup]);
+      if (file == null || !context.mounted) return;
+      workspace.add(WorkspaceOpenApiImportRequested(await file.readAsString()));
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Не удалось открыть OpenAPI specification.'),
+        ),
+      );
+    }
+  }
+
+  static Future<void> _exportCollection(
+    BuildContext context,
+    RequestCollection collection,
+  ) async {
+    const typeGroup = XTypeGroup(
+      label: 'Post Killer collection',
+      extensions: ['json'],
+      mimeTypes: ['application/json'],
+    );
+    try {
+      final location = await getSaveLocation(
+        acceptedTypeGroups: [typeGroup],
+        suggestedName:
+            '${collection.name.replaceAll('/', '-')}.post-killer.json',
+        confirmButtonText: 'Export',
+      );
+      if (location == null) return;
+      final contents = LocalCollectionExporter.encode(collection);
+      await XFile.fromData(
+        Uint8List.fromList(contents.codeUnits),
+        mimeType: 'application/json',
+        name: collection.name,
+      ).saveTo(location.path);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Коллекция экспортирована без credentials.'),
+        ),
+      );
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось экспортировать коллекцию.')),
       );
     }
   }

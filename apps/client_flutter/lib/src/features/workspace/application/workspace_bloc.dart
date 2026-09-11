@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../data/workspace_repository.dart';
 import '../data/request_executor.dart';
 import '../data/postman_collection_importer.dart';
+import '../data/openapi_collection_importer.dart';
 import '../domain/workspace_models.dart';
 
 import 'workspace_event.dart';
@@ -157,6 +158,8 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         await _deleteCollection(event, emit);
       case WorkspacePostmanImportRequested():
         await _importPostmanCollection(event, emit);
+      case WorkspaceOpenApiImportRequested():
+        await _importOpenApiCollection(event, emit);
       case WorkspaceRequestSaveRequested():
         await _saveRequest(event, emit);
       case WorkspaceSavedRequestDeleteRequested():
@@ -329,32 +332,7 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     emit(state.copyWith(isLoading: true, storageError: null));
     try {
       final imported = PostmanCollectionImport.parse(event.source);
-      final collection = await _repository.createCollection(
-        workspaceId: workspaceId,
-        name: imported.name,
-      );
-      final requests = <SavedRequest>[];
-      for (final request in imported.requests) {
-        requests.add(
-          await _repository.saveRequest(
-            collectionId: collection.id,
-            request: RequestTab.fromSaved(request),
-          ),
-        );
-      }
-      emit(
-        state.copyWith(
-          collections: [
-            ...state.collections,
-            RequestCollection(
-              id: collection.id,
-              name: collection.name,
-              requests: requests,
-            ),
-          ],
-          isLoading: false,
-        ),
-      );
+      await _saveImportedCollection(imported.name, imported.requests, emit);
     } on FormatException catch (error) {
       emit(state.copyWith(isLoading: false, storageError: error.message));
     } on Object {
@@ -365,6 +343,63 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         ),
       );
     }
+  }
+
+  Future<void> _importOpenApiCollection(
+    WorkspaceOpenApiImportRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    final workspaceId = state.selectedWorkspaceId;
+    if (workspaceId == null) return;
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      final imported = OpenApiCollectionImport.parse(event.source);
+      await _saveImportedCollection(imported.name, imported.requests, emit);
+    } on FormatException catch (error) {
+      emit(state.copyWith(isLoading: false, storageError: error.message));
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось импортировать коллекцию OpenAPI.',
+        ),
+      );
+    }
+  }
+
+  Future<void> _saveImportedCollection(
+    String name,
+    List<SavedRequest> source,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    final workspaceId = state.selectedWorkspaceId;
+    if (workspaceId == null) return;
+    final collection = await _repository.createCollection(
+      workspaceId: workspaceId,
+      name: name,
+    );
+    final requests = <SavedRequest>[];
+    for (final request in source) {
+      requests.add(
+        await _repository.saveRequest(
+          collectionId: collection.id,
+          request: RequestTab.fromSaved(request),
+        ),
+      );
+    }
+    emit(
+      state.copyWith(
+        collections: [
+          ...state.collections,
+          RequestCollection(
+            id: collection.id,
+            name: collection.name,
+            requests: requests,
+          ),
+        ],
+        isLoading: false,
+      ),
+    );
   }
 
   Future<void> _bootstrap(
