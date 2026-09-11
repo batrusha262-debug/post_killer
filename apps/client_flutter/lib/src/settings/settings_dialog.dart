@@ -35,7 +35,7 @@ class SettingsDialog extends StatelessWidget {
                     ),
                     (AppAppearance.light, 'Светлая', Icons.light_mode_outlined),
                     (AppAppearance.dark, 'Тёмная', Icons.dark_mode_outlined),
-                    (AppAppearance.slay, 'Slay', Icons.auto_awesome),
+                    (AppAppearance.slay, 'Nebula', Icons.auto_awesome),
                   ])
                     ChoiceChip(
                       key: Key('theme-${entry.$1.name}'),
@@ -49,7 +49,7 @@ class SettingsDialog extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 settings.appearance == AppAppearance.slay
-                    ? 'Slay: розовый, лиловый и немного Y2K.'
+                    ? 'Nebula: насыщенный индиго с мягким фиолетовым акцентом.'
                     : 'Системная тема следует оформлению устройства.',
               ),
               const SizedBox(height: 20),

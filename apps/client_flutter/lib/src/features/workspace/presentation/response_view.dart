@@ -92,13 +92,22 @@ class _ResponseViewState extends State<ResponseView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: response.status! < 400
+                  ? colors.secondaryContainer.withValues(alpha: .55)
+                  : colors.errorContainer.withValues(alpha: .55),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Wrap(
               spacing: 16,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Chip(
+                  backgroundColor: Colors.transparent,
+                  side: BorderSide.none,
                   avatar: Icon(
                     response.status! < 400
                         ? Icons.check_circle_outline
@@ -122,7 +131,7 @@ class _ResponseViewState extends State<ResponseView> {
           ),
           Expanded(
             child: ColoredBox(
-              color: colors.surfaceContainerLowest,
+              color: colors.surface,
               child: TabBarView(
                 children: [
                   _body(context, pretty: true),

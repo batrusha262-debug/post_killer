@@ -54,17 +54,17 @@ class RequestWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.all(8),
+    margin: const EdgeInsets.fromLTRB(0, 12, 12, 12),
     clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(18),
       border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
     ),
     child: Column(
       children: [
         SizedBox(
-          height: 40,
+          height: 48,
           child: Row(
             children: [
               Expanded(
@@ -85,7 +85,7 @@ class RequestWorkspace extends StatelessWidget {
               IconButton(
                 tooltip: 'New tab',
                 onPressed: onNewTab,
-                icon: const Icon(Icons.add, size: 20),
+                icon: const Icon(Icons.add_rounded, size: 20),
               ),
             ],
           ),

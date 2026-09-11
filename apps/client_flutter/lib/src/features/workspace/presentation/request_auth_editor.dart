@@ -16,8 +16,18 @@ class RequestAuthEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(12),
+    padding: const EdgeInsets.all(16),
     children: [
+      const Text(
+        'Authentication',
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+      ),
+      const SizedBox(height: 4),
+      const Text(
+        'Attach credentials only when this endpoint needs them.',
+        style: TextStyle(fontSize: 12),
+      ),
+      const SizedBox(height: 16),
       DropdownButtonFormField<RequestAuthKind>(
         key: const Key('auth-kind-picker'),
         initialValue: auth.kind,
@@ -42,21 +52,32 @@ class RequestAuthEditor extends StatelessWidget {
         },
       ),
       const SizedBox(height: 16),
-      switch (auth.kind) {
-        RequestAuthKind.none => const Text(
-          'This request has no authentication.',
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest
+              .withValues(alpha: .35),
+          borderRadius: BorderRadius.circular(14),
         ),
-        RequestAuthKind.basic => _BasicFields(auth: auth, onChanged: onChanged),
-        RequestAuthKind.bearer => _BearerFields(
-          auth: auth,
-          loginEndpoints: loginEndpoints,
-          onChanged: onChanged,
-        ),
-        RequestAuthKind.apiKey => _ApiKeyFields(
-          auth: auth,
-          onChanged: onChanged,
-        ),
-      },
+        child: switch (auth.kind) {
+          RequestAuthKind.none => const Text(
+            'This request has no authentication.',
+          ),
+          RequestAuthKind.basic => _BasicFields(
+            auth: auth,
+            onChanged: onChanged,
+          ),
+          RequestAuthKind.bearer => _BearerFields(
+            auth: auth,
+            loginEndpoints: loginEndpoints,
+            onChanged: onChanged,
+          ),
+          RequestAuthKind.apiKey => _ApiKeyFields(
+            auth: auth,
+            onChanged: onChanged,
+          ),
+        },
+      ),
     ],
   );
 }

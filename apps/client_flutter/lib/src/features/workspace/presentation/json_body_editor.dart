@@ -142,13 +142,13 @@ class JsonBodyEditorState extends State<JsonBodyEditor> {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Text('JSON', style: Theme.of(context).textTheme.labelLarge),
+              Text('JSON body', style: Theme.of(context).textTheme.labelLarge),
               const Spacer(),
               TextButton.icon(
                 key: const Key('format-json-button'),

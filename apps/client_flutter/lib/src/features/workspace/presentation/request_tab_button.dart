@@ -21,18 +21,18 @@ class RequestTabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: selected
-        ? Theme.of(context).colorScheme.surfaceContainerHighest
+        ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .55)
         : Colors.transparent,
     child: InkWell(
       key: Key('request-tab-${tab.id}'),
       onTap: onTap,
       child: Container(
-        width: 176,
-        padding: const EdgeInsets.only(left: 12),
+        width: 190,
+        padding: const EdgeInsets.only(left: 14),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
-              width: 2,
+              width: 3,
               color: selected
                   ? Theme.of(context).colorScheme.primary
                   : Colors.transparent,
