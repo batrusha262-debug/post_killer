@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../data/workspace_repository.dart';
 import '../data/request_executor.dart';
+import '../data/postman_collection_importer.dart';
 import '../domain/workspace_models.dart';
 
 import 'workspace_event.dart';
@@ -141,8 +143,57 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         await _createWorkspace(event, emit);
       case CollectionCreateRequested():
         await _createCollection(event, emit);
+      case WorkspacePostmanImportRequested():
+        await _importPostmanCollection(event, emit);
       case WorkspaceRequestSaveRequested():
         await _saveRequest(event, emit);
+    }
+  }
+
+  Future<void> _importPostmanCollection(
+    WorkspacePostmanImportRequested event,
+    Emitter<WorkspaceState> emit,
+  ) async {
+    final workspaceId = state.selectedWorkspaceId;
+    if (workspaceId == null) return;
+    emit(state.copyWith(isLoading: true, storageError: null));
+    try {
+      final imported = PostmanCollectionImport.parse(event.source);
+      final collection = await _repository.createCollection(
+        workspaceId: workspaceId,
+        name: imported.name,
+      );
+      final requests = <SavedRequest>[];
+      for (final request in imported.requests) {
+        requests.add(
+          await _repository.saveRequest(
+            collectionId: collection.id,
+            request: RequestTab.fromSaved(request),
+          ),
+        );
+      }
+      emit(
+        state.copyWith(
+          collections: [
+            ...state.collections,
+            RequestCollection(
+              id: collection.id,
+              name: collection.name,
+              requests: requests,
+            ),
+          ],
+          isLoading: false,
+        ),
+      );
+    } on FormatException catch (error) {
+      emit(state.copyWith(isLoading: false, storageError: error.message));
+    } on Object {
+      emit(
+        state.copyWith(
+          isLoading: false,
+          storageError: 'Не удалось импортировать коллекцию Postman.',
+        ),
+      );
     }
   }
 
@@ -411,7 +462,46 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     if (tab == null || state.isExecuting || !tab.auth.isValid) return;
     final generation = ++_executionGeneration;
     emit(state.copyWith(isExecuting: true));
-    final execution = await _executeSafely(tab);
+    RequestExecutionView execution;
+    final loginRequestId = tab.auth.loginRequestId;
+    if (loginRequestId == null || loginRequestId.isEmpty) {
+      execution = await _executeSafely(tab);
+    } else {
+      final login = _findRequest(loginRequestId);
+      if (login == null) {
+        execution = RequestExecutionView.error(
+          requestId: tab.id,
+          error: 'Выбранный запрос авторизации больше не существует.',
+        );
+      } else {
+        final loginExecution = await _executeSafely(login);
+        final token = _tokenFrom(loginExecution.body, tab.auth.tokenPath);
+        if (loginExecution.error != null) {
+          execution = RequestExecutionView.error(
+            requestId: tab.id,
+            error: 'Запрос авторизации не выполнен: ${loginExecution.error}',
+          );
+        } else if (token == null || token.isEmpty) {
+          execution = RequestExecutionView.error(
+            requestId: tab.id,
+            error:
+                'Токен не найден по пути "${tab.auth.tokenPath}" в ответе авторизации.',
+          );
+        } else {
+          _updateSelected(
+            emit,
+            (current) => current.copyWith(
+              auth: current.auth.copyWith(acquiredToken: token),
+            ),
+          );
+          execution = await _executeSafely(
+            tab.copyWith(
+              auth: tab.auth.copyWith(token: token, acquiredToken: token),
+            ),
+          );
+        }
+      }
+    }
     // Cancellation immediately releases the UI. A native call may resolve a
     // little later, but its result must never overwrite a newer request.
     if (emit.isDone || generation != _executionGeneration) return;
@@ -435,6 +525,32 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         ],
       ),
     );
+  }
+
+  RequestTab? _findRequest(String id) {
+    for (final tab in state.tabs) {
+      if (tab.id == id) return tab;
+    }
+    for (final collection in state.collections) {
+      for (final request in collection.requests) {
+        if (request.id == id) return RequestTab.fromSaved(request);
+      }
+    }
+    return null;
+  }
+
+  String? _tokenFrom(String? body, String path) {
+    if (body == null) return null;
+    try {
+      Object? value = jsonDecode(body);
+      for (final part in path.replaceFirst(r'$.', '').split('.')) {
+        if (value is! Map || !value.containsKey(part)) return null;
+        value = value[part];
+      }
+      return value is String || value is num ? value.toString() : null;
+    } on FormatException {
+      return path.trim().isEmpty ? body.trim() : null;
+    }
   }
 
   void _cancelRequest(

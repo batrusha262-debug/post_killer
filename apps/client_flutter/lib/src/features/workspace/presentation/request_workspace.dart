@@ -110,6 +110,10 @@ class RequestWorkspace extends StatelessWidget {
                   onHeaderChanged: onHeaderChanged,
                   onDeleteHeader: onDeleteHeader,
                   collections: workspace.collections,
+                  loginEndpoints: [
+                    for (final collection in workspace.collections)
+                      ...collection.requests,
+                  ],
                   onSave: onSave,
                   onSend: onSend,
                   onCancel: onCancel,

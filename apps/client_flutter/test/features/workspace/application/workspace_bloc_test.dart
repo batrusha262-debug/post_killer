@@ -269,6 +269,55 @@ void main() {
     },
   );
 
+  test(
+    'executes the selected login request and injects its JSON token',
+    () async {
+      const login = SavedRequest(
+        id: 'login',
+        name: 'Auth login',
+        method: HttpMethod.post,
+        url: 'https://example.test/login',
+      );
+      final executor = _LoginThenTargetExecutor();
+      final bloc = WorkspaceBloc(
+        const _FakeWorkspaceRepository(request),
+        executor: executor,
+        autoBootstrap: false,
+        initialState: WorkspaceState(
+          workspaces: const [
+            WorkspaceSummary(id: 'workspace', name: 'Workspace'),
+          ],
+          selectedWorkspaceId: 'workspace',
+          collections: const [
+            RequestCollection(id: 'auth', name: 'Auth', requests: [login]),
+          ],
+          tabs: [
+            RequestTab.fromSaved(request).copyWith(
+              auth: const RequestAuth(
+                kind: RequestAuthKind.bearer,
+                loginRequestId: 'login',
+                tokenPath: 'data.access_token',
+              ),
+            ),
+          ],
+          selectedTabId: request.id,
+        ),
+      );
+
+      final finished = bloc.stream.firstWhere((state) => !state.isExecuting);
+      bloc.add(const WorkspaceRequestSent());
+      await finished;
+      expect(executor.calls.map((request) => request.id), [
+        'login',
+        request.id,
+      ]);
+      expect(executor.calls.last.auth.token, 'fresh-token');
+      expect(bloc.state.selectedTab!.auth.acquiredToken, 'fresh-token');
+      expect(bloc.state.execution?.status, 200);
+      await bloc.close();
+    },
+  );
+
   blocTest<WorkspaceBloc, WorkspaceState>(
     'creates a tab only in response to an explicit event',
     build: buildBloc,
@@ -480,6 +529,30 @@ class _DelayedExecutor implements RequestExecutor {
   Future<RequestExecutionView> execute(RequestTab request) {
     started.complete();
     return result.future;
+  }
+}
+
+class _LoginThenTargetExecutor implements RequestExecutor {
+  final calls = <RequestTab>[];
+
+  @override
+  Future<RequestExecutionView> execute(RequestTab request) async {
+    calls.add(request);
+    return request.id == 'login'
+        ? RequestExecutionView.response(
+            requestId: request.id,
+            status: 200,
+            durationMillis: 1,
+            headers: const [],
+            body: '{"data":{"access_token":"fresh-token"}}',
+          )
+        : RequestExecutionView.response(
+            requestId: request.id,
+            status: 200,
+            durationMillis: 1,
+            headers: const [],
+            body: '{}',
+          );
   }
 }
 

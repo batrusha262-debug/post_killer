@@ -32,6 +32,11 @@ final class CollectionCreateRequested extends WorkspaceStorageEvent {
   final String name;
 }
 
+final class WorkspacePostmanImportRequested extends WorkspaceStorageEvent {
+  const WorkspacePostmanImportRequested(this.source);
+  final String source;
+}
+
 final class WorkspaceSectionSelected extends WorkspaceEvent {
   const WorkspaceSectionSelected(this.section);
   final WorkspaceSection section;

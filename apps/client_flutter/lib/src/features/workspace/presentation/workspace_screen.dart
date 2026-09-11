@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
+
 import '../../../settings/app_settings.dart';
 import '../../../settings/settings_dialog.dart';
 import 'navigation_panes.dart';
@@ -153,6 +155,8 @@ class WorkspaceScreen extends StatelessWidget {
                             onSubmit: (name) =>
                                 controller.add(CollectionCreateRequested(name)),
                           ),
+                          onImportPostman: () =>
+                              _importPostmanCollection(context, controller),
                           onSearchChanged: (query) => controller.add(
                             WorkspaceCollectionSearchChanged(query),
                           ),
@@ -235,6 +239,27 @@ class WorkspaceScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  static Future<void> _importPostmanCollection(
+    BuildContext context,
+    WorkspaceBloc workspace,
+  ) async {
+    const typeGroup = XTypeGroup(
+      label: 'Postman collection',
+      extensions: ['json'],
+      mimeTypes: ['application/json'],
+    );
+    try {
+      final file = await openFile(acceptedTypeGroups: [typeGroup]);
+      if (file == null || !context.mounted) return;
+      workspace.add(WorkspacePostmanImportRequested(await file.readAsString()));
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось открыть файл коллекции.')),
+      );
+    }
   }
 
   static Future<void> _showNameDialog(

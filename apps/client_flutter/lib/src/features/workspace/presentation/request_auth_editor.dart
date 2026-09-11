@@ -6,10 +6,12 @@ class RequestAuthEditor extends StatelessWidget {
   const RequestAuthEditor({
     super.key,
     required this.auth,
+    this.loginEndpoints = const [],
     required this.onChanged,
   });
 
   final RequestAuth auth;
+  final List<SavedRequest> loginEndpoints;
   final ValueChanged<RequestAuth> onChanged;
 
   @override
@@ -45,13 +47,10 @@ class RequestAuthEditor extends StatelessWidget {
           'This request has no authentication.',
         ),
         RequestAuthKind.basic => _BasicFields(auth: auth, onChanged: onChanged),
-        RequestAuthKind.bearer => _AuthField(
-          fieldKey: const Key('auth-token-field'),
-          label: 'Token',
-          value: auth.token,
-          errorText: auth.token.trim().isEmpty ? 'Token is required' : null,
-          obscureText: true,
-          onChanged: (value) => onChanged(auth.copyWith(token: value)),
+        RequestAuthKind.bearer => _BearerFields(
+          auth: auth,
+          loginEndpoints: loginEndpoints,
+          onChanged: onChanged,
         ),
         RequestAuthKind.apiKey => _ApiKeyFields(
           auth: auth,
@@ -60,6 +59,78 @@ class RequestAuthEditor extends StatelessWidget {
       },
     ],
   );
+}
+
+class _BearerFields extends StatelessWidget {
+  const _BearerFields({
+    required this.auth,
+    required this.loginEndpoints,
+    required this.onChanged,
+  });
+
+  final RequestAuth auth;
+  final List<SavedRequest> loginEndpoints;
+  final ValueChanged<RequestAuth> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedExists = loginEndpoints.any(
+      (request) => request.id == auth.loginRequestId,
+    );
+    return Column(
+      children: [
+        DropdownButtonFormField<String?>(
+          key: const Key('auth-login-request-picker'),
+          initialValue: selectedExists ? auth.loginRequestId : null,
+          decoration: const InputDecoration(
+            labelText: 'Get token from request',
+            helperText:
+                'This request runs first. Pick any saved login/auth endpoint.',
+          ),
+          items: [
+            const DropdownMenuItem<String?>(
+              value: null,
+              child: Text('Enter token manually'),
+            ),
+            for (final request in loginEndpoints)
+              DropdownMenuItem<String?>(
+                value: request.id,
+                child: Text('${request.method.label}  ${request.name}'),
+              ),
+          ],
+          onChanged: (id) =>
+              onChanged(auth.copyWith(loginRequestId: id, acquiredToken: null)),
+        ),
+        const SizedBox(height: 12),
+        if (auth.loginRequestId != null) ...[
+          _AuthField(
+            fieldKey: const Key('auth-token-path-field'),
+            label: 'Token JSON path',
+            value: auth.tokenPath,
+            errorText: auth.tokenPath.trim().isEmpty
+                ? 'Token path is required'
+                : null,
+            onChanged: (value) => onChanged(auth.copyWith(tokenPath: value)),
+          ),
+          if (auth.acquiredToken case final token?) ...[
+            const SizedBox(height: 12),
+            SelectableText(
+              'Received token: $token',
+              key: const Key('auth-acquired-token'),
+            ),
+          ],
+        ] else
+          _AuthField(
+            fieldKey: const Key('auth-token-field'),
+            label: 'Token',
+            value: auth.token,
+            errorText: auth.token.trim().isEmpty ? 'Token is required' : null,
+            obscureText: true,
+            onChanged: (value) => onChanged(auth.copyWith(token: value)),
+          ),
+      ],
+    );
+  }
 }
 
 class _BasicFields extends StatelessWidget {

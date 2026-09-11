@@ -21,6 +21,9 @@ class RequestAuth {
     this.key = '',
     this.value = '',
     this.placement = ApiKeyPlacement.header,
+    this.loginRequestId,
+    this.tokenPath = 'access_token',
+    this.acquiredToken,
   });
 
   final RequestAuthKind kind;
@@ -31,10 +34,20 @@ class RequestAuth {
   final String value;
   final ApiKeyPlacement placement;
 
+  /// A saved request that is run immediately before this one to obtain a token.
+  final String? loginRequestId;
+
+  /// Dot path in the login JSON response, e.g. `data.accessToken`.
+  final String tokenPath;
+
+  /// Runtime-only token. It is never saved as part of a request definition.
+  final String? acquiredToken;
+
   bool get isValid => switch (kind) {
     RequestAuthKind.none => true,
     RequestAuthKind.basic => username.trim().isNotEmpty && password.isNotEmpty,
-    RequestAuthKind.bearer => token.trim().isNotEmpty,
+    RequestAuthKind.bearer =>
+      token.trim().isNotEmpty || loginRequestId?.trim().isNotEmpty == true,
     RequestAuthKind.apiKey => key.trim().isNotEmpty && value.isNotEmpty,
   };
 
@@ -46,6 +59,9 @@ class RequestAuth {
     String? key,
     String? value,
     ApiKeyPlacement? placement,
+    Object? loginRequestId = _unchanged,
+    String? tokenPath,
+    Object? acquiredToken = _unchanged,
   }) => RequestAuth(
     kind: kind ?? this.kind,
     username: username ?? this.username,
@@ -54,6 +70,13 @@ class RequestAuth {
     key: key ?? this.key,
     value: value ?? this.value,
     placement: placement ?? this.placement,
+    loginRequestId: identical(loginRequestId, _unchanged)
+        ? this.loginRequestId
+        : loginRequestId as String?,
+    tokenPath: tokenPath ?? this.tokenPath,
+    acquiredToken: identical(acquiredToken, _unchanged)
+        ? this.acquiredToken
+        : acquiredToken as String?,
   );
 }
 

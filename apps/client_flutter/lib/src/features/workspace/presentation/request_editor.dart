@@ -25,6 +25,7 @@ class RequestEditor extends StatelessWidget {
     required this.onHeaderChanged,
     required this.onDeleteHeader,
     required this.collections,
+    required this.loginEndpoints,
     required this.onSave,
     required this.onSend,
     required this.onCancel,
@@ -48,6 +49,7 @@ class RequestEditor extends StatelessWidget {
   onHeaderChanged;
   final ValueChanged<String> onDeleteHeader;
   final List<RequestCollection> collections;
+  final List<SavedRequest> loginEndpoints;
   final ValueChanged<String> onSave;
   final VoidCallback onSend;
   final VoidCallback onCancel;
@@ -201,6 +203,7 @@ class RequestEditor extends StatelessWidget {
                         ),
                         RequestAuthEditor(
                           auth: tab.auth,
+                          loginEndpoints: loginEndpoints,
                           onChanged: onAuthChanged,
                         ),
                         Column(

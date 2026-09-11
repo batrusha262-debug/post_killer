@@ -15,6 +15,7 @@ class CollectionsPane extends StatelessWidget {
     required this.onWorkspaceSelected,
     required this.onNewWorkspace,
     required this.onNewCollection,
+    required this.onImportPostman,
     required this.onSearchChanged,
     required this.onOpenRequest,
     required this.onNewRequest,
@@ -28,6 +29,7 @@ class CollectionsPane extends StatelessWidget {
   final ValueChanged<String> onWorkspaceSelected;
   final VoidCallback onNewWorkspace;
   final VoidCallback onNewCollection;
+  final VoidCallback onImportPostman;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<SavedRequest> onOpenRequest;
   final VoidCallback onNewRequest;
@@ -57,6 +59,12 @@ class CollectionsPane extends StatelessWidget {
               tooltip: 'New collection',
               onPressed: selectedWorkspaceId == null ? null : onNewCollection,
               icon: const Icon(Icons.create_new_folder_outlined),
+            ),
+            IconButton(
+              key: const Key('import-postman-button'),
+              tooltip: 'Import Postman collection',
+              onPressed: selectedWorkspaceId == null ? null : onImportPostman,
+              icon: const Icon(Icons.upload_file_outlined),
             ),
             IconButton(
               key: const Key('new-request-button'),
