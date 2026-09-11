@@ -1,8 +1,8 @@
 const _unchanged = Object();
 
-enum HttpMethod { get, post, put, patch, delete }
+enum HttpMethod { get, post, put, patch, delete, head, options }
 
-enum RequestBodyFormat { json, text }
+enum RequestBodyFormat { json, text, formUrlEncoded, multipart }
 
 enum WorkspaceSection { collections, history, variables }
 
@@ -94,6 +94,7 @@ class SavedRequest {
     this.headers = const [],
     this.body = '',
     this.bodyFormat = RequestBodyFormat.json,
+    this.bodyFields = const [],
   });
 
   final String id;
@@ -104,6 +105,7 @@ class SavedRequest {
   final List<RequestKeyValue> headers;
   final String body;
   final RequestBodyFormat bodyFormat;
+  final List<RequestKeyValue> bodyFields;
 }
 
 class WorkspaceSummary {
@@ -141,6 +143,7 @@ class RequestTab {
     ],
     this.body = '',
     this.bodyFormat = RequestBodyFormat.json,
+    this.bodyFields = const [],
     this.auth = const RequestAuth(),
     this.isDirty = false,
   });
@@ -162,6 +165,7 @@ class RequestTab {
         : request.headers,
     body: request.body,
     bodyFormat: request.bodyFormat,
+    bodyFields: request.bodyFields,
   );
 
   final String id;
@@ -172,6 +176,7 @@ class RequestTab {
   final List<RequestKeyValue> headers;
   final String body;
   final RequestBodyFormat bodyFormat;
+  final List<RequestKeyValue> bodyFields;
   final RequestAuth auth;
   final bool isDirty;
 
@@ -183,6 +188,7 @@ class RequestTab {
     List<RequestKeyValue>? headers,
     String? body,
     RequestBodyFormat? bodyFormat,
+    List<RequestKeyValue>? bodyFields,
     RequestAuth? auth,
     bool? isDirty,
   }) => RequestTab(
@@ -194,6 +200,7 @@ class RequestTab {
     headers: headers ?? this.headers,
     body: body ?? this.body,
     bodyFormat: bodyFormat ?? this.bodyFormat,
+    bodyFields: bodyFields ?? this.bodyFields,
     auth: auth ?? this.auth,
     isDirty: isDirty ?? this.isDirty,
   );

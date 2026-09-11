@@ -10,5 +10,7 @@ Color methodColor(BuildContext context, HttpMethod method) {
     HttpMethod.put => dark ? Colors.blue.shade300 : Colors.blue.shade800,
     HttpMethod.patch => dark ? Colors.purple.shade200 : Colors.purple.shade700,
     HttpMethod.delete => Theme.of(context).colorScheme.error,
+    HttpMethod.head => dark ? Colors.teal.shade200 : Colors.teal.shade800,
+    HttpMethod.options => dark ? Colors.cyan.shade200 : Colors.cyan.shade800,
   };
 }

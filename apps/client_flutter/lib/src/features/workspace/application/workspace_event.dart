@@ -110,6 +110,29 @@ final class WorkspaceBodyFormatChanged extends WorkspaceEvent {
   final RequestBodyFormat format;
 }
 
+final class WorkspaceBodyFieldAdded extends WorkspaceEvent {
+  const WorkspaceBodyFieldAdded();
+}
+
+final class WorkspaceBodyFieldChanged extends WorkspaceEvent {
+  const WorkspaceBodyFieldChanged({
+    required this.id,
+    this.key,
+    this.value,
+    this.enabled,
+  });
+
+  final String id;
+  final String? key;
+  final String? value;
+  final bool? enabled;
+}
+
+final class WorkspaceBodyFieldDeleted extends WorkspaceEvent {
+  const WorkspaceBodyFieldDeleted(this.id);
+  final String id;
+}
+
 final class WorkspaceAuthChanged extends WorkspaceEvent {
   const WorkspaceAuthChanged(this.auth);
   final RequestAuth auth;

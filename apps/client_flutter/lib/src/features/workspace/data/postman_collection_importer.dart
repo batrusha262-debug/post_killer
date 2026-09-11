@@ -77,6 +77,27 @@ class PostmanCollectionImport {
         body['options'] is Map &&
         ((body['options'] as Map)['raw'] is Map) &&
         (((body['options'] as Map)['raw'] as Map)['language'] == 'json');
+    final bodyFormat = switch (body['mode']) {
+      'urlencoded' => RequestBodyFormat.formUrlEncoded,
+      'formdata' => RequestBodyFormat.multipart,
+      _ =>
+        isJson ||
+                headers.any(
+                  (header) =>
+                      header.key.toLowerCase() == 'content-type' &&
+                      header.value.toLowerCase().contains('json'),
+                )
+            ? RequestBodyFormat.json
+            : RequestBodyFormat.text,
+    };
+    final bodyFields = switch (bodyFormat) {
+      RequestBodyFormat.formUrlEncoded => _keyValues(
+        body['urlencoded'],
+        'body',
+      ),
+      RequestBodyFormat.multipart => _keyValues(body['formdata'], 'body'),
+      _ => const <RequestKeyValue>[],
+    };
     return SavedRequest(
       id: id,
       name: name,
@@ -85,15 +106,8 @@ class PostmanCollectionImport {
       query: url.query,
       headers: headers,
       body: raw,
-      bodyFormat:
-          isJson ||
-              headers.any(
-                (header) =>
-                    header.key.toLowerCase() == 'content-type' &&
-                    header.value.toLowerCase().contains('json'),
-              )
-          ? RequestBodyFormat.json
-          : RequestBodyFormat.text,
+      bodyFormat: bodyFormat,
+      bodyFields: bodyFields,
     );
   }
 
@@ -103,6 +117,8 @@ class PostmanCollectionImport {
         'PUT' => HttpMethod.put,
         'PATCH' => HttpMethod.patch,
         'DELETE' => HttpMethod.delete,
+        'HEAD' => HttpMethod.head,
+        'OPTIONS' => HttpMethod.options,
         _ => HttpMethod.get,
       };
 

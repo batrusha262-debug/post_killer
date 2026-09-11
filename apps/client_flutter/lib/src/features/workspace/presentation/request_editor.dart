@@ -17,6 +17,9 @@ class RequestEditor extends StatelessWidget {
     required this.onUrlChanged,
     required this.onBodyChanged,
     required this.onBodyFormatChanged,
+    required this.onAddBodyField,
+    required this.onBodyFieldChanged,
+    required this.onDeleteBodyField,
     required this.onAuthChanged,
     required this.onAddQuery,
     required this.onAddHeader,
@@ -39,6 +42,10 @@ class RequestEditor extends StatelessWidget {
   final ValueChanged<String> onUrlChanged;
   final ValueChanged<String> onBodyChanged;
   final ValueChanged<RequestBodyFormat> onBodyFormatChanged;
+  final VoidCallback onAddBodyField;
+  final void Function(String, {String? key, String? value, bool? enabled})
+  onBodyFieldChanged;
+  final ValueChanged<String> onDeleteBodyField;
   final ValueChanged<RequestAuth> onAuthChanged;
   final VoidCallback onAddQuery;
   final VoidCallback onAddHeader;
@@ -59,7 +66,7 @@ class RequestEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canSend =
-        (tab.bodyFormat == RequestBodyFormat.text || isValidJson(tab.body)) &&
+        (tab.bodyFormat != RequestBodyFormat.json || isValidJson(tab.body)) &&
         tab.auth.isValid;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -244,6 +251,14 @@ class RequestEditor extends StatelessWidget {
                                     value: RequestBodyFormat.text,
                                     child: Text('Text (raw)'),
                                   ),
+                                  DropdownMenuItem(
+                                    value: RequestBodyFormat.formUrlEncoded,
+                                    child: Text('Form URL encoded'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: RequestBodyFormat.multipart,
+                                    child: Text('Multipart form'),
+                                  ),
                                 ],
                                 onChanged: (format) {
                                   if (format != null) {
@@ -253,15 +268,13 @@ class RequestEditor extends StatelessWidget {
                               ),
                             ),
                             Expanded(
-                              child: tab.bodyFormat == RequestBodyFormat.json
-                                  ? JsonBodyEditor(
-                                      value: tab.body,
-                                      onChanged: onBodyChanged,
-                                    )
-                                  : TextBodyEditor(
-                                      value: tab.body,
-                                      onChanged: onBodyChanged,
-                                    ),
+                              child: _BodyEditor(
+                                tab: tab,
+                                onBodyChanged: onBodyChanged,
+                                onAddBodyField: onAddBodyField,
+                                onBodyFieldChanged: onBodyFieldChanged,
+                                onDeleteBodyField: onDeleteBodyField,
+                              ),
                             ),
                           ],
                         ),
@@ -277,4 +290,45 @@ class RequestEditor extends StatelessWidget {
       ),
     );
   }
+}
+
+class _BodyEditor extends StatelessWidget {
+  const _BodyEditor({
+    required this.tab,
+    required this.onBodyChanged,
+    required this.onAddBodyField,
+    required this.onBodyFieldChanged,
+    required this.onDeleteBodyField,
+  });
+
+  final RequestTab tab;
+  final ValueChanged<String> onBodyChanged;
+  final VoidCallback onAddBodyField;
+  final void Function(String, {String? key, String? value, bool? enabled})
+  onBodyFieldChanged;
+  final ValueChanged<String> onDeleteBodyField;
+
+  @override
+  Widget build(BuildContext context) => switch (tab.bodyFormat) {
+    RequestBodyFormat.json => JsonBodyEditor(
+      value: tab.body,
+      onChanged: onBodyChanged,
+    ),
+    RequestBodyFormat.text => TextBodyEditor(
+      value: tab.body,
+      onChanged: onBodyChanged,
+    ),
+    RequestBodyFormat.formUrlEncoded ||
+    RequestBodyFormat.multipart => KeyValueEditor(
+      values: tab.bodyFields,
+      keyLabel: 'FIELD',
+      valueLabel: 'VALUE',
+      emptyLabel: tab.bodyFormat == RequestBodyFormat.multipart
+          ? 'No multipart fields yet'
+          : 'No form fields yet',
+      onAdd: onAddBodyField,
+      onChanged: onBodyFieldChanged,
+      onDelete: onDeleteBodyField,
+    ),
+  };
 }

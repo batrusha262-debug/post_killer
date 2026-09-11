@@ -31,6 +31,25 @@ void main() {
     );
   });
 
+  test('imports urlencoded fields and HEAD requests', () {
+    final collection = PostmanCollectionImport.parse('''
+      {"info":{"name":"OAuth"},"item":[{
+        "name":"Get token","request":{
+          "method":"HEAD","url":"https://api.example.test/token",
+          "body":{"mode":"urlencoded","urlencoded":[
+            {"key":"grant_type","value":"client_credentials"}
+          ]}
+        }
+      }]}
+    ''');
+
+    final request = collection.requests.single;
+    expect(request.method, HttpMethod.head);
+    expect(request.bodyFormat, RequestBodyFormat.formUrlEncoded);
+    expect(request.bodyFields.single.key, 'grant_type');
+    expect(request.bodyFields.single.value, 'client_credentials');
+  });
+
   test('skips unfinished Postman drafts without blocking valid requests', () {
     final collection = PostmanCollectionImport.parse('''
       {"info":{"name":"FAQ"},"item":[

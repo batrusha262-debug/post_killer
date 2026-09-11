@@ -88,6 +88,9 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         (tab) => tab.copyWith(bodyFormat: event.format, isDirty: true),
       ),
     );
+    on<WorkspaceBodyFieldAdded>(_addBodyField);
+    on<WorkspaceBodyFieldChanged>(_updateBodyField);
+    on<WorkspaceBodyFieldDeleted>(_deleteBodyField);
     on<WorkspaceAuthChanged>(
       (event, emit) => _updateSelected(
         emit,
@@ -552,6 +555,56 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
         ? tab.copyWith(headers: next, isDirty: true)
         : tab.copyWith(query: next, isDirty: true);
   });
+
+  void _addBodyField(
+    WorkspaceBodyFieldAdded event,
+    Emitter<WorkspaceState> emit,
+  ) => _updateSelected(
+    emit,
+    (tab) => tab.copyWith(
+      bodyFields: [
+        ...tab.bodyFields,
+        RequestKeyValue(id: 'body-${tab.bodyFields.length + 1}'),
+      ],
+      isDirty: true,
+    ),
+  );
+
+  void _updateBodyField(
+    WorkspaceBodyFieldChanged event,
+    Emitter<WorkspaceState> emit,
+  ) => _updateSelected(
+    emit,
+    (tab) => tab.copyWith(
+      bodyFields: [
+        for (final field in tab.bodyFields)
+          if (field.id == event.id)
+            field.copyWith(
+              key: event.key,
+              value: event.value,
+              enabled: event.enabled,
+            )
+          else
+            field,
+      ],
+      isDirty: true,
+    ),
+  );
+
+  void _deleteBodyField(
+    WorkspaceBodyFieldDeleted event,
+    Emitter<WorkspaceState> emit,
+  ) => _updateSelected(
+    emit,
+    (tab) => tab.copyWith(
+      bodyFields: [
+        for (final field in tab.bodyFields)
+          if (field.id != event.id) field,
+      ],
+      isDirty: true,
+    ),
+  );
+
   void _updateKeyValue(
     WorkspaceKeyValueChanged event,
     Emitter<WorkspaceState> emit,

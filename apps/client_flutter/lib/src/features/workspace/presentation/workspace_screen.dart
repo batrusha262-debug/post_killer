@@ -238,6 +238,19 @@ class WorkspaceScreen extends StatelessWidget {
                         controller.add(WorkspaceBodyChanged(body)),
                     onBodyFormatChanged: (format) =>
                         controller.add(WorkspaceBodyFormatChanged(format)),
+                    onAddBodyField: () =>
+                        controller.add(const WorkspaceBodyFieldAdded()),
+                    onBodyFieldChanged: (id, {key, value, enabled}) =>
+                        controller.add(
+                          WorkspaceBodyFieldChanged(
+                            id: id,
+                            key: key,
+                            value: value,
+                            enabled: enabled,
+                          ),
+                        ),
+                    onDeleteBodyField: (id) =>
+                        controller.add(WorkspaceBodyFieldDeleted(id)),
                     onAuthChanged: (auth) =>
                         controller.add(WorkspaceAuthChanged(auth)),
                     onAddQuery: () => controller.add(

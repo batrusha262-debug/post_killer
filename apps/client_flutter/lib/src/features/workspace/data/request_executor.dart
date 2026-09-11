@@ -55,18 +55,23 @@ class FrbRequestExecutor implements RequestExecutor {
       HttpMethod.put => FfiRequestMethod.put,
       HttpMethod.patch => FfiRequestMethod.patch,
       HttpMethod.delete => FfiRequestMethod.delete,
+      HttpMethod.head => FfiRequestMethod.head,
+      HttpMethod.options => FfiRequestMethod.options,
     },
     url: request.url,
     queryParams: _keyValues(request.query),
     headers: _keyValues(request.headers),
     body: FfiRequestBody(
-      kind: request.body.isEmpty
-          ? FfiRequestBodyKind.empty
-          : request.bodyFormat == RequestBodyFormat.json
-          ? FfiRequestBodyKind.json
-          : FfiRequestBodyKind.text,
+      kind: switch (request.bodyFormat) {
+        RequestBodyFormat.json when request.body.isEmpty =>
+          FfiRequestBodyKind.empty,
+        RequestBodyFormat.json => FfiRequestBodyKind.json,
+        RequestBodyFormat.text => FfiRequestBodyKind.text,
+        RequestBodyFormat.formUrlEncoded => FfiRequestBodyKind.formUrlEncoded,
+        RequestBodyFormat.multipart => FfiRequestBodyKind.multipart,
+      },
       content: request.body,
-      fields: const [],
+      fields: _keyValues(request.bodyFields),
     ),
     auth: FfiRequestAuth(
       kind: switch (request.auth.kind) {

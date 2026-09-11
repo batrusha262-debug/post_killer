@@ -346,6 +346,29 @@ void main() {
   );
 
   blocTest<WorkspaceBloc, WorkspaceState>(
+    'keeps form fields in the immutable request draft',
+    build: buildBloc,
+    act: (bloc) => bloc
+      ..add(const WorkspaceBodyFormatChanged(RequestBodyFormat.formUrlEncoded))
+      ..add(const WorkspaceBodyFieldAdded())
+      ..add(
+        const WorkspaceBodyFieldChanged(
+          id: 'body-1',
+          key: 'grant_type',
+          value: 'client_credentials',
+        ),
+      ),
+    verify: (bloc) {
+      final tab = bloc.state.selectedTab!;
+      expect(tab.bodyFormat, RequestBodyFormat.formUrlEncoded);
+      expect(tab.bodyFields, hasLength(1));
+      expect(tab.bodyFields.single.key, 'grant_type');
+      expect(tab.bodyFields.single.value, 'client_credentials');
+      expect(tab.isDirty, isTrue);
+    },
+  );
+
+  blocTest<WorkspaceBloc, WorkspaceState>(
     'adds a sent request to history',
     build: () => buildBloc(executor: const _FakeRequestExecutor()),
     act: (bloc) => bloc.add(const WorkspaceRequestSent()),

@@ -101,6 +101,8 @@
 
 ## Готово
 
+- API-WORKBENCH-1 (2026-09-11): request model, Flutter editor и typed FFI mapping расширены до HEAD/OPTIONS, `application/x-www-form-urlencoded` и text multipart fields. Поля формы редактируются как immutable BLoC draft, сохраняются и исполняются через уже существующий Rust transport; базовый Postman v2 import теперь сохраняет `urlencoded` fields и HEAD. Flutter analyze и 65 tests, Rust fmt/test (39 passed, 1 ignored)/Clippy, `git diff --check` проходят.
+
 - UI-FLOW (v0.2.14): polished desktop surface — выразительные кнопки, tabs,
   cards и feedback; мягкие переходы между рабочими разделами и live-indicator
   активного запроса с полным уважением Reduce motion. Во время Send кнопка

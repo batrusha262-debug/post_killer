@@ -115,9 +115,22 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
         ),
     ],
     body: request.body.content,
-    bodyFormat: request.body.kind == rust_api.FfiRequestBodyKind.text
-        ? RequestBodyFormat.text
-        : RequestBodyFormat.json,
+    bodyFormat: switch (request.body.kind) {
+      rust_api.FfiRequestBodyKind.text => RequestBodyFormat.text,
+      rust_api.FfiRequestBodyKind.formUrlEncoded =>
+        RequestBodyFormat.formUrlEncoded,
+      rust_api.FfiRequestBodyKind.multipart => RequestBodyFormat.multipart,
+      _ => RequestBodyFormat.json,
+    },
+    bodyFields: [
+      for (var index = 0; index < request.body.fields.length; index++)
+        RequestKeyValue(
+          id: 'body-$index',
+          key: request.body.fields[index].key,
+          value: request.body.fields[index].value,
+          enabled: request.body.fields[index].enabled,
+        ),
+    ],
   );
 
   rust_api.FfiRequest _ffiRequest(RequestTab request) => rust_api.FfiRequest(
@@ -129,18 +142,24 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
       HttpMethod.put => rust_api.FfiRequestMethod.put,
       HttpMethod.patch => rust_api.FfiRequestMethod.patch,
       HttpMethod.delete => rust_api.FfiRequestMethod.delete,
+      HttpMethod.head => rust_api.FfiRequestMethod.head,
+      HttpMethod.options => rust_api.FfiRequestMethod.options,
     },
     url: request.url,
     queryParams: _values(request.query),
     headers: _values(request.headers),
     body: rust_api.FfiRequestBody(
-      kind: request.body.isEmpty
-          ? rust_api.FfiRequestBodyKind.empty
-          : request.bodyFormat == RequestBodyFormat.json
-          ? rust_api.FfiRequestBodyKind.json
-          : rust_api.FfiRequestBodyKind.text,
+      kind: switch (request.bodyFormat) {
+        RequestBodyFormat.json when request.body.isEmpty =>
+          rust_api.FfiRequestBodyKind.empty,
+        RequestBodyFormat.json => rust_api.FfiRequestBodyKind.json,
+        RequestBodyFormat.text => rust_api.FfiRequestBodyKind.text,
+        RequestBodyFormat.formUrlEncoded =>
+          rust_api.FfiRequestBodyKind.formUrlEncoded,
+        RequestBodyFormat.multipart => rust_api.FfiRequestBodyKind.multipart,
+      },
       content: request.body,
-      fields: const [],
+      fields: _values(request.bodyFields),
     ),
     auth: const rust_api.FfiRequestAuth(
       kind: rust_api.FfiRequestAuthKind.none,
@@ -169,6 +188,7 @@ class FrbWorkspaceGateway implements WorkspaceGateway {
         rust_api.FfiRequestMethod.put => HttpMethod.put,
         rust_api.FfiRequestMethod.patch => HttpMethod.patch,
         rust_api.FfiRequestMethod.delete => HttpMethod.delete,
-        _ => HttpMethod.get,
+        rust_api.FfiRequestMethod.head => HttpMethod.head,
+        rust_api.FfiRequestMethod.options => HttpMethod.options,
       };
 }

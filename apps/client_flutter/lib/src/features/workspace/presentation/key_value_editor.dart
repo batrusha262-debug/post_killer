@@ -10,6 +10,8 @@ class KeyValueEditor extends StatelessWidget {
     required this.values,
     this.isHeader = false,
     this.onHeaderPreset,
+    this.keyLabel = 'KEY',
+    this.valueLabel = 'VALUE',
     required this.emptyLabel,
     required this.onAdd,
     required this.onChanged,
@@ -18,6 +20,8 @@ class KeyValueEditor extends StatelessWidget {
   final List<RequestKeyValue> values;
   final bool isHeader;
   final void Function(String, String)? onHeaderPreset;
+  final String keyLabel;
+  final String valueLabel;
   final String emptyLabel;
   final VoidCallback onAdd;
   final void Function(String, {String? key, String? value, bool? enabled})
@@ -32,7 +36,7 @@ class KeyValueEditor extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
           child: HeaderPresets(onSelected: onHeaderPreset!),
         ),
-      const _TableHeader(),
+      _TableHeader(keyLabel: keyLabel, valueLabel: valueLabel),
       for (final entry in values)
         Container(
           key: ValueKey(entry.id),
@@ -120,7 +124,10 @@ class KeyValueEditor extends StatelessWidget {
 }
 
 class _TableHeader extends StatelessWidget {
-  const _TableHeader();
+  const _TableHeader({required this.keyLabel, required this.valueLabel});
+
+  final String keyLabel;
+  final String valueLabel;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -132,12 +139,12 @@ class _TableHeader extends StatelessWidget {
         bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
     ),
-    child: const Row(
+    child: Row(
       children: [
-        SizedBox(width: 32),
-        Expanded(child: Text('KEY', style: _TableHeader.style)),
-        Expanded(child: Text('VALUE', style: _TableHeader.style)),
-        SizedBox(width: 44),
+        const SizedBox(width: 32),
+        Expanded(child: Text(keyLabel, style: style)),
+        Expanded(child: Text(valueLabel, style: style)),
+        const SizedBox(width: 44),
       ],
     ),
   );
