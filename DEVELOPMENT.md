@@ -12,8 +12,8 @@
 
 ## Активный план
 
-- [ ] RELEASE-PACKAGES-1: выполнить полные quality gates, сверить новую версию с remote tags/releases, запушить release tag и подтвердить DMG/EXE/DEB/AppImage из GitHub Actions.
-- [ ] AUDIT-RELEASE: проверить публикацию v0.2.5 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
+- [ ] QA-007: добавить macOS desktop E2E runner для нативного FRB request flow в CI.
+- [ ] RELEASE-HARDENING-1: подготовить release notes и provenance/SBOM; signing/notarization требует предоставленных Apple Developer, Windows certificate и GPG authority.
 
 ### Foundation
 
@@ -91,8 +91,8 @@
   AppImage как постоянные GitHub Release assets, а не только временные Actions
   artifacts. Автоматическая замена приложения отложена до code signing и
   notarization.
-- [ ] GitHub Actions для macOS, Windows и Linux; signing/notarization.
-- [ ] Выполнить и проверить первый GitHub Actions packaging run: macOS `.app`/
+- [x] GitHub Actions для macOS, Windows и Linux packaging.
+- [x] Выполнить и проверить GitHub Actions packaging run: macOS `.app`/
   DMG, Windows `.exe`, Linux AppImage/DEB artifacts.
 - [ ] Добавить signing/notarization secrets, release signing и updater после
   предоставления Apple Developer / Windows certificate / GPG authority.
@@ -101,6 +101,14 @@
   пользователя через Vercel.
 
 ## Готово
+
+- RELEASE-PACKAGES-1 (2026-09-12): после полного local gate (Rust 44 passed/
+  1 ignored + Clippy; Flutter `dart format`, analyze и 74 tests) опубликован
+  `v0.2.21` на commit `7cb7741`. GitHub Actions Release packages #32 завершён
+  успешно за 7m39s; Flutter quality #29 также зелёный. GitHub Release содержит
+  macOS arm64/x86_64 DMG, Windows EXE, Linux DEB и AppImage. Предыдущий
+  `v0.2.20` сохранён неизменным: его отдельный Flutter quality job выявил
+  formatting, исправленный в `v0.2.21`.
 
 - API-WORKBENCH-6 (2026-09-12): Response workbench сохраняет exact native
   bytes отдельно от lossy text preview, показывает размер binary payload,
