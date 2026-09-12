@@ -138,6 +138,71 @@ void main() {
     },
   );
 
+  testWidgets('response search reports and highlights body matches', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ResponseView(
+            execution: RequestExecutionView.response(
+              requestId: 'one',
+              status: 200,
+              durationMillis: 12,
+              headers: const [],
+              body: 'alpha beta ALPHA',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const Key('response-search')).first,
+      'alpha',
+    );
+    await tester.pump();
+    expect(find.text('2 matches'), findsWidgets);
+    final highlighted = tester.widget<SelectableText>(
+      find.byKey(const Key('response-content')),
+    );
+    expect(highlighted.textSpan!.toPlainText(), 'alpha beta ALPHA');
+  });
+
+  testWidgets('binary response shows preview and save controls', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: ResponseView(
+            execution: RequestExecutionView.response(
+              requestId: 'binary',
+              status: 200,
+              durationMillis: 12,
+              headers: const [
+                RequestResponseHeader(
+                  name: 'content-type',
+                  value: 'application/octet-stream',
+                ),
+              ],
+              body: 'lossy preview',
+              bodyBytes: [0, 255, 12],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Binary'), findsOneWidget);
+    expect(find.text('Preview'), findsOneWidget);
+    expect(find.byKey(const Key('response-download')), findsWidgets);
+    expect(
+      find.text('3 bytes — save the response to inspect it locally.'),
+      findsWidgets,
+    );
+  });
+
   testWidgets('auth editor exposes required-field errors for Basic auth', (
     tester,
   ) async {

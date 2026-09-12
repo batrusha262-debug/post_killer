@@ -1081,7 +1081,9 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
           : ExecutionHistoryResult.error,
       status: execution.status,
       durationMillis: execution.durationMillis ?? 0,
-      responseSizeBytes: utf8.encode(execution.body ?? '').length,
+      responseSizeBytes:
+          execution.bodyBytes?.length ??
+          utf8.encode(execution.body ?? '').length,
       errorCategory: category,
     );
   }

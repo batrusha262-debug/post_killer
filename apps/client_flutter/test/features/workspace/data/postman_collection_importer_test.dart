@@ -50,6 +50,33 @@ void main() {
     expect(request.bodyFields.single.value, 'client_credentials');
   });
 
+  test(
+    'imports Postman multipart text and local file references separately',
+    () {
+      final collection = PostmanCollectionImport.parse('''
+      {"info":{"name":"Upload"},"item":[{
+        "name":"Attach report","request":{
+          "method":"POST","url":"https://api.example.test/upload",
+          "body":{"mode":"formdata","formdata":[
+            {"key":"title","value":"September report","type":"text"},
+            {"key":"attachment","type":"file","src":"/tmp/report.pdf","contentType":"application/pdf"}
+          ]}
+        }
+      }]}
+    ''');
+
+      final request = collection.requests.single;
+      expect(request.bodyFormat, RequestBodyFormat.multipart);
+      expect(request.bodyFields, hasLength(1));
+      expect(request.bodyFields.single.key, 'title');
+      expect(request.bodyFiles, hasLength(1));
+      expect(request.bodyFiles.single.fieldName, 'attachment');
+      expect(request.bodyFiles.single.path, '/tmp/report.pdf');
+      expect(request.bodyFiles.single.fileName, 'report.pdf');
+      expect(request.bodyFiles.single.contentType, 'application/pdf');
+    },
+  );
+
   test('skips unfinished Postman drafts without blocking valid requests', () {
     final collection = PostmanCollectionImport.parse('''
       {"info":{"name":"FAQ"},"item":[

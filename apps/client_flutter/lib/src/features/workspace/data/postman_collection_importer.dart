@@ -95,7 +95,11 @@ class PostmanCollectionImport {
         body['urlencoded'],
         'body',
       ),
-      RequestBodyFormat.multipart => _keyValues(body['formdata'], 'body'),
+      RequestBodyFormat.multipart => _keyValues(
+        body['formdata'],
+        'body',
+        skipFiles: true,
+      ),
       _ => const <RequestKeyValue>[],
     };
     return SavedRequest(
@@ -108,6 +112,9 @@ class PostmanCollectionImport {
       body: raw,
       bodyFormat: bodyFormat,
       bodyFields: bodyFields,
+      bodyFiles: bodyFormat == RequestBodyFormat.multipart
+          ? _multipartFiles(body['formdata'])
+          : const [],
     );
   }
 
@@ -181,17 +188,48 @@ class PostmanCollectionImport {
         : '${url.substring(0, queryStart)}${url.substring(fragmentStart)}';
   }
 
-  static List<RequestKeyValue> _keyValues(Object? source, String prefix) {
+  static List<RequestKeyValue> _keyValues(
+    Object? source,
+    String prefix, {
+    bool skipFiles = false,
+  }) {
     if (source is! List) return const [];
     return [
       for (var index = 0; index < source.length; index++)
         if (source[index] is Map)
-          RequestKeyValue(
-            id: '$prefix-$index',
-            key: (source[index] as Map)['key'] as String? ?? '',
-            value: (source[index] as Map)['value']?.toString() ?? '',
-            enabled: (source[index] as Map)['disabled'] != true,
-          ),
+          if (!skipFiles || (source[index] as Map)['type'] != 'file')
+            RequestKeyValue(
+              id: '$prefix-$index',
+              key: (source[index] as Map)['key'] as String? ?? '',
+              value: (source[index] as Map)['value']?.toString() ?? '',
+              enabled: (source[index] as Map)['disabled'] != true,
+            ),
     ];
+  }
+
+  static List<MultipartFileReference> _multipartFiles(Object? source) {
+    if (source is! List) return const [];
+    return [
+      for (final item in source)
+        if (item is Map && item['type'] == 'file')
+          if (_filePath(item['src']) case final path? when path.isNotEmpty)
+            MultipartFileReference(
+              fieldName: item['key'] as String? ?? 'file',
+              path: path,
+              fileName: _fileName(path),
+              contentType: item['contentType'] as String?,
+            ),
+    ];
+  }
+
+  static String? _filePath(Object? source) => switch (source) {
+    String value => value,
+    List values when values.isNotEmpty => values.first as String?,
+    _ => null,
+  };
+
+  static String _fileName(String path) {
+    final separator = path.lastIndexOf(RegExp(r'[/\\]'));
+    return separator < 0 ? path : path.substring(separator + 1);
   }
 }

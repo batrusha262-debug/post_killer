@@ -368,6 +368,7 @@ class RequestExecutionView {
     required this.durationMillis,
     required this.headers,
     required this.body,
+    required this.bodyBytes,
     required this.error,
   });
 
@@ -377,12 +378,14 @@ class RequestExecutionView {
     required int durationMillis,
     required List<RequestResponseHeader> headers,
     required String body,
+    List<int>? bodyBytes,
   }) => RequestExecutionView._(
     requestId: requestId,
     status: status,
     durationMillis: durationMillis,
     headers: headers,
     body: body,
+    bodyBytes: bodyBytes,
     error: null,
   );
 
@@ -395,6 +398,7 @@ class RequestExecutionView {
     durationMillis: null,
     headers: const [],
     body: null,
+    bodyBytes: null,
     error: error,
   );
 
@@ -403,6 +407,11 @@ class RequestExecutionView {
   final int? durationMillis;
   final List<RequestResponseHeader> headers;
   final String? body;
+
+  /// Exact transport bytes when the response came from the native engine.
+  /// Keeping these separate prevents a lossy UTF-8 preview from corrupting a
+  /// binary download.
+  final List<int>? bodyBytes;
   final String? error;
 }
 

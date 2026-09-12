@@ -61,6 +61,7 @@ class FrbRequestExecutor implements RequestExecutor {
             ),
         ],
         body: utf8.decode(response.body, allowMalformed: true),
+        bodyBytes: response.body,
       );
     }
     return RequestExecutionView.error(

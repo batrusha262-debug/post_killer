@@ -12,7 +12,7 @@
 
 ## Активный план
 
-- [ ] API-WORKBENCH-6: завершить response workbench: поиск по response, безопасный binary preview/download и расширенный Postman Collection v2.1 import.
+- [ ] RELEASE-PACKAGES-1: выполнить полные quality gates, сверить новую версию с remote tags/releases, запушить release tag и подтвердить DMG/EXE/DEB/AppImage из GitHub Actions.
 - [ ] AUDIT-RELEASE: проверить публикацию v0.2.5 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
 
 ### Foundation
@@ -63,7 +63,7 @@
 
 ### HTTP execution
 
-- [ ] Добавить Flutter JSON/text/binary viewer, поиск и отображение privacy-safe
+- [x] Добавить Flutter JSON/text/binary viewer, поиск и отображение privacy-safe
   истории запусков.
 - [x] Добавить cookie jar, file multipart, proxy и custom CA settings.
 
@@ -101,6 +101,15 @@
   пользователя через Vercel.
 
 ## Готово
+
+- API-WORKBENCH-6 (2026-09-12): Response workbench сохраняет exact native
+  bytes отдельно от lossy text preview, показывает размер binary payload,
+  preview для изображений и explicit Save response для любого binary content
+  type. Текстовые и JSON responses получили case-insensitive поиск с числом
+  совпадений и highlight, не нарушающий JSON highlighting когда поиск выключен.
+  Postman Collection v2.1 import теперь различает multipart text fields и file
+  references, сохраняет имя/тип файла, но не читает файл на import и не
+  экспортирует его путь. Flutter analyze и 74 tests проходят.
 
 - SECURITY-WORKBENCH-1 (2026-09-12): значения environment-переменных с
   credential-like key отправляются из SQLite в системный Keychain/Credential
