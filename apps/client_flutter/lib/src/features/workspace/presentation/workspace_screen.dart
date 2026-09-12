@@ -36,7 +36,7 @@ class WorkspaceScreen extends StatelessWidget {
         : const Duration(milliseconds: 220);
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: Platform.isMacOS ? 84 : 14,
+        titleSpacing: Platform.isMacOS ? 108 : 22,
         title: Row(
           children: [
             Container(
@@ -61,40 +61,18 @@ class WorkspaceScreen extends StatelessWidget {
               child: LayoutBuilder(
                 builder: (context, constraints) => constraints.maxWidth < 430
                     ? const SizedBox.shrink()
-                    : Container(
-                        height: 34,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: colors.surfaceContainerHighest.withValues(
-                            alpha: .45,
+                    : SizedBox(
+                        height: 46,
+                        child: TextField(
+                          key: const Key('command-search-field'),
+                          onChanged: (value) => controller.add(
+                            WorkspaceCollectionSearchChanged(value),
                           ),
-                          border: Border.all(color: colors.outlineVariant),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.terminal_rounded,
-                              size: 16,
-                              color: colors.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Команда или поиск…',
-                              style: TextStyle(
-                                color: colors.onSurfaceVariant,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              '⌘ K',
-                              style: TextStyle(
-                                color: colors.onSurfaceVariant,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
+                          decoration: const InputDecoration(
+                            prefixIcon: Icon(Icons.terminal_rounded, size: 18),
+                            hintText: 'Команда или поиск…',
+                            suffixText: '⌘ K',
+                          ),
                         ),
                       ),
               ),
@@ -118,7 +96,7 @@ class WorkspaceScreen extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: colors.primaryContainer,
-                        borderRadius: BorderRadius.circular(5),
+                        borderRadius: BorderRadius.circular(99),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -161,7 +139,7 @@ class WorkspaceScreen extends StatelessWidget {
         builder: (context, constraints) => SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SizedBox(
-            width: constraints.maxWidth < 1120 ? 1120 : constraints.maxWidth,
+            width: constraints.maxWidth < 1180 ? 1180 : constraints.maxWidth,
             height: constraints.maxHeight,
             child: Row(
               children: [
@@ -171,7 +149,7 @@ class WorkspaceScreen extends StatelessWidget {
                       controller.add(WorkspaceSectionSelected(section)),
                 ),
                 SizedBox(
-                  width: 316,
+                  width: 340,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: colors.surface,

@@ -59,6 +59,21 @@ void main() {
     expect(find.byKey(const Key('response-tab')), findsOneWidget);
   });
 
+  testWidgets('command search filters the live collection tree', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+
+    await tester.enterText(
+      find.byKey(const Key('command-search-field')),
+      'create user',
+    );
+    await tester.pump();
+
+    expect(find.text('Create user'), findsWidgets);
+    expect(find.text('Health check'), findsNWidgets(2));
+  });
+
   testWidgets('creates a local request tab and tracks draft edits', (
     tester,
   ) async {

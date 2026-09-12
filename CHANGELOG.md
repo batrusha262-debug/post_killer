@@ -4,6 +4,17 @@ All notable user-facing changes are documented here. Releases follow semantic
 versioning; package signatures and notarization are introduced only after their
 respective signing authorities are configured.
 
+## [0.2.26]
+
+### Changed
+
+- Recreated the desktop workspace around the light, request-first layout:
+  a macOS-integrated top bar, collection rail, request tabs, request composer
+  and permanent response inspector now match one coherent workbench.
+- The top command field now filters the live collection tree, while existing
+  Send, authentication, request-body, network and response controls retain
+  their real local-first behaviour.
+
 ## [0.2.25]
 
 ### Changed

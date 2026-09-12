@@ -73,7 +73,7 @@ class RequestWorkspace extends StatelessWidget {
     child: Column(
       children: [
         SizedBox(
-          height: 44,
+          height: 62,
           child: Row(
             children: [
               Expanded(
