@@ -31,6 +31,14 @@ fn request(url: String) -> FfiRequest {
     }
 }
 
+#[test]
+fn recognizes_secret_environment_keys_without_inspecting_values() {
+    assert!(is_secret_key("access_token"));
+    assert!(is_secret_key("DB_PASSWORD"));
+    assert!(is_secret_key("X-API-Key"));
+    assert!(!is_secret_key("base_url"));
+}
+
 #[tokio::test]
 async fn executes_real_http_through_application_boundary() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();

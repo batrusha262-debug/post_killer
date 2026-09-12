@@ -189,7 +189,9 @@ class VariablesPane extends StatelessWidget {
                 ),
               ),
               title: Text(variable.key),
-              subtitle: SelectableText(variable.value),
+              subtitle: SelectableText(
+                _isSecretVariable(variable.key) ? '••••••••' : variable.value,
+              ),
               trailing: IconButton(
                 tooltip: 'Delete variable',
                 onPressed: () => onDeleteVariable(variable.id),
@@ -204,6 +206,19 @@ class VariablesPane extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  bool _isSecretVariable(String key) {
+    final normalized = key.trim().toLowerCase();
+    return [
+      'token',
+      'secret',
+      'password',
+      'api_key',
+      'api-key',
+      'apikey',
+      'credential',
+    ].any(normalized.contains);
   }
 
   Future<void> _showCreateVariableDialog(BuildContext context) async {

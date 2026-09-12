@@ -191,16 +191,34 @@ pub fn list_environment_variables(
             .list_environment_variables(&environment_id)
             .map_err(|error| error.to_string())
     })
-    .map(|variables| variables.into_iter().map(Into::into).collect())
+    .and_then(|variables| {
+        variables
+            .into_iter()
+            .map(|mut variable| {
+                if variable.value == "__post_killer_secure__" {
+                    variable.value = read_secret(&variable.id)?;
+                }
+                Ok(variable.into())
+            })
+            .collect()
+    })
 }
 
 pub fn save_environment_variable(
     variable: FfiEnvironmentVariable,
 ) -> Result<FfiEnvironmentVariable, String> {
     let variable = EnvironmentVariable::try_from(variable).map_err(|error| error.message)?;
+    let is_secret = is_secret_key(&variable.key);
+    if is_secret {
+        write_secret(&variable.id, &variable.value)?;
+    }
     with_storage(|storage| {
+        let mut stored = variable.clone();
+        if is_secret {
+            stored.value = "__post_killer_secure__".to_owned();
+        }
         storage
-            .save_environment_variable(variable.clone())
+            .save_environment_variable(stored)
             .map_err(|error| error.to_string())?;
         Ok(variable)
     })
@@ -208,11 +226,50 @@ pub fn save_environment_variable(
 }
 
 pub fn delete_environment_variable(id: String) -> Result<(), String> {
+    let _ = delete_secret(&id);
     with_storage(|storage| {
         storage
             .delete_environment_variable(&id)
             .map_err(|error| error.to_string())
     })
+}
+
+fn is_secret_key(key: &str) -> bool {
+    let key = key.to_ascii_lowercase();
+    [
+        "token",
+        "secret",
+        "password",
+        "api_key",
+        "api-key",
+        "apikey",
+        "credential",
+    ]
+    .iter()
+    .any(|needle| key.contains(needle))
+}
+
+fn secret_entry(id: &str) -> Result<keyring::Entry, String> {
+    keyring::Entry::new("com.postkiller.environment", id)
+        .map_err(|error| format!("system secure storage is unavailable: {error}"))
+}
+
+fn write_secret(id: &str, value: &str) -> Result<(), String> {
+    secret_entry(id)?
+        .set_password(value)
+        .map_err(|error| format!("cannot save secret in system secure storage: {error}"))
+}
+
+fn read_secret(id: &str) -> Result<String, String> {
+    secret_entry(id)?
+        .get_password()
+        .map_err(|error| format!("cannot read secret from system secure storage: {error}"))
+}
+
+fn delete_secret(id: &str) -> Result<(), String> {
+    secret_entry(id)?
+        .delete_credential()
+        .map_err(|error| format!("cannot remove secret from system secure storage: {error}"))
 }
 
 pub fn list_requests(collection_id: String) -> Result<Vec<FfiStoredRequest>, String> {
