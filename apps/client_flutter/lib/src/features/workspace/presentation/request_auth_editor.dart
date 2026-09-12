@@ -133,10 +133,10 @@ class _BearerFields extends StatelessWidget {
                 : null,
             onChanged: (value) => onChanged(auth.copyWith(tokenPath: value)),
           ),
-          if (auth.acquiredToken case final token?) ...[
+          if (auth.acquiredToken case final _?) ...[
             const SizedBox(height: 12),
-            SelectableText(
-              'Received token: $token',
+            Text(
+              'Received token: ••••••••',
               key: const Key('auth-acquired-token'),
             ),
           ],

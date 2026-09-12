@@ -30,7 +30,7 @@ class LocalCollectionExporter {
     ),
     'body': {
       'format': request.bodyFormat.name,
-      'content': request.body,
+      'content': _redactBody(request.body, request.bodyFormat),
       'fields': _values(request.bodyFields),
     },
   };
@@ -50,6 +50,40 @@ class LocalCollectionExporter {
         normalized == 'x-api-key' ||
         normalized.contains('token') ||
         normalized.contains('secret') ||
-        normalized.contains('password');
+        normalized.contains('password') ||
+        normalized.contains('api_key') ||
+        normalized.contains('api-key') ||
+        normalized.contains('apikey') ||
+        normalized.contains('credential');
+  }
+
+  /// JSON request bodies frequently contain a password or token field. Keep
+  /// the shape of the example while replacing known credential values before a
+  /// portable collection file is written. Unstructured text is left unchanged
+  /// because it has no reliable key/value boundary to redact safely.
+  static String _redactBody(String content, RequestBodyFormat format) {
+    if (content.isEmpty || format != RequestBodyFormat.json) return content;
+    try {
+      return jsonEncode(_redactJson(jsonDecode(content)));
+    } on FormatException {
+      return content;
+    }
+  }
+
+  static Object? _redactJson(Object? value, {String? key}) {
+    if (key != null && _sensitive(key)) return '<redacted>';
+    if (value is Map) {
+      return {
+        for (final entry in value.entries)
+          entry.key.toString(): _redactJson(
+            entry.value,
+            key: entry.key.toString(),
+          ),
+      };
+    }
+    if (value is List) {
+      return [for (final item in value) _redactJson(item)];
+    }
+    return value;
   }
 }

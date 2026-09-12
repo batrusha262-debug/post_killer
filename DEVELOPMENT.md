@@ -12,7 +12,7 @@
 
 ## Активный план
 
-- [ ] SECURITY-WORKBENCH-1: перенести environment secrets и draft credentials в системный secure storage, добавить redaction в UI/exports/logging и limits для request/response/file inputs.
+- [ ] API-WORKBENCH-6: завершить response workbench: поиск по response, безопасный binary preview/download и расширенный Postman Collection v2.1 import.
 - [ ] AUDIT-RELEASE: проверить публикацию v0.2.5 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
 
 ### Foundation
@@ -31,7 +31,7 @@
   хранится в системной app-data директории. BLoC и widget tests покрывают
   загрузку и создание. Финальный macOS smoke-test нового DMG остаётся частью
   QA-007 desktop E2E, поскольку локально отсутствует полный Xcode.
-- [ ] Реализовать auth form поверх локального request draft state.
+- [x] Реализовать auth form поверх локального request draft state.
 - [x] **QA-001 · Critical · Send не выполняет HTTP-запрос.** В приложении
   введите `GET https://httpbin.org/get` в открытую вкладку и нажмите **Send**.
   Ожидание: BLoC запускает use case через `flutter_rust_bridge`, кнопка показывает
@@ -65,12 +65,12 @@
 
 - [ ] Добавить Flutter JSON/text/binary viewer, поиск и отображение privacy-safe
   истории запусков.
-- [ ] Добавить cookie jar, file multipart, proxy и custom CA settings.
+- [x] Добавить cookie jar, file multipart, proxy и custom CA settings.
 
 ### Interoperability и hardening
 
-- [ ] Импорт Postman Collection v2.1 и OpenAPI; экспорт собственного формата.
-- [ ] Хранение секретов через системный secure storage, redaction и limits.
+- [x] Базовый импорт Postman Collection v2.1 и OpenAPI; экспорт собственного формата.
+- [x] Хранение environment-секретов через системный secure storage, redaction и limits.
 - [ ] Rust/Flutter unit, widget, integration и desktop E2E tests.
 
 ### Release
@@ -101,6 +101,18 @@
   пользователя через Vercel.
 
 ## Готово
+
+- SECURITY-WORKBENCH-1 (2026-09-12): значения environment-переменных с
+  credential-like key отправляются из SQLite в системный Keychain/Credential
+  Manager/Secret Service; в SQLite остаётся только marker, а старые plaintext
+  values мигрируют при первом чтении. Черновые Basic/Bearer/API-key credentials
+  остаются исключительно в памяти открытой вкладки и не сохраняются. UI
+  маскирует environment и полученный bearer token; экспорт исключает secret
+  query/header/form fields и redacts именованные secret-поля JSON body. FFI
+  возвращает только typed privacy-safe ошибки без raw URL/transport diagnostics.
+  Введены лимиты: inline request 5 MiB, collection/OpenAPI import 10 MiB,
+  custom CA 1 MiB, multipart 50 MiB и response 10 MiB. Rust 44 passed/1
+  ignored, Clippy; Flutter analyze и 71 tests проходят.
 
 - API-WORKBENCH-5 (2026-09-12): multipart получил explicit local-file
   references через Flutter UI → BLoC → FFI → Rust; файл читается только во

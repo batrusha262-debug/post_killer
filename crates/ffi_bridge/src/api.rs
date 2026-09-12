@@ -187,20 +187,28 @@ pub fn list_environment_variables(
     environment_id: String,
 ) -> Result<Vec<FfiEnvironmentVariable>, String> {
     with_storage(|storage| {
-        storage
+        let mut variables = storage
             .list_environment_variables(&environment_id)
-            .map_err(|error| error.to_string())
-    })
-    .and_then(|variables| {
-        variables
-            .into_iter()
-            .map(|mut variable| {
-                if variable.value == "__post_killer_secure__" {
-                    variable.value = read_secret(&variable.id)?;
-                }
-                Ok(variable.into())
-            })
-            .collect()
+            .map_err(|error| error.to_string())?;
+        for variable in &mut variables {
+            if !is_secret_key(&variable.key) {
+                continue;
+            }
+            if variable.value == "__post_killer_secure__" {
+                variable.value = read_secret(&variable.id)?;
+                continue;
+            }
+            // One-way lazy migration for legacy plaintext rows. If system
+            // storage is unavailable, return an error rather than exposing or
+            // retaining the old secret in a new app session.
+            write_secret(&variable.id, &variable.value)?;
+            let mut stored = variable.clone();
+            stored.value = "__post_killer_secure__".to_owned();
+            storage
+                .save_environment_variable(stored)
+                .map_err(|error| error.to_string())?;
+        }
+        Ok(variables.into_iter().map(Into::into).collect())
     })
 }
 

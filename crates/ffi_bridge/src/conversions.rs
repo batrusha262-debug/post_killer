@@ -12,10 +12,23 @@ use post_killer_storage_sqlite::{
 };
 use std::time::Duration;
 
+/// Bounds the complete inline request passed from Flutter before JSON parsing or
+/// transport construction. Local multipart attachments are separately bounded
+/// by the HTTP engine when their bytes are read at send time.
+const MAX_FFI_REQUEST_INPUT_BYTES: usize = 5 * 1024 * 1024;
+
 impl TryFrom<FfiRequest> for RequestDefinition {
     type Error = FfiExecutionError;
 
     fn try_from(value: FfiRequest) -> Result<Self, Self::Error> {
+        if ffi_request_input_size(&value) > MAX_FFI_REQUEST_INPUT_BYTES {
+            return Err(FfiExecutionError {
+                kind: FfiExecutionErrorKind::InvalidRequest,
+                message: "request input exceeds the 5 MiB limit".to_owned(),
+                field: Some("request".to_owned()),
+                limit_bytes: Some(MAX_FFI_REQUEST_INPUT_BYTES as u64),
+            });
+        }
         let body = match value.body.kind {
             FfiRequestBodyKind::Empty => Body::Empty,
             FfiRequestBodyKind::Text => Body::Text {
@@ -67,6 +80,37 @@ impl TryFrom<FfiRequest> for RequestDefinition {
             auth,
         })
     }
+}
+
+fn ffi_request_input_size(request: &FfiRequest) -> usize {
+    let mut size = request
+        .id
+        .len()
+        .saturating_add(request.name.len())
+        .saturating_add(request.url.len())
+        .saturating_add(request.body.content.len());
+    for value in request
+        .query_params
+        .iter()
+        .chain(request.headers.iter())
+        .chain(request.body.fields.iter())
+    {
+        size = size
+            .saturating_add(value.key.len())
+            .saturating_add(value.value.len());
+    }
+    for file in &request.body.files {
+        size = size
+            .saturating_add(file.field_name.len())
+            .saturating_add(file.path.len())
+            .saturating_add(file.file_name.as_deref().unwrap_or_default().len())
+            .saturating_add(file.content_type.as_deref().unwrap_or_default().len());
+    }
+    size.saturating_add(request.auth.username.len())
+        .saturating_add(request.auth.password.len())
+        .saturating_add(request.auth.token.len())
+        .saturating_add(request.auth.key.len())
+        .saturating_add(request.auth.value.len())
 }
 
 impl TryFrom<FfiExecutionOptions> for ExecutionOptions {
@@ -466,57 +510,94 @@ impl From<ResponsePayload> for FfiExecutionResponse {
 
 impl From<ExecuteError> for FfiExecutionError {
     fn from(value: ExecuteError) -> Self {
-        let message = value.to_string();
-        let (kind, field, limit_bytes) = match value {
+        // Never forward `reqwest` or URL parser diagnostics as they may echo a
+        // full URL, query string, body fragment, path, or credential. The UI
+        // receives a useful typed summary and focus field instead.
+        let (kind, message, field, limit_bytes) = match value {
             ExecuteError::InvalidRequest(error) => (
                 FfiExecutionErrorKind::InvalidRequest,
+                "request validation failed".to_owned(),
                 validation_field(&error),
                 None,
             ),
             ExecuteError::InvalidUrl => (
                 FfiExecutionErrorKind::InvalidUrl,
+                "request URL is invalid".to_owned(),
                 Some("url".to_owned()),
                 None,
             ),
             ExecuteError::InvalidHeaderName { .. } => (
                 FfiExecutionErrorKind::InvalidHeaderName,
+                "request header name is invalid".to_owned(),
                 Some("header".to_owned()),
                 None,
             ),
             ExecuteError::InvalidHeaderValue { .. } => (
                 FfiExecutionErrorKind::InvalidHeaderValue,
+                "request header value is invalid".to_owned(),
                 Some("header".to_owned()),
                 None,
             ),
             ExecuteError::UnsupportedBody { .. } => (
                 FfiExecutionErrorKind::UnsupportedBody,
+                "request body format is unsupported".to_owned(),
                 Some("body".to_owned()),
                 None,
             ),
             ExecuteError::MultipartFileRead => (
                 FfiExecutionErrorKind::MultipartFileRead,
+                "cannot read the selected multipart file".to_owned(),
                 Some("body.file".to_owned()),
                 None,
             ),
             ExecuteError::MultipartFileTooLarge { limit } => (
                 FfiExecutionErrorKind::MultipartFileTooLarge,
+                "selected multipart file exceeds the configured limit".to_owned(),
                 Some("body.file".to_owned()),
                 Some(limit as u64),
             ),
-            ExecuteError::Timeout => (FfiExecutionErrorKind::Timeout, None, None),
-            ExecuteError::Cancelled => (FfiExecutionErrorKind::Cancelled, None, None),
-            ExecuteError::EventReceiverDropped => (FfiExecutionErrorKind::Internal, None, None),
+            ExecuteError::Timeout => (
+                FfiExecutionErrorKind::Timeout,
+                "request timed out".to_owned(),
+                None,
+                None,
+            ),
+            ExecuteError::Cancelled => (
+                FfiExecutionErrorKind::Cancelled,
+                "request was cancelled".to_owned(),
+                None,
+                None,
+            ),
+            ExecuteError::EventReceiverDropped => (
+                FfiExecutionErrorKind::Internal,
+                "request event channel closed".to_owned(),
+                None,
+                None,
+            ),
             ExecuteError::Transport(transport) => {
-                let kind = match transport {
-                    TransportErrorKind::Connect => FfiExecutionErrorKind::TransportConnect,
-                    TransportErrorKind::Request => FfiExecutionErrorKind::TransportRequest,
-                    TransportErrorKind::Decode => FfiExecutionErrorKind::TransportDecode,
-                    TransportErrorKind::Other => FfiExecutionErrorKind::TransportOther,
+                let (kind, message) = match transport {
+                    TransportErrorKind::Connect => (
+                        FfiExecutionErrorKind::TransportConnect,
+                        "connection failed".to_owned(),
+                    ),
+                    TransportErrorKind::Request => (
+                        FfiExecutionErrorKind::TransportRequest,
+                        "request transport failed".to_owned(),
+                    ),
+                    TransportErrorKind::Decode => (
+                        FfiExecutionErrorKind::TransportDecode,
+                        "response decoding failed".to_owned(),
+                    ),
+                    TransportErrorKind::Other => (
+                        FfiExecutionErrorKind::TransportOther,
+                        "network transport failed".to_owned(),
+                    ),
                 };
-                (kind, None, None)
+                (kind, message, None, None)
             }
             ExecuteError::ResponseTooLarge { limit } => (
                 FfiExecutionErrorKind::ResponseTooLarge,
+                "response exceeds the configured limit".to_owned(),
                 None,
                 Some(limit as u64),
             ),

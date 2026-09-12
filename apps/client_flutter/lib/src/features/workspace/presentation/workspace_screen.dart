@@ -21,6 +21,10 @@ import '../domain/workspace_models.dart';
 class WorkspaceScreen extends StatelessWidget {
   const WorkspaceScreen({super.key});
 
+  static const _maxCollectionImportBytes = 10 * 1024 * 1024;
+  static const _maxMultipartFileBytes = 50 * 1024 * 1024;
+  static const _maxCustomCaBytes = 1024 * 1024;
+
   @override
   Widget build(BuildContext context) {
     final workspace = context.watch<WorkspaceBloc>().state;
@@ -385,6 +389,15 @@ class WorkspaceScreen extends StatelessWidget {
     try {
       final file = await openFile(acceptedTypeGroups: [typeGroup]);
       if (file == null || !context.mounted) return;
+      if (!await _acceptInputSize(
+        context,
+        file,
+        _maxCollectionImportBytes,
+        'Коллекция',
+      )) {
+        return;
+      }
+      if (!context.mounted) return;
       workspace.add(WorkspacePostmanImportRequested(await file.readAsString()));
     } on Object {
       if (!context.mounted) return;
@@ -406,6 +419,15 @@ class WorkspaceScreen extends StatelessWidget {
     try {
       final file = await openFile(acceptedTypeGroups: [typeGroup]);
       if (file == null || !context.mounted) return;
+      if (!await _acceptInputSize(
+        context,
+        file,
+        _maxCollectionImportBytes,
+        'OpenAPI specification',
+      )) {
+        return;
+      }
+      if (!context.mounted) return;
       workspace.add(WorkspaceOpenApiImportRequested(await file.readAsString()));
     } on Object {
       if (!context.mounted) return;
@@ -461,6 +483,15 @@ class WorkspaceScreen extends StatelessWidget {
     try {
       final file = await openFile();
       if (file == null || !context.mounted || file.path.isEmpty) return;
+      if (!await _acceptInputSize(
+        context,
+        file,
+        _maxMultipartFileBytes,
+        'Файл multipart',
+      )) {
+        return;
+      }
+      if (!context.mounted) return;
       workspace.add(
         WorkspaceBodyFileAdded(
           MultipartFileReference(
@@ -491,6 +522,15 @@ class WorkspaceScreen extends StatelessWidget {
     try {
       final file = await openFile(acceptedTypeGroups: [typeGroup]);
       if (file == null || !context.mounted) return;
+      if (!await _acceptInputSize(
+        context,
+        file,
+        _maxCustomCaBytes,
+        'PEM certificate',
+      )) {
+        return;
+      }
+      if (!context.mounted) return;
       final current = workspace.state.selectedTab;
       if (current == null) return;
       workspace.add(
@@ -504,6 +544,24 @@ class WorkspaceScreen extends StatelessWidget {
         const SnackBar(content: Text('Не удалось прочитать PEM certificate.')),
       );
     }
+  }
+
+  static Future<bool> _acceptInputSize(
+    BuildContext context,
+    XFile file,
+    int maximumBytes,
+    String label,
+  ) async {
+    if (await file.length() <= maximumBytes) return true;
+    if (context.mounted) {
+      final maximumMiB = maximumBytes ~/ (1024 * 1024);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$label больше допустимого размера $maximumMiB MiB.'),
+        ),
+      );
+    }
+    return false;
   }
 
   static Future<void> _showNameDialog(

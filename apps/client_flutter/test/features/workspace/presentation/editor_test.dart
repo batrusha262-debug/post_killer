@@ -188,4 +188,30 @@ void main() {
     await tester.tap(find.text('Query parameter').last);
     expect(edited!.placement, ApiKeyPlacement.query);
   });
+
+  testWidgets('auth editor redacts a runtime token obtained from login', (
+    tester,
+  ) async {
+    const token = 'access-token-that-must-not-be-rendered';
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: RequestAuthEditor(
+            auth: RequestAuth(
+              kind: RequestAuthKind.bearer,
+              loginRequestId: 'saved-login-request',
+              acquiredToken: token,
+            ),
+            onChanged: _ignoreAuthChange,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const Key('auth-acquired-token')), findsOneWidget);
+    expect(find.text('Received token: ••••••••'), findsOneWidget);
+    expect(find.textContaining(token), findsNothing);
+  });
 }
+
+void _ignoreAuthChange(RequestAuth _) {}

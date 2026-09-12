@@ -40,6 +40,26 @@ fn recognizes_secret_environment_keys_without_inspecting_values() {
 }
 
 #[tokio::test]
+async fn rejects_oversized_inline_request_without_echoing_its_content() {
+    let secret = "must-not-appear-in-error";
+    let mut input = request("https://example.test".to_owned());
+    input.body = FfiRequestBody {
+        kind: FfiRequestBodyKind::Text,
+        content: format!("{secret}{}", "x".repeat(5 * 1024 * 1024)),
+        content_type: Some("text/plain".to_owned()),
+        fields: vec![],
+        files: vec![],
+    };
+
+    let outcome = execute_request(input).await;
+    let error = outcome.error.expect("input limit error");
+    assert_eq!(error.kind, FfiExecutionErrorKind::InvalidRequest);
+    assert_eq!(error.field.as_deref(), Some("request"));
+    assert_eq!(error.limit_bytes, Some(5 * 1024 * 1024));
+    assert!(!error.message.contains(secret));
+}
+
+#[tokio::test]
 async fn executes_real_http_through_application_boundary() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());

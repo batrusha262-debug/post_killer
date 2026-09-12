@@ -338,8 +338,8 @@ class RequestKeyValue {
       );
 }
 
-/// A named local variable set. Secret storage will be introduced behind this
-/// model later; values are never copied to request history.
+/// A named local variable set. Values whose keys identify credentials are kept
+/// by Rust in system secure storage; values are never copied to request history.
 class WorkspaceEnvironment {
   const WorkspaceEnvironment({
     required this.id,
