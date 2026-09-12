@@ -49,49 +49,71 @@ class CollectionsPane extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 6, 6),
-        child: Row(
+        padding: const EdgeInsets.fromLTRB(16, 16, 12, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Expanded(
-              child: Text(
-                'Collections',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-              ),
+            Row(
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Запросы',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Коллекции и черновики',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  key: const Key('new-workspace-button'),
+                  tooltip: 'Создать рабочее пространство',
+                  onPressed: onNewWorkspace,
+                  icon: const Icon(Icons.workspaces_outlined, size: 20),
+                ),
+                PopupMenuButton<void>(
+                  tooltip: 'Импортировать API',
+                  icon: const Icon(Icons.file_upload_outlined, size: 20),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      enabled: selectedWorkspaceId != null,
+                      onTap: onImportPostman,
+                      child: const Text('Коллекцию Postman'),
+                    ),
+                    PopupMenuItem(
+                      enabled: selectedWorkspaceId != null,
+                      onTap: onImportOpenApi,
+                      child: const Text('Спецификацию OpenAPI'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            IconButton(
-              key: const Key('new-workspace-button'),
-              tooltip: 'New workspace',
-              onPressed: onNewWorkspace,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.workspaces_outlined, size: 20),
-            ),
-            IconButton(
-              key: const Key('new-collection-button'),
-              tooltip: 'New collection',
-              onPressed: selectedWorkspaceId == null ? null : onNewCollection,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.create_new_folder_outlined, size: 20),
-            ),
-            IconButton(
-              key: const Key('import-postman-button'),
-              tooltip: 'Import Postman collection',
-              onPressed: selectedWorkspaceId == null ? null : onImportPostman,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.file_upload_outlined, size: 20),
-            ),
-            IconButton(
-              key: const Key('import-openapi-button'),
-              tooltip: 'Import OpenAPI specification',
-              onPressed: selectedWorkspaceId == null ? null : onImportOpenApi,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.api_outlined, size: 20),
-            ),
-            IconButton(
+            const SizedBox(height: 10),
+            FilledButton.icon(
               key: const Key('new-request-button'),
-              tooltip: 'New request',
               onPressed: onNewRequest,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.add_rounded),
+              icon: const Icon(Icons.add_rounded, size: 18),
+              label: const Text('Новый запрос'),
+            ),
+            const SizedBox(height: 4),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const Key('new-collection-button'),
+                onPressed: selectedWorkspaceId == null ? null : onNewCollection,
+                icon: const Icon(Icons.create_new_folder_outlined, size: 17),
+                label: const Text('Новая коллекция'),
+              ),
             ),
           ],
         ),
@@ -103,7 +125,7 @@ class CollectionsPane extends StatelessWidget {
             padding: const EdgeInsets.only(left: 10, right: 3),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
@@ -115,7 +137,7 @@ class CollectionsPane extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Tooltip(
-                    message: 'Workspace',
+                    message: 'Рабочее пространство',
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         isExpanded: true,
@@ -144,7 +166,7 @@ class CollectionsPane extends StatelessWidget {
                 ),
                 IconButton(
                   key: const Key('delete-workspace-button'),
-                  tooltip: 'Delete workspace',
+                  tooltip: 'Удалить рабочее пространство',
                   visualDensity: VisualDensity.compact,
                   onPressed: isLoading || selectedWorkspaceId == null
                       ? null
@@ -169,7 +191,7 @@ class CollectionsPane extends StatelessWidget {
           onChanged: onSearchChanged,
           decoration: InputDecoration(
             isDense: true,
-            hintText: 'Search requests',
+            hintText: 'Найти запрос',
             prefixIcon: const Icon(Icons.search_rounded, size: 20),
           ),
         ),
@@ -232,7 +254,7 @@ class CollectionsPane extends StatelessWidget {
                           children: [
                             IconButton(
                               key: Key('export-collection-${collection.id}'),
-                              tooltip: 'Export collection',
+                              tooltip: 'Экспортировать коллекцию',
                               visualDensity: VisualDensity.compact,
                               onPressed: () => onExportCollection(collection),
                               icon: const Icon(
@@ -242,7 +264,7 @@ class CollectionsPane extends StatelessWidget {
                             ),
                             IconButton(
                               key: Key('delete-collection-${collection.id}'),
-                              tooltip: 'Delete folder',
+                              tooltip: 'Удалить коллекцию',
                               visualDensity: VisualDensity.compact,
                               onPressed: () => onDeleteCollection(collection),
                               icon: const Icon(Icons.delete_outline, size: 18),
@@ -269,7 +291,7 @@ class CollectionsPane extends StatelessWidget {
                               onTap: () => onOpenRequest(request),
                               trailing: IconButton(
                                 key: Key('delete-request-${request.id}'),
-                                tooltip: 'Delete request',
+                                tooltip: 'Удалить запрос',
                                 visualDensity: VisualDensity.compact,
                                 onPressed: () =>
                                     onDeleteRequest(collection, request),
@@ -303,13 +325,13 @@ class _NoWorkspace extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Create your first workspace',
+            'Создайте первое рабочее пространство',
             textAlign: TextAlign.center,
             style: TextStyle(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           const Text(
-            'Keep requests, folders and variables together.',
+            'Храните запросы, коллекции и переменные в одном месте.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12),
           ),

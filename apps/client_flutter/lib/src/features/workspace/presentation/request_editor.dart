@@ -77,18 +77,16 @@ class RequestEditor extends StatelessWidget {
         (tab.bodyFormat != RequestBodyFormat.json || isValidJson(tab.body)) &&
         tab.auth.isValid;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest
+                  .withValues(alpha: .52),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
@@ -100,20 +98,20 @@ class RequestEditor extends StatelessWidget {
                   child: Row(
                     children: [
                       SizedBox(
-                        width: 150,
+                        width: 138,
                         child: TextFormField(
                           key: const Key('request-name-field'),
                           initialValue: tab.title,
                           onChanged: onTitleChanged,
                           decoration: const InputDecoration(
                             isDense: true,
-                            hintText: 'Request name',
+                            hintText: 'Название',
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       SizedBox(
-                        width: 96,
+                        width: 92,
                         child: DropdownButtonFormField<HttpMethod>(
                           key: const Key('method-picker'),
                           initialValue: tab.method,
@@ -139,14 +137,15 @@ class RequestEditor extends StatelessWidget {
                           onChanged: onUrlChanged,
                           decoration: const InputDecoration(
                             isDense: true,
-                            hintText: 'https://api.example.com/resource',
+                            prefixIcon: Icon(Icons.link_rounded, size: 19),
+                            hintText: 'Вставьте URL API…',
                           ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       PopupMenuButton<String>(
                         key: const Key('save-request-menu'),
-                        tooltip: 'Save to folder',
+                        tooltip: 'Сохранить в коллекцию',
                         enabled: collections.isNotEmpty,
                         onSelected: onSave,
                         itemBuilder: (context) => [
@@ -184,14 +183,14 @@ class RequestEditor extends StatelessWidget {
                                 ),
                                 onPressed: onCancel,
                                 icon: const Icon(Icons.close_rounded, size: 17),
-                                label: const Text('Cancel'),
+                                label: const Text('Отменить'),
                               )
                             : FilledButton.icon(
                                 key: const Key('send-request-button'),
                                 onPressed: canSend ? onSend : null,
                                 icon: const Icon(Icons.send_rounded, size: 17),
                                 label: Text(
-                                  canSend ? 'Send' : 'Fix JSON to send',
+                                  canSend ? 'Отправить' : 'Исправьте JSON',
                                 ),
                               ),
                       ),
@@ -209,12 +208,32 @@ class RequestEditor extends StatelessWidget {
                 children: [
                   const TabBar(
                     tabs: [
-                      Tab(text: 'Query'),
-                      Tab(text: 'Headers'),
-                      Tab(key: Key('auth-tab'), text: 'Auth'),
-                      Tab(text: 'Body'),
-                      Tab(text: 'Network'),
-                      Tab(key: Key('response-tab'), text: 'Response'),
+                      Tab(
+                        icon: Icon(Icons.tune_rounded, size: 17),
+                        text: 'Параметры',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.article_outlined, size: 17),
+                        text: 'Заголовки',
+                      ),
+                      Tab(
+                        key: Key('auth-tab'),
+                        icon: Icon(Icons.lock_outline, size: 17),
+                        text: 'Доступ',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.data_object_rounded, size: 17),
+                        text: 'Тело',
+                      ),
+                      Tab(
+                        icon: Icon(Icons.language_outlined, size: 17),
+                        text: 'Сеть',
+                      ),
+                      Tab(
+                        key: Key('response-tab'),
+                        icon: Icon(Icons.bolt_outlined, size: 17),
+                        text: 'Ответ',
+                      ),
                     ],
                   ),
                   Expanded(

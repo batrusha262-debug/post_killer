@@ -21,22 +21,16 @@ class RequestTabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Material(
     color: selected
-        ? Theme.of(context).colorScheme.surfaceContainerHighest
+        ? Theme.of(context).colorScheme.primaryContainer
         : Colors.transparent,
     child: InkWell(
       key: Key('request-tab-${tab.id}'),
       onTap: onTap,
       child: Container(
-        width: 168,
-        padding: const EdgeInsets.only(left: 12),
+        width: 184,
+        padding: const EdgeInsets.only(left: 14),
         decoration: BoxDecoration(
           border: Border(
-            bottom: BorderSide(
-              width: 2,
-              color: selected
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
-            ),
             right: BorderSide(
               color: Theme.of(context).colorScheme.outlineVariant,
             ),
@@ -48,7 +42,7 @@ class RequestTabButton extends StatelessWidget {
               tab.method.label,
               style: TextStyle(
                 color: methodColor(context, tab.method),
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -62,7 +56,7 @@ class RequestTabButton extends StatelessWidget {
             ),
             IconButton(
               key: Key('close-tab-${tab.id}'),
-              tooltip: 'Close ${tab.title}',
+              tooltip: 'Закрыть ${tab.title}',
               onPressed: onClose,
               icon: const Icon(Icons.close, size: 16),
             ),

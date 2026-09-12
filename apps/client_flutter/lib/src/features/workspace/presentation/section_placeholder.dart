@@ -28,14 +28,14 @@ class HistoryPane extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'History',
+                'История',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
             TextButton.icon(
               onPressed: entries.isEmpty ? null : onClear,
               icon: const Icon(Icons.delete_sweep_outlined),
-              label: const Text('Clear'),
+              label: const Text('Очистить'),
             ),
           ],
         ),
@@ -45,7 +45,7 @@ class HistoryPane extends StatelessWidget {
           onChanged: onQueryChanged,
           decoration: const InputDecoration(
             prefixIcon: Icon(Icons.search),
-            hintText: 'Filter by request name or method',
+            hintText: 'Поиск по названию или методу',
           ),
         ),
         const SizedBox(height: 8),
@@ -55,8 +55,8 @@ class HistoryPane extends StatelessWidget {
             child: Center(
               child: Text(
                 query.isEmpty
-                    ? 'No request history yet'
-                    : 'No matching requests',
+                    ? 'История запросов пока пуста'
+                    : 'Ничего не найдено',
               ),
             ),
           )
@@ -84,7 +84,7 @@ class HistoryPane extends StatelessWidget {
 
   String _summary(RequestHistoryEntry entry) {
     if (entry.result != ExecutionHistoryResult.response) {
-      return 'Failed · ${_errorLabel(entry.errorCategory)}';
+      return 'Ошибка · ${_errorLabel(entry.errorCategory)}';
     }
     return 'HTTP ${entry.status ?? '—'} · ${entry.durationMillis} ms · '
         '${_bytes(entry.responseSizeBytes)}';
@@ -92,15 +92,15 @@ class HistoryPane extends StatelessWidget {
 
   String _errorLabel(ExecutionHistoryErrorCategory? category) =>
       switch (category) {
-        ExecutionHistoryErrorCategory.timeout => 'timeout',
+        ExecutionHistoryErrorCategory.timeout => 'тайм-аут',
         ExecutionHistoryErrorCategory.dns => 'DNS',
-        ExecutionHistoryErrorCategory.connection => 'connection',
+        ExecutionHistoryErrorCategory.connection => 'соединение',
         ExecutionHistoryErrorCategory.tls => 'TLS',
-        ExecutionHistoryErrorCategory.proxy => 'proxy',
-        ExecutionHistoryErrorCategory.redirect => 'redirect',
-        ExecutionHistoryErrorCategory.requestBody => 'request body',
-        ExecutionHistoryErrorCategory.responseBody => 'response body',
-        _ => 'other error',
+        ExecutionHistoryErrorCategory.proxy => 'прокси',
+        ExecutionHistoryErrorCategory.redirect => 'перенаправление',
+        ExecutionHistoryErrorCategory.requestBody => 'тело запроса',
+        ExecutionHistoryErrorCategory.responseBody => 'тело ответа',
+        _ => 'неизвестная ошибка',
       };
 
   String _bytes(int bytes) =>
@@ -137,7 +137,7 @@ class VariablesPane extends StatelessWidget {
         child: FilledButton.icon(
           onPressed: onNewEnvironment,
           icon: const Icon(Icons.add_rounded),
-          label: const Text('Create environment'),
+          label: const Text('Создать окружение'),
         ),
       );
     }
@@ -150,7 +150,7 @@ class VariablesPane extends StatelessWidget {
               child: DropdownButtonFormField<String>(
                 initialValue: selectedEnvironmentId,
                 decoration: const InputDecoration(
-                  labelText: 'Active environment',
+                  labelText: 'Активное окружение',
                 ),
                 items: [
                   for (final environment in environments)
@@ -163,21 +163,21 @@ class VariablesPane extends StatelessWidget {
               ),
             ),
             IconButton(
-              tooltip: 'Delete environment',
+              tooltip: 'Удалить окружение',
               onPressed: selected == null
                   ? null
                   : () => onDeleteEnvironment(selected.id),
               icon: const Icon(Icons.delete_outline),
             ),
             IconButton(
-              tooltip: 'New environment',
+              tooltip: 'Создать окружение',
               onPressed: onNewEnvironment,
               icon: const Icon(Icons.add_rounded),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        Text('Variables', style: Theme.of(context).textTheme.titleMedium),
+        Text('Переменные', style: Theme.of(context).textTheme.titleMedium),
         if (selected != null) ...[
           for (final variable in selected.variables)
             ListTile(
@@ -193,7 +193,7 @@ class VariablesPane extends StatelessWidget {
                 _isSecretVariable(variable.key) ? '••••••••' : variable.value,
               ),
               trailing: IconButton(
-                tooltip: 'Delete variable',
+                tooltip: 'Удалить переменную',
                 onPressed: () => onDeleteVariable(variable.id),
                 icon: const Icon(Icons.delete_outline, size: 19),
               ),
@@ -201,7 +201,7 @@ class VariablesPane extends StatelessWidget {
           TextButton.icon(
             onPressed: () => _showCreateVariableDialog(context),
             icon: const Icon(Icons.add_rounded),
-            label: const Text('Add variable'),
+            label: const Text('Добавить переменную'),
           ),
         ],
       ],
@@ -227,26 +227,26 @@ class VariablesPane extends StatelessWidget {
     final created = await showDialog<RequestKeyValue>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('New variable'),
+        title: const Text('Новая переменная'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: key,
               autofocus: true,
-              decoration: const InputDecoration(labelText: 'Key'),
+              decoration: const InputDecoration(labelText: 'Ключ'),
             ),
             const SizedBox(height: 10),
             TextField(
               controller: value,
-              decoration: const InputDecoration(labelText: 'Value'),
+              decoration: const InputDecoration(labelText: 'Значение'),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const Text('Отмена'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(
@@ -257,7 +257,7 @@ class VariablesPane extends StatelessWidget {
                 value: value.text,
               ),
             ),
-            child: const Text('Add'),
+            child: const Text('Добавить'),
           ),
         ],
       ),

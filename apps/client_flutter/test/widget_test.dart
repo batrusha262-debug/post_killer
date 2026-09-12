@@ -69,7 +69,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('new-request-button')));
     await tester.pump();
-    await tester.tap(find.text('Send'));
+    await tester.tap(find.text('Отправить'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('response-tab')));
     await tester.pumpAndSettle();
@@ -84,7 +84,7 @@ void main() {
   testWidgets('edits a request body through the body tab', (tester) async {
     await pumpApp(tester);
 
-    await tester.tap(find.text('Body'));
+    await tester.tap(find.text('Тело'));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('json-body-editor')),
@@ -100,14 +100,14 @@ void main() {
   ) async {
     await pumpApp(tester);
 
-    await tester.tap(find.text('Body'));
+    await tester.tap(find.text('Тело'));
     await tester.pumpAndSettle();
     final editor = find.byKey(const Key('json-body-editor'));
 
     await tester.enterText(editor, '{"enabled": ');
     await tester.pump();
     expect(find.byKey(const Key('json-validation-error')), findsOneWidget);
-    expect(find.text('Fix JSON to send'), findsOneWidget);
+    expect(find.text('Исправьте JSON'), findsOneWidget);
 
     await tester.enterText(editor, '{"enabled": tr');
     await tester.pump();
@@ -121,7 +121,7 @@ void main() {
     await tester.enterText(editor, '{"enabled": true}');
     await tester.pump();
     expect(find.byKey(const Key('json-validation-error')), findsNothing);
-    expect(find.text('Send'), findsOneWidget);
+    expect(find.text('Отправить'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('format-json-button')));
     await tester.pump();
@@ -136,14 +136,14 @@ void main() {
   ) async {
     await pumpApp(tester);
 
-    await tester.tap(find.text('History').first);
+    await tester.tap(find.text('История').first);
     await tester.pump();
-    expect(find.text('No request history yet'), findsOneWidget);
+    expect(find.text('История запросов пока пуста'), findsOneWidget);
     expect(find.text('Getting started'), findsNothing);
 
-    await tester.tap(find.text('Variables').first);
+    await tester.tap(find.text('Переменные').first);
     await tester.pump();
-    expect(find.text('Create environment'), findsOneWidget);
+    expect(find.text('Создать окружение'), findsOneWidget);
   });
 
   testWidgets('filters collections without losing the original list', (
@@ -245,7 +245,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Send'));
+      await tester.tap(find.text('Отправить'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('response-tab')));
       await tester.pumpAndSettle();

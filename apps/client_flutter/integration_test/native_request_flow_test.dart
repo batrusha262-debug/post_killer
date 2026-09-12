@@ -26,7 +26,7 @@ void main() {
     await tester.pumpWidget(const PostKillerApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('New tab'));
+    await tester.tap(find.byTooltip('Новая вкладка'));
     await tester.pump();
     await tester.enterText(
       find.byKey(const Key('request-url-field')),

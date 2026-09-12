@@ -4,6 +4,16 @@ All notable user-facing changes are documented here. Releases follow semantic
 versioning; package signatures and notarization are introduced only after their
 respective signing authorities are configured.
 
+## [0.2.23]
+
+### Changed
+
+- Redesigned the desktop workspace around a clearer request-first flow: an
+  action-led collections pane, visual navigation, calmer surfaces, improved
+  tab hierarchy, and a focused request composer.
+- Localized the primary workspace controls, navigation, history and variables
+  to Russian for a more consistent, approachable interface.
+
 ## [0.2.22]
 
 ### Added
