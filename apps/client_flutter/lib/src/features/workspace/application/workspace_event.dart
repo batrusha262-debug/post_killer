@@ -195,6 +195,11 @@ final class WorkspaceBodyFileDeleted extends WorkspaceEvent {
   final String path;
 }
 
+final class WorkspaceNetworkChanged extends WorkspaceEvent {
+  const WorkspaceNetworkChanged(this.network);
+  final RequestNetworkSettings network;
+}
+
 final class WorkspaceAuthChanged extends WorkspaceEvent {
   const WorkspaceAuthChanged(this.auth);
   final RequestAuth auth;

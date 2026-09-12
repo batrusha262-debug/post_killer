@@ -12,7 +12,7 @@
 
 ## Активный план
 
-- [ ] API-WORKBENCH-5: добавить безопасный multipart file upload с explicit local-file references, per-request cookie jar и настройки proxy/custom CA в Rust transport и Flutter UI, без передачи файлов/credentials в историю или экспорт.
+- [ ] SECURITY-WORKBENCH-1: перенести environment secrets и draft credentials в системный secure storage, добавить redaction в UI/exports/logging и limits для request/response/file inputs.
 - [ ] AUDIT-RELEASE: проверить публикацию v0.2.5 и пакеты в GitHub Actions после push тега; нужен авторизованный GitHub CLI/браузер. Сборка v0.2.3 остановилась на APT Hash Sum mismatch стороннего репозитория Chrome (лог пользователя).
 
 ### Foundation
@@ -101,6 +101,15 @@
   пользователя через Vercel.
 
 ## Готово
+
+- API-WORKBENCH-5 (2026-09-12): multipart получил explicit local-file
+  references через Flutter UI → BLoC → FFI → Rust; файл читается только во
+  время send, ограничен 50 MiB, а path/bytes не попадают в history или export.
+  Встроен session-only in-memory cookie jar, который очищается вместе с native
+  process. Network-tab добавляет runtime-only proxy URL и выбранный PEM custom
+  CA, передаёт их через typed FFI в reqwest и не сохраняет в collection,
+  history или export. Flutter 70 tests, Rust 42 passed/1 ignored, Clippy и
+  `git diff --check` проходят.
 
 - API-WORKBENCH-4 (2026-09-11): добавлены offline OpenAPI 3.0/3.1 JSON/YAML
   import и export собственной collection. Import читает только выбранный файл,

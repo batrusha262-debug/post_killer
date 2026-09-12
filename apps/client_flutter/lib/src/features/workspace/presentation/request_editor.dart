@@ -22,6 +22,8 @@ class RequestEditor extends StatelessWidget {
     required this.onDeleteBodyField,
     required this.onPickBodyFile,
     required this.onDeleteBodyFile,
+    required this.onNetworkChanged,
+    required this.onPickCustomCa,
     required this.onAuthChanged,
     required this.onAddQuery,
     required this.onAddHeader,
@@ -50,6 +52,8 @@ class RequestEditor extends StatelessWidget {
   final ValueChanged<String> onDeleteBodyField;
   final VoidCallback onPickBodyFile;
   final ValueChanged<String> onDeleteBodyFile;
+  final ValueChanged<RequestNetworkSettings> onNetworkChanged;
+  final VoidCallback onPickCustomCa;
   final ValueChanged<RequestAuth> onAuthChanged;
   final VoidCallback onAddQuery;
   final VoidCallback onAddHeader;
@@ -200,7 +204,7 @@ class RequestEditor extends StatelessWidget {
           const SizedBox(height: 4),
           Expanded(
             child: DefaultTabController(
-              length: 5,
+              length: 6,
               child: Column(
                 children: [
                   const TabBar(
@@ -209,6 +213,7 @@ class RequestEditor extends StatelessWidget {
                       Tab(text: 'Headers'),
                       Tab(key: Key('auth-tab'), text: 'Auth'),
                       Tab(text: 'Body'),
+                      Tab(text: 'Network'),
                       Tab(key: Key('response-tab'), text: 'Response'),
                     ],
                   ),
@@ -281,6 +286,34 @@ class RequestEditor extends StatelessWidget {
                                 onPickBodyFile: onPickBodyFile,
                                 onDeleteBodyFile: onDeleteBodyFile,
                               ),
+                            ),
+                          ],
+                        ),
+                        ListView(
+                          padding: const EdgeInsets.all(12),
+                          children: [
+                            TextFormField(
+                              initialValue: tab.network.proxyUrl,
+                              onChanged: (value) => onNetworkChanged(
+                                tab.network.copyWith(proxyUrl: value),
+                              ),
+                              decoration: const InputDecoration(
+                                labelText: 'Proxy URL',
+                                hintText: 'http://127.0.0.1:8080',
+                                helperText:
+                                    'Runtime only; never saved or exported.',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              tab.network.customCaPem == null
+                                  ? 'Custom CA: system trust store'
+                                  : 'Custom CA loaded for this draft',
+                            ),
+                            TextButton.icon(
+                              onPressed: onPickCustomCa,
+                              icon: const Icon(Icons.verified_user_outlined),
+                              label: const Text('Choose PEM certificate'),
                             ),
                           ],
                         ),

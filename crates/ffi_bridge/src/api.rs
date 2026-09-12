@@ -415,12 +415,14 @@ pub struct FfiRequest {
     pub auth: FfiRequestAuth,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FfiExecutionOptions {
     pub timeout_millis: u64,
     /// `None` disables redirects; otherwise this is the maximum followed count.
     pub max_redirects: Option<u32>,
     pub max_response_bytes: u64,
+    pub proxy_url: Option<String>,
+    pub custom_ca_pem: Option<Vec<u8>>,
 }
 
 impl Default for FfiExecutionOptions {
@@ -429,6 +431,8 @@ impl Default for FfiExecutionOptions {
             timeout_millis: 30_000,
             max_redirects: Some(10),
             max_response_bytes: 10 * 1024 * 1024,
+            proxy_url: None,
+            custom_ca_pem: None,
         }
     }
 }
@@ -538,6 +542,44 @@ pub async fn execute_request_with_variables(
 
     match RequestExecutionService::new(ReqwestRequestExecutor)
         .execute(request, ExecutionOptions::default())
+        .await
+    {
+        Ok(response) => FfiExecutionOutcome::success(response.into()),
+        Err(error) => FfiExecutionOutcome::error(error.into()),
+    }
+}
+
+pub async fn execute_request_with_variables_and_options(
+    request: FfiRequest,
+    variables: Vec<FfiKeyValue>,
+    options: FfiExecutionOptions,
+) -> FfiExecutionOutcome {
+    let request = match RequestDefinition::try_from(request) {
+        Ok(request) => request,
+        Err(error) => return FfiExecutionOutcome::error(error),
+    };
+    let variables = variables
+        .into_iter()
+        .filter(|variable| variable.enabled)
+        .map(|variable| (variable.key, variable.value))
+        .collect::<BTreeMap<_, _>>();
+    let request = match request.resolve_variables(&variables) {
+        Ok(request) => request,
+        Err(error) => {
+            return FfiExecutionOutcome::error(FfiExecutionError {
+                kind: FfiExecutionErrorKind::InvalidRequest,
+                message: format!("request variables are invalid: {error}"),
+                field: None,
+                limit_bytes: None,
+            });
+        }
+    };
+    let options = match ExecutionOptions::try_from(options) {
+        Ok(options) => options,
+        Err(error) => return FfiExecutionOutcome::error(error),
+    };
+    match RequestExecutionService::new(ReqwestRequestExecutor)
+        .execute(request, options)
         .await
     {
         Ok(response) => FfiExecutionOutcome::success(response.into()),

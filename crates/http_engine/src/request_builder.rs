@@ -12,20 +12,27 @@ fn session_cookie_jar() -> Arc<reqwest::cookie::Jar> {
 
 pub(super) fn build_request(
     request: &RequestDefinition,
-    options: ExecutionOptions,
+    options: &ExecutionOptions,
 ) -> Result<reqwest::RequestBuilder, ExecuteError> {
     let redirect = match options.redirect_policy {
         RedirectPolicy::None => Policy::none(),
         RedirectPolicy::Follow { max_redirects } => Policy::limited(max_redirects),
     };
-    let client = Client::builder()
+    let mut client = Client::builder()
         .redirect(redirect)
         .timeout(options.timeout)
         // Kept in native process memory only. Cookies disappear when the app
         // exits and are never persisted/exported/recorded in history.
-        .cookie_provider(session_cookie_jar())
-        .build()
-        .map_err(classify_transport)?;
+        .cookie_provider(session_cookie_jar());
+    if let Some(proxy_url) = &options.proxy_url {
+        client = client.proxy(reqwest::Proxy::all(proxy_url).map_err(classify_transport)?);
+    }
+    if let Some(certificate) = &options.custom_ca_pem {
+        client = client.add_root_certificate(
+            reqwest::Certificate::from_pem(certificate).map_err(classify_transport)?,
+        );
+    }
+    let client = client.build().map_err(classify_transport)?;
     let url = reqwest::Url::parse(request.url.trim()).map_err(|_| ExecuteError::InvalidUrl)?;
     if !matches!(url.scheme(), "http" | "https") {
         return Err(ExecuteError::InvalidUrl);

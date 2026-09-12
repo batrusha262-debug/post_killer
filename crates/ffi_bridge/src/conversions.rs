@@ -90,6 +90,8 @@ impl TryFrom<FfiExecutionOptions> for ExecutionOptions {
             timeout: Duration::from_millis(value.timeout_millis),
             redirect_policy,
             max_response_bytes,
+            proxy_url: value.proxy_url.filter(|value| !value.trim().is_empty()),
+            custom_ca_pem: value.custom_ca_pem.filter(|value| !value.is_empty()),
         })
     }
 }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import '../../../rust/api.dart';
 import '../domain/workspace_models.dart';
@@ -31,9 +32,20 @@ class FrbRequestExecutor implements RequestExecutor {
     RequestTab request, {
     List<RequestKeyValue> variables = const [],
   }) async {
-    final outcome = await executeRequestWithVariables(
+    final outcome = await executeRequestWithVariablesAndOptions(
       request: _toFfiRequest(request),
       variables: _keyValues(variables),
+      options: FfiExecutionOptions(
+        timeoutMillis: 30000,
+        maxRedirects: 10,
+        maxResponseBytes: 10 * 1024 * 1024,
+        proxyUrl: request.network.proxyUrl.trim().isEmpty
+            ? null
+            : request.network.proxyUrl.trim(),
+        customCaPem: request.network.customCaPem == null
+            ? null
+            : Uint8List.fromList(request.network.customCaPem!),
+      ),
     );
     final response = outcome.response;
     if (response != null) {

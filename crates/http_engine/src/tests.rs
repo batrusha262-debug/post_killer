@@ -474,7 +474,7 @@ fn explicit_url_query_takes_precedence_over_generated_api_key() {
         value: "generated".into(),
         placement: ApiKeyPlacement::Query,
     };
-    let built = build_request(&input, ExecutionOptions::default())
+    let built = build_request(&input, &ExecutionOptions::default())
         .unwrap()
         .build()
         .unwrap();

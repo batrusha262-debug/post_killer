@@ -147,6 +147,7 @@ class RequestTab {
     this.bodyFormat = RequestBodyFormat.json,
     this.bodyFields = const [],
     this.bodyFiles = const [],
+    this.network = const RequestNetworkSettings(),
     this.auth = const RequestAuth(),
     this.isDirty = false,
   });
@@ -182,6 +183,7 @@ class RequestTab {
   final RequestBodyFormat bodyFormat;
   final List<RequestKeyValue> bodyFields;
   final List<MultipartFileReference> bodyFiles;
+  final RequestNetworkSettings network;
   final RequestAuth auth;
   final bool isDirty;
 
@@ -195,6 +197,7 @@ class RequestTab {
     RequestBodyFormat? bodyFormat,
     List<RequestKeyValue>? bodyFields,
     List<MultipartFileReference>? bodyFiles,
+    RequestNetworkSettings? network,
     RequestAuth? auth,
     bool? isDirty,
   }) => RequestTab(
@@ -208,6 +211,7 @@ class RequestTab {
     bodyFormat: bodyFormat ?? this.bodyFormat,
     bodyFields: bodyFields ?? this.bodyFields,
     bodyFiles: bodyFiles ?? this.bodyFiles,
+    network: network ?? this.network,
     auth: auth ?? this.auth,
     isDirty: isDirty ?? this.isDirty,
   );
@@ -253,6 +257,25 @@ class MultipartFileReference {
   final String path;
   final String? fileName;
   final String? contentType;
+}
+
+/// Runtime-only transport controls. They stay in the open draft and are never
+/// saved, exported, added to history or response diagnostics.
+class RequestNetworkSettings {
+  const RequestNetworkSettings({this.proxyUrl = '', this.customCaPem});
+
+  final String proxyUrl;
+  final List<int>? customCaPem;
+
+  RequestNetworkSettings copyWith({
+    String? proxyUrl,
+    Object? customCaPem = _unchanged,
+  }) => RequestNetworkSettings(
+    proxyUrl: proxyUrl ?? this.proxyUrl,
+    customCaPem: identical(customCaPem, _unchanged)
+        ? this.customCaPem
+        : customCaPem as List<int>?,
+  );
 }
 
 enum ExecutionHistoryResult { response, error, cancelled }

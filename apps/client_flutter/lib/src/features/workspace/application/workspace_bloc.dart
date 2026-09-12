@@ -99,6 +99,12 @@ class WorkspaceBloc extends Bloc<WorkspaceEvent, WorkspaceState> {
     on<WorkspaceBodyFieldDeleted>(_deleteBodyField);
     on<WorkspaceBodyFileAdded>(_addBodyFile);
     on<WorkspaceBodyFileDeleted>(_deleteBodyFile);
+    on<WorkspaceNetworkChanged>(
+      (event, emit) => _updateSelected(
+        emit,
+        (tab) => tab.copyWith(network: event.network, isDirty: true),
+      ),
+    );
     on<WorkspaceAuthChanged>(
       (event, emit) => _updateSelected(
         emit,

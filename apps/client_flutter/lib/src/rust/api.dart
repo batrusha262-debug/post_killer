@@ -129,6 +129,17 @@ Future<FfiExecutionOutcome> executeRequestWithVariables({
   variables: variables,
 );
 
+Future<FfiExecutionOutcome> executeRequestWithVariablesAndOptions({
+  required FfiRequest request,
+  required List<FfiKeyValue> variables,
+  required FfiExecutionOptions options,
+}) => PostKillerRustLib.instance.api
+    .crateApiExecuteRequestWithVariablesAndOptions(
+      request: request,
+      variables: variables,
+      options: options,
+    );
+
 /// Executes with caller-controlled limits while retaining typed outcomes for
 /// expected validation and transport failures.
 Future<FfiExecutionOutcome> executeRequestWithOptions({
@@ -344,11 +355,15 @@ class FfiExecutionOptions {
   /// `None` disables redirects; otherwise this is the maximum followed count.
   final int? maxRedirects;
   final int maxResponseBytes;
+  final String? proxyUrl;
+  final Uint8List? customCaPem;
 
   const FfiExecutionOptions({
     required this.timeoutMillis,
     this.maxRedirects,
     required this.maxResponseBytes,
+    this.proxyUrl,
+    this.customCaPem,
   });
 
   static Future<FfiExecutionOptions> default_() =>
@@ -358,7 +373,9 @@ class FfiExecutionOptions {
   int get hashCode =>
       timeoutMillis.hashCode ^
       maxRedirects.hashCode ^
-      maxResponseBytes.hashCode;
+      maxResponseBytes.hashCode ^
+      proxyUrl.hashCode ^
+      customCaPem.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -367,7 +384,9 @@ class FfiExecutionOptions {
           runtimeType == other.runtimeType &&
           timeoutMillis == other.timeoutMillis &&
           maxRedirects == other.maxRedirects &&
-          maxResponseBytes == other.maxResponseBytes;
+          maxResponseBytes == other.maxResponseBytes &&
+          proxyUrl == other.proxyUrl &&
+          customCaPem == other.customCaPem;
 }
 
 /// Exactly one of `response` and `error` is populated.

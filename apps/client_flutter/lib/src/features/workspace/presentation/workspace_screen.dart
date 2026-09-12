@@ -321,6 +321,9 @@ class WorkspaceScreen extends StatelessWidget {
                         _pickMultipartFile(context, controller),
                     onDeleteBodyFile: (path) =>
                         controller.add(WorkspaceBodyFileDeleted(path)),
+                    onNetworkChanged: (network) =>
+                        controller.add(WorkspaceNetworkChanged(network)),
+                    onPickCustomCa: () => _pickCustomCa(context, controller),
                     onAuthChanged: (auth) =>
                         controller.add(WorkspaceAuthChanged(auth)),
                     onAddQuery: () => controller.add(
@@ -472,6 +475,33 @@ class WorkspaceScreen extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Не удалось прикрепить файл.')),
+      );
+    }
+  }
+
+  static Future<void> _pickCustomCa(
+    BuildContext context,
+    WorkspaceBloc workspace,
+  ) async {
+    const typeGroup = XTypeGroup(
+      label: 'PEM certificate',
+      extensions: ['pem', 'crt', 'cer'],
+      mimeTypes: ['application/x-pem-file', 'application/pkix-cert'],
+    );
+    try {
+      final file = await openFile(acceptedTypeGroups: [typeGroup]);
+      if (file == null || !context.mounted) return;
+      final current = workspace.state.selectedTab;
+      if (current == null) return;
+      workspace.add(
+        WorkspaceNetworkChanged(
+          current.network.copyWith(customCaPem: await file.readAsBytes()),
+        ),
+      );
+    } on Object {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Не удалось прочитать PEM certificate.')),
       );
     }
   }

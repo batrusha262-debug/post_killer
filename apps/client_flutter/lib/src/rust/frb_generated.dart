@@ -73,7 +73,7 @@ class PostKillerRustLib
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -1768134463;
+  int get rustContentHash => -1274085819;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -123,6 +123,12 @@ abstract class PostKillerRustLibApi extends BaseApi {
   Future<FfiExecutionOutcome> crateApiExecuteRequestWithVariables({
     required FfiRequest request,
     required List<FfiKeyValue> variables,
+  });
+
+  Future<FfiExecutionOutcome> crateApiExecuteRequestWithVariablesAndOptions({
+    required FfiRequest request,
+    required List<FfiKeyValue> variables,
+    required FfiExecutionOptions options,
   });
 
   Future<FfiExecutionOptions> crateApiFfiExecutionOptionsDefault();
@@ -545,6 +551,43 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
       );
 
   @override
+  Future<FfiExecutionOutcome> crateApiExecuteRequestWithVariablesAndOptions({
+    required FfiRequest request,
+    required List<FfiKeyValue> variables,
+    required FfiExecutionOptions options,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_ffi_request(request, serializer);
+          sse_encode_list_ffi_key_value(variables, serializer);
+          sse_encode_box_autoadd_ffi_execution_options(options, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 13,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_ffi_execution_outcome,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiExecuteRequestWithVariablesAndOptionsConstMeta,
+        argValues: [request, variables, options],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiExecuteRequestWithVariablesAndOptionsConstMeta =>
+      const TaskConstMeta(
+        debugName: "execute_request_with_variables_and_options",
+        argNames: ["request", "variables", "options"],
+      );
+
+  @override
   Future<FfiExecutionOptions> crateApiFfiExecutionOptionsDefault() {
     return handler.executeNormal(
       NormalTask(
@@ -553,7 +596,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 14,
             port: port_,
           );
         },
@@ -586,7 +629,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 15,
             port: port_,
           );
         },
@@ -618,7 +661,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 16,
             port: port_,
           );
         },
@@ -651,7 +694,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 17,
             port: port_,
           );
         },
@@ -683,7 +726,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 18,
             port: port_,
           );
         },
@@ -714,7 +757,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 19,
             port: port_,
           );
         },
@@ -744,7 +787,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 20,
             port: port_,
           );
         },
@@ -774,7 +817,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 21,
             port: port_,
           );
         },
@@ -810,7 +853,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 22,
             port: port_,
           );
         },
@@ -847,7 +890,7 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 23,
             port: port_,
           );
         },
@@ -1067,12 +1110,14 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   FfiExecutionOptions dco_decode_ffi_execution_options(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return FfiExecutionOptions(
       timeoutMillis: dco_decode_CastedPrimitive_u_64(arr[0]),
       maxRedirects: dco_decode_opt_box_autoadd_u_32(arr[1]),
       maxResponseBytes: dco_decode_CastedPrimitive_u_64(arr[2]),
+      proxyUrl: dco_decode_opt_String(arr[3]),
+      customCaPem: dco_decode_opt_list_prim_u_8_strict(arr[4]),
     );
   }
 
@@ -1368,6 +1413,12 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  Uint8List? dco_decode_opt_list_prim_u_8_strict(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw == null ? null : dco_decode_list_prim_u_8_strict(raw);
+  }
+
+  @protected
   int dco_decode_u_16(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
@@ -1628,10 +1679,14 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     var var_timeoutMillis = sse_decode_CastedPrimitive_u_64(deserializer);
     var var_maxRedirects = sse_decode_opt_box_autoadd_u_32(deserializer);
     var var_maxResponseBytes = sse_decode_CastedPrimitive_u_64(deserializer);
+    var var_proxyUrl = sse_decode_opt_String(deserializer);
+    var var_customCaPem = sse_decode_opt_list_prim_u_8_strict(deserializer);
     return FfiExecutionOptions(
       timeoutMillis: var_timeoutMillis,
       maxRedirects: var_maxRedirects,
       maxResponseBytes: var_maxResponseBytes,
+      proxyUrl: var_proxyUrl,
+      customCaPem: var_customCaPem,
     );
   }
 
@@ -2043,6 +2098,17 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
   }
 
   @protected
+  Uint8List? sse_decode_opt_list_prim_u_8_strict(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    if (sse_decode_bool(deserializer)) {
+      return (sse_decode_list_prim_u_8_strict(deserializer));
+    } else {
+      return null;
+    }
+  }
+
+  @protected
   int sse_decode_u_16(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint16();
@@ -2278,6 +2344,8 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     sse_encode_CastedPrimitive_u_64(self.timeoutMillis, serializer);
     sse_encode_opt_box_autoadd_u_32(self.maxRedirects, serializer);
     sse_encode_CastedPrimitive_u_64(self.maxResponseBytes, serializer);
+    sse_encode_opt_String(self.proxyUrl, serializer);
+    sse_encode_opt_list_prim_u_8_strict(self.customCaPem, serializer);
   }
 
   @protected
@@ -2635,6 +2703,19 @@ class PostKillerRustLibApiImpl extends PostKillerRustLibApiImplPlatform
     sse_encode_bool(self != null, serializer);
     if (self != null) {
       sse_encode_box_autoadd_u_32(self, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_opt_list_prim_u_8_strict(
+    Uint8List? self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    sse_encode_bool(self != null, serializer);
+    if (self != null) {
+      sse_encode_list_prim_u_8_strict(self, serializer);
     }
   }
 

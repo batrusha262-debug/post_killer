@@ -56,7 +56,7 @@ pub async fn execute_with_options(
 ) -> Result<ResponsePayload, ExecuteError> {
     request.validate().map_err(ExecuteError::InvalidRequest)?;
 
-    let builder = build_request(&request, options)?;
+    let builder = build_request(&request, &options)?;
 
     let started_at = std::time::Instant::now();
     let response = builder.send().await.map_err(classify_transport)?;

@@ -15,11 +15,16 @@ impl Default for RedirectPolicy {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ExecutionOptions {
     pub timeout: Duration,
     pub redirect_policy: RedirectPolicy,
     pub max_response_bytes: usize,
+    /// Optional per-execution proxy URL. It is runtime configuration only.
+    pub proxy_url: Option<String>,
+    /// PEM certificate bytes supplied by the caller for a private CA. Never
+    /// serialize this value into history or diagnostics.
+    pub custom_ca_pem: Option<Vec<u8>>,
 }
 
 impl Default for ExecutionOptions {
@@ -28,6 +33,8 @@ impl Default for ExecutionOptions {
             timeout: DEFAULT_TIMEOUT,
             redirect_policy: RedirectPolicy::default(),
             max_response_bytes: DEFAULT_MAX_RESPONSE_BYTES,
+            proxy_url: None,
+            custom_ca_pem: None,
         }
     }
 }

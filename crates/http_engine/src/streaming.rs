@@ -12,7 +12,7 @@ pub async fn execute_streaming(
     // The deadline includes channel backpressure, not only socket I/O.
     let result = tokio::time::timeout(
         options.timeout,
-        execute_streaming_inner(&request, options, &cancellation, &events),
+        execute_streaming_inner(&request, options.clone(), &cancellation, &events),
     )
     .await
     .unwrap_or(Err(ExecuteError::Timeout));
@@ -41,7 +41,7 @@ async fn execute_streaming_inner(
     request.validate().map_err(ExecuteError::InvalidRequest)?;
     check_cancelled(cancellation)?;
 
-    let builder = build_request(request, options)?;
+    let builder = build_request(request, &options)?;
     let started_at = std::time::Instant::now();
     let response = tokio::select! {
         _ = cancellation.cancelled() => return Err(ExecuteError::Cancelled),
