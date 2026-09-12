@@ -74,8 +74,8 @@ jobs:
         with:
           name: post-killer-linux-packages
           path: |
-            dist/*.deb
-            dist/*.AppImage
+            dist/post-killer_*.deb
+            dist/Post-Killer-*-linux-x86_64.AppImage
 
   publish-release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -83,6 +83,8 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -91,6 +93,37 @@ jobs:
         with:
           path: release-files
           merge-multiple: true
+      - name: Generate SPDX SBOM for release packages
+        uses: anchore/sbom-action@v0
+        with:
+          path: release-files
+          format: spdx-json
+          output-file: release-files/post-killer-${{ github.ref_name }}.spdx.json
+          artifact-name: post-killer-${{ github.ref_name }}-sbom
+          upload-artifact: false
+      - name: Generate build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            release-files/*.dmg
+            release-files/*-windows-setup.exe
+            release-files/*.deb
+            release-files/Post-Killer-*-linux-x86_64.AppImage
+      - name: Write package checksums
+        run: |
+          cd release-files
+          sha256sum *.dmg *-windows-setup.exe *.deb Post-Killer-*-linux-x86_64.AppImage > SHA256SUMS.txt
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" release-files/* --generate-notes --verify-tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v version="$version" '
+            $0 == "## [" version "]" { in_release = 1; next }
+            in_release && /^## \[/ { exit }
+            in_release { print }
+          ' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
+          gh release create "$GITHUB_REF_NAME" release-files/* \
+            --title "Post Killer $version" \
+            --notes-file release-notes.md \
+            --verify-tag

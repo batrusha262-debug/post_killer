@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:client_flutter/src/app.dart';
 import 'package:client_flutter/src/rust/frb_generated.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -35,11 +35,23 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(const Key('send-request-button')));
 
-    await tester.pumpAndSettle(const Duration(seconds: 10));
+    for (
+      var attempt = 0;
+      attempt < 40 && find.text('HTTP 200').evaluate().isEmpty;
+      attempt += 1
+    ) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 250)),
+      );
+      await tester.pump();
+    }
     await tester.tap(find.byKey(const Key('response-tab')));
     await tester.pumpAndSettle();
 
     expect(find.text('HTTP 200'), findsOneWidget);
-    expect(find.textContaining('native-frb'), findsOneWidget);
+    final response = tester.widget<SelectableText>(
+      find.byKey(const Key('response-content')),
+    );
+    expect(response.textSpan!.toPlainText(), contains('native-frb'));
   });
 }

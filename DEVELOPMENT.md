@@ -18,7 +18,9 @@
   проверяет HTTP 200/response body в UI без mock-слоёв. Local endpoint намеренно
   заменяет внешний `httpbin`: он устраняет сетевую нестабильность CI, не ослабляя
   проверяемый native request flow.
-- [ ] RELEASE-HARDENING-1: подготовить release notes и provenance/SBOM; signing/notarization требует предоставленных Apple Developer, Windows certificate и GPG authority.
+- [ ] RELEASE-HARDENING-1: проверить в release CI release notes, SPDX SBOM,
+  SHA-256 checksums и GitHub provenance; signing/notarization требует
+  предоставленных Apple Developer, Windows certificate и GPG authority.
 
 ### Foundation
 
@@ -107,6 +109,9 @@
 - [ ] Добавить signing/notarization secrets, release signing и updater после
   предоставления Apple Developer / Windows certificate / GPG authority.
 - [ ] Добавить release notes и provenance/SBOM для опубликованных пакетов.
+  Реализация ожидает первый tag run: `CHANGELOG.md` даёт notes конкретной версии;
+  release job добавляет SPDX SBOM, `SHA256SUMS.txt` и provenance attestation для
+  DMG/EXE/DEB/AppImage. Packaging helper AppImage исключён из release assets.
 - [ ] Отдельно решить необходимость E2EE cloud sync; не проксировать запросы
   пользователя через Vercel.
 
