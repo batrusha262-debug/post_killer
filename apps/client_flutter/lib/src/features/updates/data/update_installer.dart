@@ -33,24 +33,22 @@ class HttpPlatformUpdateInstaller implements UpdateInstaller {
           )
           .timeout(const Duration(minutes: 5));
       if (response.statusCode != HttpStatus.ok) {
-        throw const UpdateInstallException('Не удалось скачать файл обновления.');
+        throw const UpdateInstallException(
+          'Не удалось скачать файл обновления.',
+        );
       }
       await response.stream.pipe(target.openWrite());
       if (await target.length() == 0) {
         throw const UpdateInstallException('Получен пустой файл обновления.');
       }
       if (Platform.isWindows) {
-        await Process.start(
-          target.path,
-          const [
-            '/VERYSILENT',
-            '/SUPPRESSMSGBOXES',
-            '/NORESTART',
-            '/CLOSEAPPLICATIONS',
-            '/RESTARTAPPLICATIONS',
-          ],
-          mode: ProcessStartMode.detached,
-        );
+        await Process.start(target.path, const [
+          '/VERYSILENT',
+          '/SUPPRESSMSGBOXES',
+          '/NORESTART',
+          '/CLOSEAPPLICATIONS',
+          '/RESTARTAPPLICATIONS',
+        ], mode: ProcessStartMode.detached);
         exit(0);
       }
       if (!Platform.isMacOS) {
@@ -65,15 +63,21 @@ class HttpPlatformUpdateInstaller implements UpdateInstaller {
     } on UpdateInstallException {
       rethrow;
     } on TimeoutException {
-      throw const UpdateInstallException('Превышено время загрузки обновления.');
+      throw const UpdateInstallException(
+        'Превышено время загрузки обновления.',
+      );
     } on MissingPluginException {
       throw const UpdateInstallException(
         'Автообновление не поддерживается на этой платформе.',
       );
     } on PlatformException catch (error) {
-      throw UpdateInstallException(error.message ?? 'Не удалось установить обновление.');
+      throw UpdateInstallException(
+        error.message ?? 'Не удалось установить обновление.',
+      );
     } on Object {
-      throw const UpdateInstallException('Не удалось скачать или запустить обновление.');
+      throw const UpdateInstallException(
+        'Не удалось скачать или запустить обновление.',
+      );
     }
   }
 

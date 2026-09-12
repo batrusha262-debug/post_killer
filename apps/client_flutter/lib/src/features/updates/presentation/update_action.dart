@@ -60,9 +60,9 @@ class _UpdateActionState extends State<UpdateAction> {
               : () {
                   if (state case UpdateAvailable(:final update)) {
                     _showDownloadDialog(context, update);
-                } else {
-                  _automaticCheckInProgress = false;
-                  context.read<UpdateBloc>().add(
+                  } else {
+                    _automaticCheckInProgress = false;
+                    context.read<UpdateBloc>().add(
                       const UpdateCheckRequested(),
                     );
                   }
