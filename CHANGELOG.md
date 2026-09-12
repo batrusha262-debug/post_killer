@@ -4,6 +4,16 @@ All notable user-facing changes are documented here. Releases follow semantic
 versioning; package signatures and notarization are introduced only after their
 respective signing authorities are configured.
 
+## [0.2.25]
+
+### Changed
+
+- Rebuilt the desktop API workspace as a dense terminal workbench: a command
+  bar, compact collection controls, high-contrast code surfaces and an
+  always-visible response inspector now keep requests and results together.
+- Refined the dark palette to graphite and arctic blue, reserving outcome
+  colours for HTTP status instead of using them as a global accent.
+
 ## [0.2.23]
 
 ### Changed
