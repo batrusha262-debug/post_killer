@@ -31,12 +31,13 @@ class WorkspaceScreen extends StatelessWidget {
     final controller = context.read<WorkspaceBloc>();
     final colors = Theme.of(context).colorScheme;
     final settings = SettingsScope.of(context);
+    final compactChrome = MediaQuery.sizeOf(context).width < 1100;
     final motionDuration = settings.reduceMotion
         ? Duration.zero
         : const Duration(milliseconds: 220);
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: Platform.isMacOS ? 108 : 22,
+        titleSpacing: Platform.isMacOS && !compactChrome ? 164 : 24,
         title: Row(
           children: [
             Container(
@@ -62,7 +63,7 @@ class WorkspaceScreen extends StatelessWidget {
                 builder: (context, constraints) => constraints.maxWidth < 430
                     ? const SizedBox.shrink()
                     : SizedBox(
-                        height: 46,
+                        height: 70,
                         child: TextField(
                           key: const Key('command-search-field'),
                           onChanged: (value) => controller.add(
@@ -77,13 +78,15 @@ class WorkspaceScreen extends StatelessWidget {
                       ),
               ),
             ),
-            const SizedBox(width: 14),
-            Icon(Icons.circle, size: 8, color: colors.secondary),
-            const SizedBox(width: 6),
-            Text(
-              'Локальный режим',
-              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
-            ),
+            if (!compactChrome) ...[
+              const SizedBox(width: 14),
+              Icon(Icons.circle, size: 8, color: colors.secondary),
+              const SizedBox(width: 6),
+              Text(
+                'Локальный режим',
+                style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
+              ),
+            ],
             AnimatedSwitcher(
               duration: motionDuration,
               child: workspace.isExecuting
@@ -139,7 +142,9 @@ class WorkspaceScreen extends StatelessWidget {
         builder: (context, constraints) => SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SizedBox(
-            width: constraints.maxWidth < 1180 ? 1180 : constraints.maxWidth,
+            // Keep the reference grid at desktop widths, but do not make
+            // controls unreachable on a 1440px desktop.
+            width: constraints.maxWidth < 1440 ? 1440 : constraints.maxWidth,
             height: constraints.maxHeight,
             child: Row(
               children: [
@@ -149,7 +154,7 @@ class WorkspaceScreen extends StatelessWidget {
                       controller.add(WorkspaceSectionSelected(section)),
                 ),
                 SizedBox(
-                  width: 340,
+                  width: 522,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: colors.surface,

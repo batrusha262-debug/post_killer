@@ -49,7 +49,7 @@ class CollectionsPane extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(14, 14, 10, 8),
+        padding: const EdgeInsets.fromLTRB(20, 35, 18, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -94,7 +94,7 @@ class CollectionsPane extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -126,64 +126,68 @@ class CollectionsPane extends StatelessWidget {
       ),
       if (workspaces.isNotEmpty)
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Container(
-            padding: const EdgeInsets.only(left: 10, right: 3),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.layers_outlined,
-                  size: 17,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Tooltip(
-                    message: 'Рабочее пространство',
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: selectedWorkspaceId,
-                        items: [
-                          for (final workspace in workspaces)
-                            DropdownMenuItem(
-                              value: workspace.id,
-                              child: Text(
-                                workspace.name,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: SizedBox(
+            height: 72,
+            child: Container(
+              padding: const EdgeInsets.only(left: 10, right: 3),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.layers_outlined,
+                    size: 17,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Tooltip(
+                      message: 'Рабочее пространство',
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: selectedWorkspaceId,
+                          items: [
+                            for (final workspace in workspaces)
+                              DropdownMenuItem(
+                                value: workspace.id,
+                                child: Text(
+                                  workspace.name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
-                        onChanged: isLoading
-                            ? null
-                            : (id) {
-                                if (id != null) onWorkspaceSelected(id);
-                              },
+                          ],
+                          onChanged: isLoading
+                              ? null
+                              : (id) {
+                                  if (id != null) onWorkspaceSelected(id);
+                                },
+                        ),
                       ),
                     ),
                   ),
-                ),
-                IconButton(
-                  key: const Key('delete-workspace-button'),
-                  tooltip: 'Удалить рабочее пространство',
-                  visualDensity: VisualDensity.compact,
-                  onPressed: isLoading || selectedWorkspaceId == null
-                      ? null
-                      : () => onDeleteWorkspace(
-                          workspaces.firstWhere(
-                            (workspace) => workspace.id == selectedWorkspaceId,
+                  IconButton(
+                    key: const Key('delete-workspace-button'),
+                    tooltip: 'Удалить рабочее пространство',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: isLoading || selectedWorkspaceId == null
+                        ? null
+                        : () => onDeleteWorkspace(
+                            workspaces.firstWhere(
+                              (workspace) =>
+                                  workspace.id == selectedWorkspaceId,
+                            ),
                           ),
-                        ),
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                ),
-              ],
+                    icon: const Icon(Icons.delete_outline, size: 18),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -191,14 +195,17 @@ class CollectionsPane extends StatelessWidget {
       if (error case final message?)
         Padding(padding: const EdgeInsets.all(12), child: Text(message)),
       Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: TextField(
-          key: const Key('collection-search-field'),
-          onChanged: onSearchChanged,
-          decoration: InputDecoration(
-            isDense: true,
-            hintText: 'Поиск в коллекциях…',
-            prefixIcon: const Icon(Icons.search_rounded, size: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SizedBox(
+          height: 74,
+          child: TextField(
+            key: const Key('collection-search-field'),
+            onChanged: onSearchChanged,
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: 'Поиск в коллекциях…',
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+            ),
           ),
         ),
       ),

@@ -76,10 +76,12 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
       foregroundColor: scheme.onSurface,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: 74,
+      // The workbench intentionally uses a generous desktop chrome.  It is a
+      // stable landmark for the command field rather than a mobile app bar.
+      toolbarHeight: 112,
       titleTextStyle: TextStyle(
         color: scheme.onSurface,
-        fontSize: 19,
+        fontSize: 25,
         fontWeight: FontWeight.w800,
         letterSpacing: -.45,
       ),
@@ -110,7 +112,7 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size(48, 44),
+        minimumSize: const Size(48, 68),
         shape: RoundedRectangleBorder(borderRadius: radius),
         textStyle: const TextStyle(fontWeight: FontWeight.w800),
         elevation: 0,
@@ -118,7 +120,7 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size(44, 42),
+        minimumSize: const Size(44, 68),
         shape: RoundedRectangleBorder(borderRadius: radius),
         side: BorderSide(color: scheme.outline),
       ),
@@ -167,10 +169,10 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
         fontSize: 12,
       ),
       dividerColor: scheme.outlineVariant,
-      indicatorSize: TabBarIndicatorSize.label,
-      indicator: UnderlineTabIndicator(
-        borderSide: BorderSide(color: scheme.primary, width: 3),
-        borderRadius: BorderRadius.circular(4),
+      indicatorSize: TabBarIndicatorSize.tab,
+      indicator: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: .82),
+        border: Border(bottom: BorderSide(color: scheme.primary, width: 4)),
       ),
     ),
     tooltipTheme: const TooltipThemeData(

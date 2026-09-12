@@ -102,29 +102,36 @@ class _ResponseViewState extends State<ResponseView> {
         children: [
           Container(
             margin: EdgeInsets.zero,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            height: 106,
+            padding: const EdgeInsets.fromLTRB(18, 13, 18, 10),
             decoration: BoxDecoration(
               color: response.status! < 400
                   ? colors.secondaryContainer.withValues(alpha: .55)
                   : colors.errorContainer.withValues(alpha: .55),
             ),
-            child: Wrap(
-              spacing: 16,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Chip(
-                  backgroundColor: Colors.transparent,
-                  side: BorderSide.none,
-                  avatar: Icon(
-                    response.status! < 400
-                        ? Icons.check_circle_outline
-                        : Icons.error_outline,
-                    size: 18,
-                  ),
-                  label: Text('HTTP ${response.status}'),
+                Wrap(
+                  spacing: 16,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Chip(
+                      backgroundColor: Colors.white.withValues(alpha: .9),
+                      side: BorderSide.none,
+                      avatar: Icon(
+                        response.status! < 400
+                            ? Icons.check_circle_outline
+                            : Icons.error_outline,
+                        size: 20,
+                      ),
+                      label: Text('HTTP ${response.status}'),
+                    ),
+                    Text('${response.durationMillis} ms'),
+                    Text('${responseBytes.length} bytes'),
+                  ],
                 ),
-                Text('${response.durationMillis} ms'),
-                Text('${responseBytes.length} bytes'),
+                const SizedBox(height: 4),
                 Text(isBinary ? 'Binary' : (_isJson ? 'JSON' : 'Text')),
               ],
             ),

@@ -4,6 +4,18 @@ All notable user-facing changes are documented here. Releases follow semantic
 versioning; package signatures and notarization are introduced only after their
 respective signing authorities are configured.
 
+## [0.2.27]
+
+### Changed
+
+- Matched the desktop workbench to the supplied API-client reference at the
+  layout level: a 134 px activity rail, 522 px collection area, larger command
+  chrome, 96 px request tabs, a 72 px request composer and aligned request /
+  response inspectors.
+- Reworked the parameter table and response status area to preserve the exact
+  dense, structured workbench hierarchy while retaining the real request,
+  collection and response behaviour.
+
 ## [0.2.26]
 
 ### Changed

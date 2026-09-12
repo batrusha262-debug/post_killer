@@ -16,7 +16,7 @@ class PrimaryNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Container(
-      width: 88,
+      width: 134,
       decoration: BoxDecoration(
         color: colors.surface,
         border: Border(right: BorderSide(color: colors.outlineVariant)),
@@ -24,15 +24,15 @@ class PrimaryNavigation extends StatelessWidget {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 16, bottom: 18),
+            padding: const EdgeInsets.only(top: 26, bottom: 28),
             child: Tooltip(
               message: 'Ваше API-пространство',
               child: Container(
-                width: 44,
-                height: 44,
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
                   color: colors.primary,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
                       color: colors.primary.withValues(alpha: .18),
@@ -114,10 +114,10 @@ class _Destination extends StatelessWidget {
                 ? Duration.zero
                 : const Duration(milliseconds: 180),
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
               color: selected ? colors.primaryContainer : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -125,16 +125,16 @@ class _Destination extends StatelessWidget {
                 Icon(
                   selected ? selectedIcon : icon,
                   color: selected ? colors.primary : colors.onSurfaceVariant,
-                  size: 22,
+                  size: 30,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 7),
                 Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: selected ? colors.primary : colors.onSurfaceVariant,
-                    fontSize: 9,
+                    fontSize: 12,
                     fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
                   ),
                 ),

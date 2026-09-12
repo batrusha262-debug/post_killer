@@ -98,15 +98,17 @@ class KeyValueEditor extends StatelessWidget {
           ),
         ),
       if (values.isEmpty)
-        Padding(
-          padding: const EdgeInsets.all(18),
+        SizedBox(
+          height: 150,
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 Icons.playlist_add_outlined,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
+                size: 30,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(emptyLabel),
             ],
           ),
@@ -114,6 +116,9 @@ class KeyValueEditor extends StatelessWidget {
       Align(
         alignment: Alignment.centerLeft,
         child: TextButton.icon(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 14),
+          ),
           onPressed: onAdd,
           icon: const Icon(Icons.add_rounded),
           label: const Text('Add row'),
@@ -131,6 +136,7 @@ class _TableHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
+    height: 46,
     padding: const EdgeInsets.fromLTRB(16, 7, 16, 7),
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
