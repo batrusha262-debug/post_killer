@@ -12,7 +12,8 @@
 
 ## Активный план
 
-- [ ] QA-007: проверить в GitHub Actions macOS desktop E2E runner, который
+- [x] QA-007: GitHub Actions Flutter quality #31 успешно проверил macOS
+  desktop E2E runner, который
   запускает настоящий Flutter app, посылает
   GET на локальный deterministic HTTP endpoint через FRB/Rust transport и
   проверяет HTTP 200/response body в UI без mock-слоёв. Local endpoint намеренно
@@ -78,7 +79,7 @@
 
 - [x] Базовый импорт Postman Collection v2.1 и OpenAPI; экспорт собственного формата.
 - [x] Хранение environment-секретов через системный secure storage, redaction и limits.
-- [ ] Rust/Flutter unit, widget, integration и desktop E2E tests.
+- [x] Rust/Flutter unit, widget, integration и desktop E2E tests.
 
 ### Release
 
@@ -86,13 +87,13 @@
   Подтверждено macOS UI smoke-test: в accessibility tree отображалась пустым
   `button`. Исправлено `Semantics` label `Проверить обновления` / доступная
   версия; widget-тест фиксирует контракт для screen readers.
-- [ ] **QA-007 · Medium · Нет автоматического desktop E2E runner для FRB.**
+- [x] **QA-007 · Medium · Нет автоматического desktop E2E runner для FRB.**
   `flutter test` не загружает macOS native `.framework`, поэтому Dart→FFI
   нельзя выполнять в обычном widget test. UI тестируется через injected port,
   Rust FFI integration — отдельным TCP-тестом. Критерий готовности: добавить
   macOS integration runner в CI, который запускает `.app` и подтверждает
-  `GET` в Response без mock-слоёв. Реализация ожидает первый GitHub Actions run:
-  `native-macos-e2e` запускает
+  `GET` в Response без mock-слоёв. Исправлено и проверено GitHub Actions
+  Flutter quality #31 (2026-09-12): `native-macos-e2e` успешно запускает
   integration test на `macos-14`; он поднимает loopback HTTP endpoint, запускает
   приложение с настоящими `FrbWorkspaceGateway` и `FrbRequestExecutor`, вводит
   URL, нажимает Send и проверяет HTTP 200/body. Loopback заменяет зависимый от
