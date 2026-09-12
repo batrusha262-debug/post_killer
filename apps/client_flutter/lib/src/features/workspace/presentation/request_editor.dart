@@ -77,7 +77,7 @@ class RequestEditor extends StatelessWidget {
         (tab.bodyFormat != RequestBodyFormat.json || isValidJson(tab.body)) &&
         tab.auth.isValid;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -85,8 +85,11 @@ class RequestEditor extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surfaceContainerHighest
-                  .withValues(alpha: .52),
-              borderRadius: BorderRadius.circular(14),
+                  .withValues(alpha: .38),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+              borderRadius: BorderRadius.circular(7),
             ),
             child: LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
@@ -200,13 +203,15 @@ class RequestEditor extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Expanded(
             child: DefaultTabController(
-              length: 6,
+              length: 5,
               child: Column(
                 children: [
                   const TabBar(
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
                     tabs: [
                       Tab(
                         icon: Icon(Icons.tune_rounded, size: 17),
@@ -229,114 +234,130 @@ class RequestEditor extends StatelessWidget {
                         icon: Icon(Icons.language_outlined, size: 17),
                         text: 'Сеть',
                       ),
-                      Tab(
-                        key: Key('response-tab'),
-                        icon: Icon(Icons.bolt_outlined, size: 17),
-                        text: 'Ответ',
-                      ),
                     ],
                   ),
                   Expanded(
-                    child: TabBarView(
+                    child: Row(
                       children: [
-                        KeyValueEditor(
-                          values: tab.query,
-                          emptyLabel: 'No query parameters',
-                          onAdd: onAddQuery,
-                          onChanged: onQueryChanged,
-                        ),
-                        KeyValueEditor(
-                          values: tab.headers,
-                          isHeader: true,
-                          onHeaderPreset: onHeaderPreset,
-                          emptyLabel: 'No headers',
-                          onAdd: onAddHeader,
-                          onChanged: onHeaderChanged,
-                          onDelete: onDeleteHeader,
-                        ),
-                        RequestAuthEditor(
-                          auth: tab.auth,
-                          loginEndpoints: loginEndpoints,
-                          onChanged: onAuthChanged,
-                        ),
-                        Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                              child: DropdownButtonFormField<RequestBodyFormat>(
-                                key: const Key('body-format-picker'),
-                                initialValue: tab.bodyFormat,
-                                decoration: const InputDecoration(
-                                  isDense: true,
-                                  labelText: 'Body format',
-                                ),
-                                items: const [
-                                  DropdownMenuItem(
-                                    value: RequestBodyFormat.json,
-                                    child: Text('JSON'),
+                        Expanded(
+                          flex: 11,
+                          child: TabBarView(
+                            children: [
+                              KeyValueEditor(
+                                values: tab.query,
+                                emptyLabel: 'No query parameters',
+                                onAdd: onAddQuery,
+                                onChanged: onQueryChanged,
+                              ),
+                              KeyValueEditor(
+                                values: tab.headers,
+                                isHeader: true,
+                                onHeaderPreset: onHeaderPreset,
+                                emptyLabel: 'No headers',
+                                onAdd: onAddHeader,
+                                onChanged: onHeaderChanged,
+                                onDelete: onDeleteHeader,
+                              ),
+                              RequestAuthEditor(
+                                auth: tab.auth,
+                                loginEndpoints: loginEndpoints,
+                                onChanged: onAuthChanged,
+                              ),
+                              Column(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      12,
+                                      12,
+                                      12,
+                                      0,
+                                    ),
+                                    child:
+                                        DropdownButtonFormField<
+                                          RequestBodyFormat
+                                        >(
+                                          key: const Key('body-format-picker'),
+                                          initialValue: tab.bodyFormat,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Body format',
+                                          ),
+                                          items: const [
+                                            DropdownMenuItem(
+                                              value: RequestBodyFormat.json,
+                                              child: Text('JSON'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: RequestBodyFormat.text,
+                                              child: Text('Text (raw)'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: RequestBodyFormat
+                                                  .formUrlEncoded,
+                                              child: Text('Form URL encoded'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value:
+                                                  RequestBodyFormat.multipart,
+                                              child: Text('Multipart form'),
+                                            ),
+                                          ],
+                                          onChanged: (format) {
+                                            if (format != null) {
+                                              onBodyFormatChanged(format);
+                                            }
+                                          },
+                                        ),
                                   ),
-                                  DropdownMenuItem(
-                                    value: RequestBodyFormat.text,
-                                    child: Text('Text (raw)'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: RequestBodyFormat.formUrlEncoded,
-                                    child: Text('Form URL encoded'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: RequestBodyFormat.multipart,
-                                    child: Text('Multipart form'),
+                                  Expanded(
+                                    child: _BodyEditor(
+                                      tab: tab,
+                                      onBodyChanged: onBodyChanged,
+                                      onAddBodyField: onAddBodyField,
+                                      onBodyFieldChanged: onBodyFieldChanged,
+                                      onDeleteBodyField: onDeleteBodyField,
+                                      onPickBodyFile: onPickBodyFile,
+                                      onDeleteBodyFile: onDeleteBodyFile,
+                                    ),
                                   ),
                                 ],
-                                onChanged: (format) {
-                                  if (format != null) {
-                                    onBodyFormatChanged(format);
-                                  }
-                                },
                               ),
-                            ),
-                            Expanded(
-                              child: _BodyEditor(
-                                tab: tab,
-                                onBodyChanged: onBodyChanged,
-                                onAddBodyField: onAddBodyField,
-                                onBodyFieldChanged: onBodyFieldChanged,
-                                onDeleteBodyField: onDeleteBodyField,
-                                onPickBodyFile: onPickBodyFile,
-                                onDeleteBodyFile: onDeleteBodyFile,
+                              ListView(
+                                padding: const EdgeInsets.all(12),
+                                children: [
+                                  TextFormField(
+                                    initialValue: tab.network.proxyUrl,
+                                    onChanged: (value) => onNetworkChanged(
+                                      tab.network.copyWith(proxyUrl: value),
+                                    ),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Proxy URL',
+                                      hintText: 'http://127.0.0.1:8080',
+                                      helperText: 'Runtime only; never saved or exported.',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    tab.network.customCaPem == null
+                                        ? 'Custom CA: system trust store'
+                                        : 'Custom CA loaded for this draft',
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: onPickCustomCa,
+                                    icon: const Icon(
+                                      Icons.verified_user_outlined,
+                                    ),
+                                    label: const Text('Choose PEM certificate'),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                        ListView(
-                          padding: const EdgeInsets.all(12),
-                          children: [
-                            TextFormField(
-                              initialValue: tab.network.proxyUrl,
-                              onChanged: (value) => onNetworkChanged(
-                                tab.network.copyWith(proxyUrl: value),
-                              ),
-                              decoration: const InputDecoration(
-                                labelText: 'Proxy URL',
-                                hintText: 'http://127.0.0.1:8080',
-                                helperText:
-                                    'Runtime only; never saved or exported.',
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              tab.network.customCaPem == null
-                                  ? 'Custom CA: system trust store'
-                                  : 'Custom CA loaded for this draft',
-                            ),
-                            TextButton.icon(
-                              onPressed: onPickCustomCa,
-                              icon: const Icon(Icons.verified_user_outlined),
-                              label: const Text('Choose PEM certificate'),
-                            ),
-                          ],
+                        const VerticalDivider(width: 1),
+                        Expanded(
+                          flex: 10,
+                          child: _ResponseInspector(execution: execution),
                         ),
-                        ResponseView(execution: execution),
                       ],
                     ),
                   ),
@@ -345,6 +366,77 @@ class RequestEditor extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ResponseInspector extends StatelessWidget {
+  const _ResponseInspector({required this.execution});
+
+  final RequestExecutionView? execution;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest.withValues(alpha: .18),
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 42,
+            child: Row(
+              children: [
+                TextButton.icon(
+                  key: const Key('response-tab'),
+                  onPressed: () {},
+                  icon: const Icon(Icons.bolt_outlined, size: 16),
+                  label: const Text('Ответ'),
+                ),
+                const Spacer(),
+                if (execution?.status case final status?) ...[
+                  _Metric(label: '$status', good: status < 400),
+                  _Metric(label: '${execution!.durationMillis} ms'),
+                ],
+                const SizedBox(width: 8),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(child: ResponseView(execution: execution)),
+        ],
+      ),
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  const _Metric({required this.label, this.good = false});
+
+  final String label;
+  final bool good;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(left: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: good
+            ? colors.secondaryContainer.withValues(alpha: .65)
+            : colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: good ? colors.secondary : colors.onSurfaceVariant,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }

@@ -36,34 +36,75 @@ class WorkspaceScreen extends StatelessWidget {
         : const Duration(milliseconds: 220);
     return Scaffold(
       appBar: AppBar(
-        titleSpacing: Platform.isMacOS ? 92 : 22,
+        titleSpacing: Platform.isMacOS ? 84 : 14,
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                color: colors.primary,
-                borderRadius: BorderRadius.circular(12),
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: colors.outline),
               ),
               child: Icon(
                 settings.appearance == AppAppearance.slay
                     ? Icons.auto_awesome
                     : Icons.bolt_rounded,
-                color: colors.onPrimary,
-                size: 20,
+                color: colors.primary,
+                size: 18,
               ),
             ),
-            const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Post Killer'),
-                Text(
-                  'API workspace',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                ),
-              ],
+            const SizedBox(width: 8),
+            const Text('Post Killer'),
+            const SizedBox(width: 18),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) => constraints.maxWidth < 430
+                    ? const SizedBox.shrink()
+                    : Container(
+                        height: 34,
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceContainerHighest.withValues(
+                            alpha: .45,
+                          ),
+                          border: Border.all(color: colors.outlineVariant),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.terminal_rounded,
+                              size: 16,
+                              color: colors.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Команда или поиск…',
+                              style: TextStyle(
+                                color: colors.onSurfaceVariant,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '⌘ K',
+                              style: TextStyle(
+                                color: colors.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Icon(Icons.circle, size: 8, color: colors.secondary),
+            const SizedBox(width: 6),
+            Text(
+              'Локальный режим',
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 11),
             ),
             AnimatedSwitcher(
               duration: motionDuration,
@@ -77,7 +118,7 @@ class WorkspaceScreen extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: colors.primaryContainer,
-                        borderRadius: BorderRadius.circular(99),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -120,7 +161,7 @@ class WorkspaceScreen extends StatelessWidget {
         builder: (context, constraints) => SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SizedBox(
-            width: constraints.maxWidth < 1060 ? 1060 : constraints.maxWidth,
+            width: constraints.maxWidth < 1120 ? 1120 : constraints.maxWidth,
             height: constraints.maxHeight,
             child: Row(
               children: [
@@ -130,7 +171,7 @@ class WorkspaceScreen extends StatelessWidget {
                       controller.add(WorkspaceSectionSelected(section)),
                 ),
                 SizedBox(
-                  width: 292,
+                  width: 316,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: colors.surface,

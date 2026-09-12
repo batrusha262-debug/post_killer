@@ -2,70 +2,80 @@ import 'package:flutter/material.dart';
 
 import 'app_settings.dart';
 
-/// A calm, high-contrast workspace theme built around long API work sessions.
+/// A dense, terminal-inspired workbench for long API investigation sessions.
+///
+/// The accent is deliberately cool blue rather than a conventional success
+/// green: HTTP outcome colours remain reserved for outcomes, while blue marks
+/// the current command and focus state.
 ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
   final isDark = brightness == Brightness.dark;
-  final isMidnight = settings.appearance == AppAppearance.slay;
-  final accent = isMidnight ? const Color(0xFFA78BFA) : const Color(0xFF2563EB);
-  final surface = isDark ? const Color(0xFF171C27) : const Color(0xFFFFFFFF);
-  final canvas = isDark ? const Color(0xFF101521) : const Color(0xFFF4F7FC);
+  final isSlay = settings.appearance == AppAppearance.slay;
+  final accent = isSlay ? const Color(0xFFA78BFA) : const Color(0xFF4EA1FF);
+  final canvas = isDark ? const Color(0xFF090E14) : const Color(0xFFF2F5F8);
+  final surface = isDark ? const Color(0xFF0D141D) : const Color(0xFFFBFCFD);
+  final raised = isDark ? const Color(0xFF121D28) : const Color(0xFFF4F7FA);
   final scheme = ColorScheme(
     brightness: brightness,
     primary: accent,
-    onPrimary: Colors.white,
+    onPrimary: isDark ? const Color(0xFF06111F) : Colors.white,
     primaryContainer: isDark
-        ? (isMidnight ? const Color(0xFF30255B) : const Color(0xFF19376B))
-        : (isMidnight ? const Color(0xFFECE7FF) : const Color(0xFFE5EEFF)),
+        ? const Color(0xFF14314F)
+        : const Color(0xFFDCEBFB),
     onPrimaryContainer: isDark
-        ? const Color(0xFFE8E1FF)
-        : const Color(0xFF193B78),
-    secondary: isMidnight ? const Color(0xFF67E8F9) : const Color(0xFF059669),
-    onSecondary: Colors.white,
+        ? const Color(0xFFD7E9FF)
+        : const Color(0xFF10385E),
+    secondary: isSlay ? const Color(0xFFD8B4FE) : const Color(0xFF7DD3FC),
+    onSecondary: const Color(0xFF07121F),
     secondaryContainer: isDark
-        ? const Color(0xFF123D39)
-        : const Color(0xFFDDF8EE),
+        ? const Color(0xFF12303B)
+        : const Color(0xFFD9F4FB),
     onSecondaryContainer: isDark
-        ? const Color(0xFFB9F5DF)
-        : const Color(0xFF07594B),
-    tertiary: isMidnight ? const Color(0xFFF9A8D4) : const Color(0xFFF59E0B),
-    onTertiary: const Color(0xFF241300),
+        ? const Color(0xFFC5F0FC)
+        : const Color(0xFF123B48),
+    tertiary: const Color(0xFFFBBF24),
+    onTertiary: const Color(0xFF2C2000),
     tertiaryContainer: isDark
-        ? const Color(0xFF513819)
-        : const Color(0xFFFFF0D0),
+        ? const Color(0xFF473615)
+        : const Color(0xFFFFF1C7),
     onTertiaryContainer: isDark
-        ? const Color(0xFFFFDCA5)
-        : const Color(0xFF624300),
-    error: isDark ? const Color(0xFFFFA4A9) : const Color(0xFFDC3545),
-    onError: isDark ? const Color(0xFF5B1019) : Colors.white,
-    errorContainer: isDark ? const Color(0xFF4A202A) : const Color(0xFFFFE8EA),
+        ? const Color(0xFFFFE8A8)
+        : const Color(0xFF5A4300),
+    error: isDark ? const Color(0xFFFFA4AB) : const Color(0xFFC6283D),
+    onError: isDark ? const Color(0xFF580716) : Colors.white,
+    errorContainer: isDark ? const Color(0xFF471923) : const Color(0xFFFFE7E9),
     onErrorContainer: isDark
-        ? const Color(0xFFFFD9DC)
-        : const Color(0xFF8D1723),
+        ? const Color(0xFFFFD9DD)
+        : const Color(0xFF7E1020),
     surface: surface,
-    onSurface: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF172033),
-    surfaceContainerHighest: isDark
-        ? const Color(0xFF252D3C)
-        : const Color(0xFFEAF0F8),
+    onSurface: isDark ? const Color(0xFFE7EDF5) : const Color(0xFF17202A),
+    surfaceContainerHighest: raised,
     onSurfaceVariant: isDark
-        ? const Color(0xFFABB7C8)
-        : const Color(0xFF60708A),
-    outline: isDark ? const Color(0xFF3B465A) : const Color(0xFFD4DEEC),
-    outlineVariant: isDark ? const Color(0xFF2D3748) : const Color(0xFFE3E9F2),
+        ? const Color(0xFF99AABD)
+        : const Color(0xFF596A7D),
+    outline: isDark ? const Color(0xFF2A3B4E) : const Color(0xFFCED8E3),
+    outlineVariant: isDark ? const Color(0xFF1B2A39) : const Color(0xFFE0E7EF),
     shadow: Colors.black,
     scrim: Colors.black,
-    inverseSurface: isDark ? const Color(0xFFF1F5F9) : const Color(0xFF172033),
-    onInverseSurface: isDark ? const Color(0xFF172033) : Colors.white,
-    inversePrimary: isDark ? const Color(0xFFB9D1FF) : const Color(0xFF245DCE),
+    inverseSurface: isDark ? const Color(0xFFE7EDF5) : const Color(0xFF17202A),
+    onInverseSurface: isDark ? const Color(0xFF17202A) : Colors.white,
+    inversePrimary: isDark ? const Color(0xFFB7D8FF) : const Color(0xFF1766B7),
   );
-  final radius = BorderRadius.circular(12);
   final fieldBorder = OutlineInputBorder(
-    borderRadius: radius,
-    borderSide: BorderSide(color: scheme.outlineVariant),
+    borderRadius: BorderRadius.circular(6),
+    borderSide: BorderSide(color: scheme.outline),
   );
+  final labelStyle = TextStyle(
+    color: scheme.onSurfaceVariant,
+    fontFamily: 'monospace',
+    fontSize: 12,
+    fontWeight: FontWeight.w600,
+  );
+
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: canvas,
+    fontFamily: 'monospace',
     splashFactory: InkSparkle.splashFactory,
     visualDensity: settings.compact
         ? VisualDensity.compact
@@ -75,33 +85,14 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
       foregroundColor: scheme.onSurface,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: 70,
+      toolbarHeight: 54,
       titleTextStyle: TextStyle(
         color: scheme.onSurface,
-        fontSize: 19,
+        fontFamily: 'monospace',
+        fontSize: 18,
         fontWeight: FontWeight.w800,
-        letterSpacing: -0.5,
+        letterSpacing: -0.4,
       ),
-    ),
-    navigationRailTheme: NavigationRailThemeData(
-      backgroundColor: surface,
-      indicatorColor: scheme.primaryContainer,
-      indicatorShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      selectedIconTheme: IconThemeData(color: scheme.primary),
-      unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
-      selectedLabelTextStyle: TextStyle(
-        color: scheme.primary,
-        fontSize: 10,
-        fontWeight: FontWeight.w800,
-      ),
-      unselectedLabelTextStyle: TextStyle(
-        color: scheme.onSurfaceVariant,
-        fontSize: 10,
-        fontWeight: FontWeight.w700,
-      ),
-      elevation: 0,
     ),
     dividerTheme: DividerThemeData(
       color: scheme.outlineVariant,
@@ -109,48 +100,54 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
       space: 1,
     ),
     inputDecorationTheme: InputDecorationTheme(
+      isDense: true,
       filled: true,
-      fillColor: isDark ? const Color(0xFF1D2533) : const Color(0xFFF8FAFD),
+      fillColor: isDark ? const Color(0xFF0A1119) : Colors.white,
       border: fieldBorder,
       enabledBorder: fieldBorder,
       focusedBorder: fieldBorder.copyWith(
-        borderSide: BorderSide(color: scheme.primary, width: 2),
+        borderSide: BorderSide(color: scheme.primary, width: 1.5),
       ),
       errorBorder: fieldBorder.copyWith(
         borderSide: BorderSide(color: scheme.error),
       ),
       contentPadding: EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: settings.compact ? 8 : 12,
+        horizontal: 12,
+        vertical: settings.compact ? 8 : 11,
       ),
-      hintStyle: TextStyle(
-        color: scheme.onSurfaceVariant.withValues(alpha: .78),
-      ),
+      hintStyle: labelStyle,
+      labelStyle: labelStyle,
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size(48, 44),
-        shape: RoundedRectangleBorder(borderRadius: radius),
-        textStyle: const TextStyle(fontWeight: FontWeight.w800),
+        minimumSize: const Size(48, 40),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        textStyle: const TextStyle(
+          fontFamily: 'monospace',
+          fontWeight: FontWeight.w800,
+        ),
         elevation: 0,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size(44, 42),
-        shape: RoundedRectangleBorder(borderRadius: radius),
+        minimumSize: const Size(44, 40),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         side: BorderSide(color: scheme.outline),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        textStyle: const TextStyle(
+          fontFamily: 'monospace',
+          fontWeight: FontWeight.w700,
+        ),
       ),
     ),
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
       ),
     ),
     cardTheme: CardThemeData(
@@ -158,38 +155,46 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(7),
         side: BorderSide(color: scheme.outlineVariant),
       ),
     ),
     chipTheme: ChipThemeData(
       backgroundColor: scheme.surfaceContainerHighest,
-      side: BorderSide(color: Colors.transparent),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      side: BorderSide(color: scheme.outlineVariant),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       labelStyle: TextStyle(
         color: scheme.onSurface,
+        fontFamily: 'monospace',
         fontWeight: FontWeight.w700,
       ),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: scheme.inverseSurface,
-      contentTextStyle: TextStyle(color: scheme.onInverseSurface),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      contentTextStyle: TextStyle(
+        color: scheme.onInverseSurface,
+        fontFamily: 'monospace',
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
     ),
     tabBarTheme: TabBarThemeData(
       labelColor: scheme.primary,
       unselectedLabelColor: scheme.onSurfaceVariant,
-      labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+      labelStyle: const TextStyle(
+        fontFamily: 'monospace',
+        fontWeight: FontWeight.w800,
+        fontSize: 12,
+      ),
       unselectedLabelStyle: const TextStyle(
-        fontWeight: FontWeight.w700,
+        fontFamily: 'monospace',
+        fontWeight: FontWeight.w600,
         fontSize: 12,
       ),
       dividerColor: scheme.outlineVariant,
       indicatorSize: TabBarIndicatorSize.label,
       indicator: UnderlineTabIndicator(
-        borderSide: BorderSide(color: scheme.primary, width: 3),
-        borderRadius: BorderRadius.circular(4),
+        borderSide: BorderSide(color: scheme.primary, width: 2),
       ),
     ),
     tooltipTheme: const TooltipThemeData(

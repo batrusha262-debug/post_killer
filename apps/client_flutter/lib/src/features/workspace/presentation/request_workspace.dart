@@ -69,17 +69,11 @@ class RequestWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.all(12),
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-    ),
+    color: Theme.of(context).colorScheme.surface,
     child: Column(
       children: [
         SizedBox(
-          height: 48,
+          height: 44,
           child: Row(
             children: [
               Expanded(

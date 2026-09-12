@@ -46,6 +46,19 @@ void main() {
     expect(find.text('POST'), findsWidgets);
   });
 
+  testWidgets('keeps the response inspector beside the request editor', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+
+    expect(find.byKey(const Key('response-tab')), findsOneWidget);
+    expect(find.text('Response will appear here'), findsOneWidget);
+    await tester.tap(find.text('Тело'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('json-body-editor')), findsOneWidget);
+    expect(find.byKey(const Key('response-tab')), findsOneWidget);
+  });
+
   testWidgets('creates a local request tab and tracks draft edits', (
     tester,
   ) async {

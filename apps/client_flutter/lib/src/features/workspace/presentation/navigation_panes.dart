@@ -16,7 +16,7 @@ class PrimaryNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Container(
-      width: 78,
+      width: 72,
       decoration: BoxDecoration(
         color: colors.surface,
         border: Border(right: BorderSide(color: colors.outlineVariant)),
@@ -24,24 +24,18 @@ class PrimaryNavigation extends StatelessWidget {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 16, bottom: 18),
+            padding: const EdgeInsets.only(top: 12, bottom: 14),
             child: Tooltip(
               message: 'Ваше API-пространство',
               child: Container(
-                width: 42,
-                height: 42,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: colors.primary,
-                  borderRadius: BorderRadius.circular(13),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.primary.withValues(alpha: .22),
-                      blurRadius: 14,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+                  color: colors.primaryContainer,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: colors.outline),
                 ),
-                child: Icon(Icons.bolt_rounded, color: colors.onPrimary),
+                child: Icon(Icons.bolt_rounded, color: colors.primary),
               ),
             ),
           ),
@@ -108,16 +102,19 @@ class _Destination extends StatelessWidget {
         message: label,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(5),
           child: AnimatedContainer(
             duration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero
                 : const Duration(milliseconds: 180),
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 9),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             decoration: BoxDecoration(
               color: selected ? colors.primaryContainer : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(5),
+              border: selected
+                  ? Border(left: BorderSide(color: colors.primary, width: 2))
+                  : null,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,

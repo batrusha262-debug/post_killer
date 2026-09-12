@@ -49,7 +49,7 @@ class CollectionsPane extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 12, 10),
+        padding: const EdgeInsets.fromLTRB(14, 14, 10, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -60,16 +60,12 @@ class CollectionsPane extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Запросы',
+                        'COLLECTIONS',
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: 13,
                           fontWeight: FontWeight.w800,
+                          letterSpacing: .4,
                         ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Коллекции и черновики',
-                        style: TextStyle(fontSize: 11),
                       ),
                     ],
                   ),
@@ -99,21 +95,31 @@ class CollectionsPane extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            FilledButton.icon(
-              key: const Key('new-request-button'),
-              onPressed: onNewRequest,
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: const Text('Новый запрос'),
-            ),
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                key: const Key('new-collection-button'),
-                onPressed: selectedWorkspaceId == null ? null : onNewCollection,
-                icon: const Icon(Icons.create_new_folder_outlined, size: 17),
-                label: const Text('Новая коллекция'),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    key: const Key('new-request-button'),
+                    onPressed: onNewRequest,
+                    icon: const Icon(Icons.add_rounded, size: 17),
+                    label: const Text('Новый запрос'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: 'Новая коллекция',
+                  child: OutlinedButton(
+                    key: const Key('new-collection-button'),
+                    onPressed: selectedWorkspaceId == null
+                        ? null
+                        : onNewCollection,
+                    child: const Icon(
+                      Icons.create_new_folder_outlined,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -191,7 +197,7 @@ class CollectionsPane extends StatelessWidget {
           onChanged: onSearchChanged,
           decoration: InputDecoration(
             isDense: true,
-            hintText: 'Найти запрос',
+            hintText: 'Поиск в коллекциях…',
             prefixIcon: const Icon(Icons.search_rounded, size: 20),
           ),
         ),
