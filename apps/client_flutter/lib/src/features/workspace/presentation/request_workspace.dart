@@ -73,7 +73,7 @@ class RequestWorkspace extends StatelessWidget {
     child: Column(
       children: [
         SizedBox(
-          height: 96,
+          height: 34,
           child: Row(
             children: [
               Expanded(
@@ -94,7 +94,7 @@ class RequestWorkspace extends StatelessWidget {
               IconButton(
                 tooltip: 'Новая вкладка',
                 onPressed: onNewTab,
-                icon: const Icon(Icons.add_rounded, size: 21),
+                icon: const Icon(Icons.add_rounded, size: 18),
               ),
             ],
           ),

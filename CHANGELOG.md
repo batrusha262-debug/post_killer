@@ -4,6 +4,18 @@ All notable user-facing changes are documented here. Releases follow semantic
 versioning; package signatures and notarization are introduced only after their
 respective signing authorities are configured.
 
+## [0.2.28]
+
+### Changed
+
+- Rebuilt the desktop API workbench around the supplied dark terminal
+  reference: a slim command chrome, compact vector navigation, 334 px local
+  workspace rail and stacked request/response flow now make the primary
+  request loop match the intended dense desktop composition.
+- Preserved live collection search, tabs, request execution, history,
+  environments, import/export and response inspection while moving those
+  controls into the new visual hierarchy.
+
 ## [0.2.27]
 
 ### Changed

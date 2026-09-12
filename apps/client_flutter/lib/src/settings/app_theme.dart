@@ -2,138 +2,144 @@ import 'package:flutter/material.dart';
 
 import 'app_settings.dart';
 
-/// The bright desktop workbench is the default product surface. It keeps
-/// request editing legible for long sessions and reserves green/red strictly
-/// for HTTP outcomes, leaving blue as the only navigation accent.
+/// The workbench borrows from a terminal rather than a dashboard: thin grid
+/// lines, compact controls and one vivid green action color keep an API
+/// request legible at a glance.
 ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
-  final isDark = brightness == Brightness.dark;
-  final isSlay = settings.appearance == AppAppearance.slay;
-  final accent = isSlay ? const Color(0xFFA78BFA) : const Color(0xFF4C9BFA);
-  final canvas = isDark ? const Color(0xFF101725) : const Color(0xFFF7F9FD);
-  final surface = isDark ? const Color(0xFF151E2C) : Colors.white;
-  final raised = isDark ? const Color(0xFF202B3C) : const Color(0xFFF1F5FB);
+  final dark = brightness == Brightness.dark;
+  final green = settings.appearance == AppAppearance.slay
+      ? const Color(0xFFA78BFA)
+      : const Color(0xFF91FF39);
+  final canvas = dark ? const Color(0xFF071014) : const Color(0xFFF4F7F6);
+  final surface = dark ? const Color(0xFF091317) : Colors.white;
+  final raised = dark ? const Color(0xFF101D22) : const Color(0xFFE8EFED);
+  final ink = dark ? const Color(0xFFD7E4E9) : const Color(0xFF15272D);
+  final muted = dark ? const Color(0xFF8BA1AB) : const Color(0xFF607982);
+  final line = dark ? const Color(0xFF1C3038) : const Color(0xFFCFDCDA);
   final scheme = ColorScheme(
     brightness: brightness,
-    primary: accent,
-    onPrimary: Colors.white,
-    primaryContainer: isDark
-        ? (isSlay ? const Color(0xFF39295C) : const Color(0xFF173D6E))
-        : (isSlay ? const Color(0xFFF0E9FF) : const Color(0xFFDDEBFF)),
-    onPrimaryContainer: isDark
-        ? const Color(0xFFE7E8FF)
-        : const Color(0xFF1A4F91),
-    secondary: isDark ? const Color(0xFF6EE7B7) : const Color(0xFF2D8A46),
+    primary: green,
+    onPrimary: const Color(0xFF102007),
+    primaryContainer: dark ? const Color(0xFF163020) : const Color(0xFFDDF8C6),
+    onPrimaryContainer: dark
+        ? const Color(0xFFC4FFA3)
+        : const Color(0xFF255113),
+    secondary: dark ? const Color(0xFF5EEB72) : const Color(0xFF21893B),
     onSecondary: Colors.white,
-    secondaryContainer: isDark
-        ? const Color(0xFF173E35)
-        : const Color(0xFFDDF8E8),
-    onSecondaryContainer: isDark
-        ? const Color(0xFFB7F6D7)
-        : const Color(0xFF176437),
-    tertiary: const Color(0xFFF59E0B),
-    onTertiary: const Color(0xFF392200),
-    tertiaryContainer: isDark
-        ? const Color(0xFF50391B)
-        : const Color(0xFFFFF0D0),
-    onTertiaryContainer: isDark
-        ? const Color(0xFFFFDDA8)
-        : const Color(0xFF6A4700),
-    error: isDark ? const Color(0xFFFFA9B0) : const Color(0xFFDC4052),
+    secondaryContainer: dark
+        ? const Color(0xFF0B3420)
+        : const Color(0xFFD7F6DE),
+    onSecondaryContainer: dark
+        ? const Color(0xFFABF8B8)
+        : const Color(0xFF155E28),
+    tertiary: const Color(0xFFFFD43B),
+    onTertiary: const Color(0xFF2C2500),
+    tertiaryContainer: dark ? const Color(0xFF40360B) : const Color(0xFFFFF0B3),
+    onTertiaryContainer: dark
+        ? const Color(0xFFFFEA8A)
+        : const Color(0xFF5F5000),
+    error: dark ? const Color(0xFFFF6670) : const Color(0xFFD92D35),
     onError: Colors.white,
-    errorContainer: isDark ? const Color(0xFF50202B) : const Color(0xFFFFE8EB),
-    onErrorContainer: isDark
-        ? const Color(0xFFFFD9DD)
-        : const Color(0xFF8A1D2B),
+    errorContainer: dark ? const Color(0xFF3E1820) : const Color(0xFFFFE2E4),
+    onErrorContainer: dark ? const Color(0xFFFFB6BD) : const Color(0xFF8E161E),
     surface: surface,
-    onSurface: isDark ? const Color(0xFFF0F4FA) : const Color(0xFF1D2939),
+    onSurface: ink,
     surfaceContainerHighest: raised,
-    onSurfaceVariant: isDark
-        ? const Color(0xFFACB9CB)
-        : const Color(0xFF64748B),
-    outline: isDark ? const Color(0xFF40516A) : const Color(0xFFCBD8E8),
-    outlineVariant: isDark ? const Color(0xFF2E3B50) : const Color(0xFFE0E8F2),
+    onSurfaceVariant: muted,
+    outline: dark ? const Color(0xFF36505A) : const Color(0xFFB8C9C7),
+    outlineVariant: line,
     shadow: Colors.black,
     scrim: Colors.black,
-    inverseSurface: isDark ? const Color(0xFFF0F4FA) : const Color(0xFF1D2939),
-    onInverseSurface: isDark ? const Color(0xFF1D2939) : Colors.white,
-    inversePrimary: isDark ? const Color(0xFFB8D9FF) : const Color(0xFF246CC4),
+    inverseSurface: ink,
+    onInverseSurface: surface,
+    inversePrimary: green,
   );
-  final radius = BorderRadius.circular(9);
   final fieldBorder = OutlineInputBorder(
-    borderRadius: radius,
+    borderRadius: BorderRadius.circular(5),
     borderSide: BorderSide(color: scheme.outline),
   );
+  final type = Typography.material2021(platform: TargetPlatform.macOS).white;
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: canvas,
-    splashFactory: InkSparkle.splashFactory,
+    splashFactory: InkRipple.splashFactory,
     visualDensity: settings.compact
         ? VisualDensity.compact
-        : VisualDensity.standard,
-    appBarTheme: AppBarTheme(
-      backgroundColor: canvas,
-      foregroundColor: scheme.onSurface,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      // The workbench intentionally uses a generous desktop chrome.  It is a
-      // stable landmark for the command field rather than a mobile app bar.
-      toolbarHeight: 112,
-      titleTextStyle: TextStyle(
-        color: scheme.onSurface,
-        fontSize: 25,
-        fontWeight: FontWeight.w800,
-        letterSpacing: -.45,
+        : const VisualDensity(horizontal: -2, vertical: -2),
+    fontFamily: 'monospace',
+    textTheme: type.copyWith(
+      bodyMedium: TextStyle(color: ink, fontSize: 13),
+      bodySmall: TextStyle(color: muted, fontSize: 11),
+      labelLarge: TextStyle(
+        color: ink,
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+      ),
+      labelMedium: TextStyle(color: muted, fontSize: 12),
+      titleMedium: TextStyle(
+        color: ink,
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
       ),
     ),
-    dividerTheme: DividerThemeData(
-      color: scheme.outlineVariant,
-      thickness: 1,
-      space: 1,
+    appBarTheme: AppBarTheme(
+      backgroundColor: canvas,
+      foregroundColor: ink,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      toolbarHeight: 54,
+      titleTextStyle: TextStyle(
+        color: ink,
+        fontFamily: 'monospace',
+        fontSize: 21,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -.5,
+      ),
     ),
+    dividerTheme: DividerThemeData(color: line, thickness: 1, space: 1),
     inputDecorationTheme: InputDecorationTheme(
+      isDense: true,
       filled: true,
-      fillColor: isDark ? const Color(0xFF1A2433) : const Color(0xFFFCFDFF),
+      fillColor: dark ? const Color(0xFF0B171C) : const Color(0xFFFCFDFC),
       border: fieldBorder,
       enabledBorder: fieldBorder,
       focusedBorder: fieldBorder.copyWith(
-        borderSide: BorderSide(color: scheme.primary, width: 2),
+        borderSide: BorderSide(color: green, width: 1),
       ),
-      errorBorder: fieldBorder.copyWith(
-        borderSide: BorderSide(color: scheme.error),
-      ),
-      contentPadding: EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: settings.compact ? 8 : 12,
-      ),
-      hintStyle: TextStyle(
-        color: scheme.onSurfaceVariant.withValues(alpha: .8),
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      hintStyle: TextStyle(color: muted.withValues(alpha: .88), fontSize: 13),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        minimumSize: const Size(48, 68),
-        shape: RoundedRectangleBorder(borderRadius: radius),
-        textStyle: const TextStyle(fontWeight: FontWeight.w800),
+        minimumSize: const Size(44, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        textStyle: const TextStyle(
+          fontFamily: 'monospace',
+          fontWeight: FontWeight.w800,
+        ),
         elevation: 0,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size(44, 68),
-        shape: RoundedRectangleBorder(borderRadius: radius),
+        minimumSize: const Size(42, 44),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         side: BorderSide(color: scheme.outline),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        textStyle: const TextStyle(
+          fontFamily: 'monospace',
+          fontWeight: FontWeight.w700,
+        ),
       ),
     ),
     iconButtonTheme: IconButtonThemeData(
       style: IconButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
     ),
     cardTheme: CardThemeData(
@@ -141,38 +147,37 @@ ThemeData buildAppTheme(AppSettings settings, Brightness brightness) {
       elevation: 0,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: scheme.outlineVariant),
+        borderRadius: BorderRadius.circular(4),
+        side: BorderSide(color: line),
       ),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: scheme.surfaceContainerHighest,
+      backgroundColor: raised,
       side: BorderSide(color: Colors.transparent),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       labelStyle: TextStyle(
-        color: scheme.onSurface,
+        color: ink,
+        fontFamily: 'monospace',
         fontWeight: FontWeight.w700,
       ),
-    ),
-    snackBarTheme: SnackBarThemeData(
-      behavior: SnackBarBehavior.floating,
-      backgroundColor: scheme.inverseSurface,
-      contentTextStyle: TextStyle(color: scheme.onInverseSurface),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
     tabBarTheme: TabBarThemeData(
-      labelColor: scheme.primary,
-      unselectedLabelColor: scheme.onSurfaceVariant,
-      labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
-      unselectedLabelStyle: const TextStyle(
+      labelColor: ink,
+      unselectedLabelColor: muted,
+      labelStyle: const TextStyle(
+        fontFamily: 'monospace',
         fontWeight: FontWeight.w700,
-        fontSize: 12,
+        fontSize: 13,
       ),
-      dividerColor: scheme.outlineVariant,
-      indicatorSize: TabBarIndicatorSize.tab,
-      indicator: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withValues(alpha: .82),
-        border: Border(bottom: BorderSide(color: scheme.primary, width: 4)),
+      unselectedLabelStyle: const TextStyle(
+        fontFamily: 'monospace',
+        fontWeight: FontWeight.w500,
+        fontSize: 13,
+      ),
+      dividerColor: line,
+      indicatorSize: TabBarIndicatorSize.label,
+      indicator: UnderlineTabIndicator(
+        borderSide: BorderSide(color: green, width: 2),
       ),
     ),
     tooltipTheme: const TooltipThemeData(

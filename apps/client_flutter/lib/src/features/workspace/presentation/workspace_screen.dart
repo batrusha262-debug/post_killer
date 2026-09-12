@@ -35,6 +35,16 @@ class WorkspaceScreen extends StatelessWidget {
     final motionDuration = settings.reduceMotion
         ? Duration.zero
         : const Duration(milliseconds: 220);
+    if (!Platform.isIOS) {
+      return _buildTerminalWorkspace(
+        context,
+        workspace: workspace,
+        controller: controller,
+        settings: settings,
+        colors: colors,
+        motionDuration: motionDuration,
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         titleSpacing: Platform.isMacOS && !compactChrome ? 164 : 24,
@@ -412,6 +422,317 @@ class WorkspaceScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildTerminalWorkspace(
+    BuildContext context, {
+    required WorkspaceState workspace,
+    required WorkspaceBloc controller,
+    required AppSettings settings,
+    required ColorScheme colors,
+    required Duration motionDuration,
+  }) => Scaffold(
+    body: Column(
+      children: [
+        _TerminalChrome(
+          settings: settings,
+          colors: colors,
+          isExecuting: workspace.isExecuting,
+          onSearchChanged: (value) =>
+              controller.add(WorkspaceCollectionSearchChanged(value)),
+        ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: constraints.maxWidth < 1180
+                    ? 1180
+                    : constraints.maxWidth,
+                height: constraints.maxHeight,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 334,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          border: Border(
+                            right: BorderSide(color: colors.outlineVariant),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            PrimaryNavigation(
+                              selectedSection: workspace.selectedSection,
+                              onSelected: (section) => controller.add(
+                                WorkspaceSectionSelected(section),
+                              ),
+                            ),
+                            const Divider(height: 1),
+                            Expanded(
+                              child: KeyedSubtree(
+                                key: ValueKey(workspace.selectedSection),
+                                child: switch (workspace.selectedSection) {
+                                  WorkspaceSection.collections => CollectionsPane(
+                                    workspaces: workspace.workspaces,
+                                    selectedWorkspaceId:
+                                        workspace.selectedWorkspaceId,
+                                    collections: workspace.filteredCollections,
+                                    isLoading: workspace.isLoading,
+                                    error: workspace.storageError,
+                                    onWorkspaceSelected: (id) =>
+                                        controller.add(WorkspaceSelected(id)),
+                                    onNewWorkspace: () => _showNameDialog(
+                                      context,
+                                      title: 'New workspace',
+                                      onSubmit: (name) => controller.add(
+                                        WorkspaceCreateRequested(name),
+                                      ),
+                                    ),
+                                    onDeleteWorkspace: (workspace) async {
+                                      if (await _confirmDelete(
+                                        context,
+                                        title: 'Удалить workspace?',
+                                        message: 'Будут удалены все его папки, запросы и переменные. Это действие нельзя отменить.',
+                                        confirmLabel: 'Удалить workspace',
+                                      )) {
+                                        controller.add(
+                                          WorkspaceDeleteRequested(
+                                            workspace.id,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    onNewCollection: () => _showNameDialog(
+                                      context,
+                                      title: 'New collection',
+                                      onSubmit: (name) => controller.add(
+                                        CollectionCreateRequested(name),
+                                      ),
+                                    ),
+                                    onDeleteCollection: (collection) async {
+                                      if (await _confirmDelete(
+                                        context,
+                                        title:
+                                            'Удалить папку «${collection.name}»?',
+                                        message: 'Все запросы в этой папке будут удалены. Это действие нельзя отменить.',
+                                        confirmLabel: 'Удалить папку',
+                                      )) {
+                                        controller.add(
+                                          CollectionDeleteRequested(
+                                            collection.id,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    onImportPostman: () =>
+                                        _importPostmanCollection(
+                                          context,
+                                          controller,
+                                        ),
+                                    onImportOpenApi: () =>
+                                        _importOpenApiSpecification(
+                                          context,
+                                          controller,
+                                        ),
+                                    onExportCollection: (collection) =>
+                                        _exportCollection(context, collection),
+                                    onSearchChanged: (query) => controller.add(
+                                      WorkspaceCollectionSearchChanged(query),
+                                    ),
+                                    onOpenRequest: (request) => controller.add(
+                                      WorkspaceRequestOpened(request),
+                                    ),
+                                    onDeleteRequest: (collection, request) async {
+                                      if (await _confirmDelete(
+                                        context,
+                                        title:
+                                            'Удалить запрос «${request.name}»?',
+                                        message: 'История этого запроса также будет удалена.',
+                                        confirmLabel: 'Удалить запрос',
+                                      )) {
+                                        controller.add(
+                                          WorkspaceSavedRequestDeleteRequested(
+                                            collectionId: collection.id,
+                                            requestId: request.id,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    onNewRequest: () => controller.add(
+                                      const WorkspaceRequestCreated(),
+                                    ),
+                                  ),
+                                  WorkspaceSection.history => HistoryPane(
+                                    entries: workspace.filteredHistory,
+                                    query: workspace.historySearchQuery,
+                                    onQueryChanged: (query) => controller.add(
+                                      WorkspaceHistorySearchChanged(query),
+                                    ),
+                                    onOpen: (requestId) => controller.add(
+                                      WorkspaceHistoryEntryOpened(requestId),
+                                    ),
+                                    onClear: () => controller.add(
+                                      const WorkspaceHistoryClearRequested(),
+                                    ),
+                                  ),
+                                  WorkspaceSection.variables => VariablesPane(
+                                    environments: workspace.environments,
+                                    selectedEnvironmentId:
+                                        workspace.selectedEnvironmentId,
+                                    onSelected: (id) =>
+                                        controller.add(EnvironmentSelected(id)),
+                                    onNewEnvironment: () => _showNameDialog(
+                                      context,
+                                      title: 'New environment',
+                                      onSubmit: (name) => controller.add(
+                                        EnvironmentCreateRequested(name),
+                                      ),
+                                    ),
+                                    onDeleteEnvironment: (id) => controller.add(
+                                      EnvironmentDeleteRequested(id),
+                                    ),
+                                    onSaveVariable: (variable) {
+                                      final id =
+                                          workspace.selectedEnvironmentId;
+                                      if (id != null) {
+                                        controller.add(
+                                          EnvironmentVariableSaveRequested(
+                                            environmentId: id,
+                                            variable: variable,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    onDeleteVariable: (variableId) {
+                                      final id =
+                                          workspace.selectedEnvironmentId;
+                                      if (id != null) {
+                                        controller.add(
+                                          EnvironmentVariableDeleteRequested(
+                                            environmentId: id,
+                                            variableId: variableId,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child:
+                          workspace.selectedSection ==
+                              WorkspaceSection.collections
+                          ? RequestWorkspace(
+                              workspace: workspace,
+                              onSelectTab: (id) =>
+                                  controller.add(WorkspaceTabSelected(id)),
+                              onCloseTab: (id) =>
+                                  controller.add(WorkspaceTabClosed(id)),
+                              onNewTab: () => controller.add(
+                                const WorkspaceRequestCreated(),
+                              ),
+                              onMethodChanged: (method) => controller.add(
+                                WorkspaceMethodChanged(method),
+                              ),
+                              onTitleChanged: (title) => controller.add(
+                                WorkspaceRequestTitleChanged(title),
+                              ),
+                              onUrlChanged: (url) =>
+                                  controller.add(WorkspaceUrlChanged(url)),
+                              onBodyChanged: (body) =>
+                                  controller.add(WorkspaceBodyChanged(body)),
+                              onBodyFormatChanged: (format) => controller.add(
+                                WorkspaceBodyFormatChanged(format),
+                              ),
+                              onAddBodyField: () => controller.add(
+                                const WorkspaceBodyFieldAdded(),
+                              ),
+                              onBodyFieldChanged: (id, {key, value, enabled}) =>
+                                  controller.add(
+                                    WorkspaceBodyFieldChanged(
+                                      id: id,
+                                      key: key,
+                                      value: value,
+                                      enabled: enabled,
+                                    ),
+                                  ),
+                              onDeleteBodyField: (id) =>
+                                  controller.add(WorkspaceBodyFieldDeleted(id)),
+                              onPickBodyFile: () =>
+                                  _pickMultipartFile(context, controller),
+                              onDeleteBodyFile: (path) => controller.add(
+                                WorkspaceBodyFileDeleted(path),
+                              ),
+                              onNetworkChanged: (network) => controller.add(
+                                WorkspaceNetworkChanged(network),
+                              ),
+                              onPickCustomCa: () =>
+                                  _pickCustomCa(context, controller),
+                              onAuthChanged: (auth) =>
+                                  controller.add(WorkspaceAuthChanged(auth)),
+                              onAddQuery: () => controller.add(
+                                const WorkspaceKeyValueAdded(isHeader: false),
+                              ),
+                              onAddHeader: () => controller.add(
+                                const WorkspaceKeyValueAdded(isHeader: true),
+                              ),
+                              onQueryChanged: (id, {key, value, enabled}) =>
+                                  controller.add(
+                                    WorkspaceKeyValueChanged(
+                                      id: id,
+                                      isHeader: false,
+                                      key: key,
+                                      value: value,
+                                      enabled: enabled,
+                                    ),
+                                  ),
+                              onHeaderChanged: (id, {key, value, enabled}) =>
+                                  controller.add(
+                                    WorkspaceKeyValueChanged(
+                                      id: id,
+                                      isHeader: true,
+                                      key: key,
+                                      value: value,
+                                      enabled: enabled,
+                                    ),
+                                  ),
+                              onDeleteHeader: (id) => controller.add(
+                                WorkspaceKeyValueDeleted(
+                                  id: id,
+                                  isHeader: true,
+                                ),
+                              ),
+                              onHeaderPreset: (name, value) => controller.add(
+                                WorkspaceHeaderPresetAdded(name, value),
+                              ),
+                              onSend: () =>
+                                  controller.add(const WorkspaceRequestSent()),
+                              onCancel: () => controller.add(
+                                const WorkspaceRequestCancelled(),
+                              ),
+                              onSave: (collectionId) => controller.add(
+                                WorkspaceRequestSaveRequested(collectionId),
+                              ),
+                            )
+                          : DecoratedBox(
+                              decoration: BoxDecoration(color: colors.surface),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
   static Future<void> _importPostmanCollection(
     BuildContext context,
     WorkspaceBloc workspace,
@@ -666,4 +987,140 @@ class WorkspaceScreen extends StatelessWidget {
         ),
       ) ??
       false;
+}
+
+class _TerminalChrome extends StatelessWidget {
+  const _TerminalChrome({
+    required this.settings,
+    required this.colors,
+    required this.isExecuting,
+    required this.onSearchChanged,
+  });
+
+  final AppSettings settings;
+  final ColorScheme colors;
+  final bool isExecuting;
+  final ValueChanged<String> onSearchChanged;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 54,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(bottom: BorderSide(color: colors.outlineVariant)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 334,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 18),
+              child: Row(
+                children: [
+                  const Icon(Icons.chevron_left_rounded, size: 18),
+                  const SizedBox(width: 9),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Post Killer',
+                        style: TextStyle(
+                          color: colors.primary,
+                          fontSize: 21,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'LOCAL FIRST. TOTAL CONTROL.',
+                        style: TextStyle(
+                          color: colors.onSurfaceVariant,
+                          fontSize: 9,
+                          letterSpacing: .25,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(width: 1, color: colors.outlineVariant),
+          const SizedBox(width: 13),
+          SizedBox(
+            width: 33,
+            height: 33,
+            child: OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(padding: EdgeInsets.zero),
+              child: const Icon(
+                Icons.keyboard_double_arrow_right_rounded,
+                size: 17,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: SizedBox(
+              height: 31,
+              child: TextField(
+                key: const Key('command-search-field'),
+                onChanged: onSearchChanged,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.terminal_rounded, size: 16),
+                  hintText: 'Type a command or search...',
+                  suffixText: '⌘ K',
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 30),
+          Icon(
+            Icons.circle,
+            color: isExecuting ? colors.tertiary : colors.secondary,
+            size: 10,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            isExecuting ? 'Running' : 'Local Mode',
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Container(
+              width: 1,
+              height: 18,
+              color: colors.outlineVariant,
+            ),
+          ),
+          Icon(Icons.sync_outlined, size: 15, color: colors.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Text(
+            'No Sync',
+            style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Container(
+              width: 1,
+              height: 18,
+              color: colors.outlineVariant,
+            ),
+          ),
+          const UpdateAction(),
+          IconButton(
+            key: const Key('settings-button'),
+            tooltip: 'Settings',
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => SettingsDialog(settings: settings),
+            ),
+            icon: const Icon(Icons.settings_outlined, size: 18),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+    ),
+  );
 }

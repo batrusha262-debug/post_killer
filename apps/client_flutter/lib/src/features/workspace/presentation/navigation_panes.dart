@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../domain/workspace_models.dart';
 
+/// Compact section rail for the left-hand workspace. It deliberately uses
+/// text labels beside small vector icons, so the rail remains scannable at a
+/// glance instead of becoming a second mobile-style navigation bar.
 class PrimaryNavigation extends StatelessWidget {
   const PrimaryNavigation({
     super.key,
@@ -13,133 +16,91 @@ class PrimaryNavigation extends StatelessWidget {
   final ValueChanged<WorkspaceSection> onSelected;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Container(
-      width: 134,
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(right: BorderSide(color: colors.outlineVariant)),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 26, bottom: 28),
-            child: Tooltip(
-              message: 'Ваше API-пространство',
-              child: Container(
-                width: 68,
-                height: 68,
-                decoration: BoxDecoration(
-                  color: colors.primary,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.primary.withValues(alpha: .18),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(Icons.bolt_rounded, color: colors.onPrimary),
-              ),
-            ),
-          ),
-          _Destination(
-            icon: Icons.folder_outlined,
-            selectedIcon: Icons.folder_rounded,
-            label: 'Запросы',
-            selected: selectedSection == WorkspaceSection.collections,
-            onTap: () => onSelected(WorkspaceSection.collections),
-          ),
-          _Destination(
-            icon: Icons.history_outlined,
-            selectedIcon: Icons.history_rounded,
-            label: 'История',
-            selected: selectedSection == WorkspaceSection.history,
-            onTap: () => onSelected(WorkspaceSection.history),
-          ),
-          _Destination(
-            icon: Icons.tune_outlined,
-            selectedIcon: Icons.tune_rounded,
-            label: 'Переменные',
-            selected: selectedSection == WorkspaceSection.variables,
-            onTap: () => onSelected(WorkspaceSection.variables),
-          ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Tooltip(
-              message: 'Все данные хранятся локально',
-              child: Icon(
-                Icons.shield_outlined,
-                color: colors.onSurfaceVariant,
-                size: 20,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(10, 18, 10, 14),
+    child: Column(
+      children: [
+        _Destination(
+          icon: Icons.article_outlined,
+          label: 'Запросы',
+          selected: selectedSection == WorkspaceSection.collections,
+          onTap: () => onSelected(WorkspaceSection.collections),
+        ),
+        _Destination(
+          icon: Icons.language_outlined,
+          label: 'Переменные',
+          selected: selectedSection == WorkspaceSection.variables,
+          onTap: () => onSelected(WorkspaceSection.variables),
+        ),
+        _Destination(
+          icon: Icons.inventory_2_outlined,
+          label: 'История',
+          selected: selectedSection == WorkspaceSection.history,
+          onTap: () => onSelected(WorkspaceSection.history),
+        ),
+        const _Destination(
+          icon: Icons.public_outlined,
+          label: 'Сниппеты',
+          selected: false,
+        ),
+      ],
+    ),
+  );
 }
 
 class _Destination extends StatelessWidget {
   const _Destination({
     required this.icon,
-    required this.selectedIcon,
     required this.label,
     required this.selected,
-    required this.onTap,
+    this.onTap,
   });
 
   final IconData icon;
-  final IconData selectedIcon;
   final String label;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      child: Tooltip(
-        message: label,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: AnimatedContainer(
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 180),
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: selected ? colors.primaryContainer : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  selected ? selectedIcon : icon,
-                  color: selected ? colors.primary : colors.onSurfaceVariant,
-                  size: 30,
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: AnimatedContainer(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 150),
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: selected
+                ? colors.surfaceContainerHighest.withValues(alpha: .88)
+                : Colors.transparent,
+            border: selected
+                ? Border(left: BorderSide(color: colors.primary, width: 2))
+                : null,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: selected ? colors.primary : colors.onSurfaceVariant,
+                size: 17,
+              ),
+              const SizedBox(width: 14),
+              Text(
+                label,
+                style: TextStyle(
+                  color: selected ? colors.onSurface : colors.onSurfaceVariant,
+                  fontSize: 13,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
-                const SizedBox(height: 7),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: selected ? colors.primary : colors.onSurfaceVariant,
-                    fontSize: 12,
-                    fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

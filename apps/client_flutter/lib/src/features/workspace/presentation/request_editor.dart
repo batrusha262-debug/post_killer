@@ -77,20 +77,13 @@ class RequestEditor extends StatelessWidget {
         (tab.bodyFormat != RequestBodyFormat.json || isValidJson(tab.body)) &&
         tab.auth.isValid;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 0),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest
-                  .withValues(alpha: .38),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-              borderRadius: BorderRadius.circular(10),
-            ),
+            padding: EdgeInsets.zero,
+            decoration: const BoxDecoration(),
             child: LayoutBuilder(
               builder: (context, constraints) => SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -98,12 +91,12 @@ class RequestEditor extends StatelessWidget {
                   width: constraints.maxWidth < 620
                       ? 620
                       : constraints.maxWidth,
-                  height: 72,
+                  height: 48,
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       SizedBox(
-                        width: 212,
+                        width: 150,
                         child: TextFormField(
                           key: const Key('request-name-field'),
                           initialValue: tab.title,
@@ -114,7 +107,7 @@ class RequestEditor extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       SizedBox(
                         width: 142,
                         child: DropdownButtonFormField<HttpMethod>(
@@ -134,7 +127,7 @@ class RequestEditor extends StatelessWidget {
                           },
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: TextFormField(
                           key: const Key('request-url-field'),
@@ -142,12 +135,11 @@ class RequestEditor extends StatelessWidget {
                           onChanged: onUrlChanged,
                           decoration: const InputDecoration(
                             isDense: true,
-                            prefixIcon: Icon(Icons.link_rounded, size: 19),
-                            hintText: 'Вставьте URL API…',
+                            hintText: 'https://api.example.com/v1/users',
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       PopupMenuButton<String>(
                         key: const Key('save-request-menu'),
                         tooltip: 'Сохранить в коллекцию',
@@ -171,9 +163,9 @@ class RequestEditor extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
                       SizedBox(
-                        width: 190,
+                        width: 146,
                         child: AnimatedSwitcher(
                           duration: MediaQuery.disableAnimationsOf(context)
                               ? Duration.zero
@@ -215,7 +207,7 @@ class RequestEditor extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Expanded(
             child: DefaultTabController(
               length: 5,
@@ -225,39 +217,18 @@ class RequestEditor extends StatelessWidget {
                     isScrollable: true,
                     tabAlignment: TabAlignment.start,
                     tabs: [
-                      Tab(
-                        height: 112,
-                        icon: Icon(Icons.tune_rounded, size: 17),
-                        text: 'Параметры',
-                      ),
-                      Tab(
-                        height: 112,
-                        icon: Icon(Icons.article_outlined, size: 17),
-                        text: 'Заголовки',
-                      ),
-                      Tab(
-                        key: Key('auth-tab'),
-                        height: 112,
-                        icon: Icon(Icons.lock_outline, size: 17),
-                        text: 'Доступ',
-                      ),
-                      Tab(
-                        height: 112,
-                        icon: Icon(Icons.data_object_rounded, size: 17),
-                        text: 'Тело',
-                      ),
-                      Tab(
-                        height: 112,
-                        icon: Icon(Icons.language_outlined, size: 17),
-                        text: 'Сеть',
-                      ),
+                      Tab(height: 42, text: 'Параметры'),
+                      Tab(height: 42, text: 'Заголовки'),
+                      Tab(key: Key('auth-tab'), height: 42, text: 'Доступ'),
+                      Tab(height: 42, text: 'Тело'),
+                      Tab(height: 42, text: 'Сеть'),
                     ],
                   ),
                   Expanded(
-                    child: Row(
+                    child: Column(
                       children: [
                         Expanded(
-                          flex: 11,
+                          flex: 10,
                           child: TabBarView(
                             children: [
                               KeyValueEditor(
@@ -370,9 +341,8 @@ class RequestEditor extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const VerticalDivider(width: 1),
                         Expanded(
-                          flex: 10,
+                          flex: 9,
                           child: _ResponseInspector(execution: execution),
                         ),
                       ],
@@ -403,13 +373,13 @@ class _ResponseInspector extends StatelessWidget {
       child: Column(
         children: [
           SizedBox(
-            height: 64,
+            height: 48,
             child: Row(
               children: [
                 TextButton.icon(
                   key: const Key('response-tab'),
                   onPressed: () {},
-                  icon: const Icon(Icons.bolt_outlined, size: 16),
+                  icon: const Icon(Icons.data_object_rounded, size: 16),
                   label: const Text('Ответ'),
                 ),
                 const Spacer(),
