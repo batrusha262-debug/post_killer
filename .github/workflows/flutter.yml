@@ -4,12 +4,22 @@ on:
   pull_request:
     paths:
       - "apps/client_flutter/**"
+      - "crates/domain/**"
+      - "crates/http_engine/**"
+      - "crates/ffi_bridge/**"
+      - "Cargo.lock"
+      - "Cargo.toml"
       - "Makefile"
       - ".github/workflows/flutter.yml"
   push:
     branches: [main]
     paths:
       - "apps/client_flutter/**"
+      - "crates/domain/**"
+      - "crates/http_engine/**"
+      - "crates/ffi_bridge/**"
+      - "Cargo.lock"
+      - "Cargo.toml"
       - "Makefile"
       - ".github/workflows/flutter.yml"
 
@@ -31,3 +41,16 @@ jobs:
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
+
+  native-macos-e2e:
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: apps/client_flutter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter test integration_test/native_request_flow_test.dart -d macos

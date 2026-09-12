@@ -12,7 +12,12 @@
 
 ## Активный план
 
-- [ ] QA-007: добавить macOS desktop E2E runner для нативного FRB request flow в CI.
+- [ ] QA-007: проверить в GitHub Actions macOS desktop E2E runner, который
+  запускает настоящий Flutter app, посылает
+  GET на локальный deterministic HTTP endpoint через FRB/Rust transport и
+  проверяет HTTP 200/response body в UI без mock-слоёв. Local endpoint намеренно
+  заменяет внешний `httpbin`: он устраняет сетевую нестабильность CI, не ослабляя
+  проверяемый native request flow.
 - [ ] RELEASE-HARDENING-1: подготовить release notes и provenance/SBOM; signing/notarization требует предоставленных Apple Developer, Windows certificate и GPG authority.
 
 ### Foundation
@@ -84,7 +89,12 @@
   нельзя выполнять в обычном widget test. UI тестируется через injected port,
   Rust FFI integration — отдельным TCP-тестом. Критерий готовности: добавить
   macOS integration runner в CI, который запускает `.app` и подтверждает
-  `GET https://httpbin.org/get` в Response без mock-слоёв.
+  `GET` в Response без mock-слоёв. Реализация ожидает первый GitHub Actions run:
+  `native-macos-e2e` запускает
+  integration test на `macos-14`; он поднимает loopback HTTP endpoint, запускает
+  приложение с настоящими `FrbWorkspaceGateway` и `FrbRequestExecutor`, вводит
+  URL, нажимает Send и проверяет HTTP 200/body. Loopback заменяет зависимый от
+  внешней сети `httpbin`, сохраняя реальный UI → BLoC → FRB → Rust путь.
 - [x] Добавить cross-platform «Проверить обновления»: BLoC проверяет GitHub
   Releases, показывает подходящий по ОС файл и открывает загрузку только после
   явного подтверждения пользователя. Release workflow публикует DMG/EXE/DEB/
